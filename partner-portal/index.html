@@ -47,6 +47,10 @@
 ═══════════════════════════════════════════════════════════════════════════
 -->
 <style>
+  /* The portal is one browser window tall, never taller: --agc-cap is the window's height as the Wix
+     page reports it (see "FIT THE BROWSER WINDOW" in the router), so the portal fills what is on screen
+     even when the Wix box it sits in is taller. Same idea as the client portal's --screen-cap. */
+  :root{--agc-h:min(100vh, var(--agc-cap, 100vh))}
   html,body{margin:0;padding:0;height:100%;background:#000;overflow:hidden}
   .agc-view{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000;
     visibility:hidden;opacity:0;pointer-events:none;transition:opacity .32s cubic-bezier(.16,1,.3,1),visibility 0s linear .32s}
@@ -57,6 +61,8 @@
   .agc-lock{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vh,32px) 16px;overflow:auto;
     background:#000;   /* true black: nothing of the portal shows through until sign-in */
     font-family:'Wix Madefor Display',Arial,sans-serif;color:#fff;transition:opacity .45s cubic-bezier(.16,1,.3,1)}
+  /* black covers the whole box, but the card is centred in the part of it that is on screen */
+  .agc-lock{padding-bottom:calc(100vh - var(--agc-h) + clamp(12px,3vh,32px))}
   .agc-lock[hidden]{display:none!important}
   .agc-lock.is-leaving{opacity:0;pointer-events:none}
   .agc-lock *{box-sizing:border-box}
@@ -106,7 +112,7 @@
   .agc-lock-dev:hover{background:rgba(0,0,0,.62);border-color:#fde68a;transform:translateY(-1px)}
   .agc-lock-dev svg{width:15px;height:15px}
   .agc-lock-ver{position:absolute;right:20px;bottom:12px;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.35)}
-  @media (max-width:520px){.agc-lock{padding:10px}.agc-lock-card{border-radius:22px}.agc-lock-top{padding:16px 18px 12px}.agc-lock-label{font-size:12px}}
+  @media (max-width:520px){.agc-lock{padding:10px;padding-bottom:calc(100vh - var(--agc-h) + 10px)}.agc-lock-card{border-radius:22px}.agc-lock-top{padding:16px 18px 12px}.agc-lock-label{font-size:12px}}
   @media (prefers-reduced-motion:reduce){.agc-lock,.agc-lock-card{transition:none;animation:none}}
   /* pixel field + flashlight that follows the mouse on the sign-in screen (same effect as the three views) */
   .qc-pixels{position:fixed;inset:0;width:100%;height:100%;z-index:1001;pointer-events:none}
@@ -117,7 +123,7 @@
      My Profile and the menu. The menu is the website's app grid. The three
      pages sit underneath it; their own top sections are switched off. */
   :root{--agc-nav:84px}
-  .agc-view{top:var(--agc-nav)!important;height:calc(100% - var(--agc-nav))!important}
+  .agc-view{top:var(--agc-nav)!important;bottom:auto!important;height:calc(var(--agc-h) - var(--agc-nav))!important}
   .agc-nav{position:fixed;top:0;left:0;right:0;height:var(--agc-nav);z-index:500;box-sizing:border-box;padding:11px 14px;
     font-family:'Wix Madefor Display',Arial,sans-serif;color:#fff}
   .agc-nav *{box-sizing:border-box}
@@ -144,7 +150,7 @@
   .agc-menu-scrim{position:fixed;inset:0;z-index:499;background:rgba(5,6,5,.55);opacity:0;visibility:hidden;transition:opacity .35s,visibility 0s .35s}
   .agc-menu-scrim.open{opacity:1;visibility:visible;transition:opacity .35s,visibility 0s}
   .agc-menu{position:fixed;top:83px;right:15px;z-index:501;display:flex;flex-direction:column;gap:12px;padding:14px;width:min(392px,calc(100vw - 28px));
-    max-height:calc(100vh - var(--agc-nav) - 14px);overflow-y:auto;overscroll-behavior:contain;border-radius:22px;border:1px solid rgba(255,255,255,.14);
+    max-height:calc(var(--agc-h) - var(--agc-nav) - 14px);overflow-y:auto;overscroll-behavior:contain;border-radius:22px;border:1px solid rgba(255,255,255,.14);
     background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012) 40%),#0b0c0d;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 24px 50px -16px rgba(0,0,0,.9);
     font-family:'Wix Madefor Display',Arial,sans-serif;font-weight:700;color:#fff;
@@ -5459,7 +5465,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.44</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.45</span>
  </div>
 
  <div class="hero">
@@ -28257,6 +28263,7 @@ function mdToHtml(s){
     frames[name].addEventListener('load', function(){
       ready[name] = true;
       try { gateWatch(frames[name].contentWindow); } catch (e) {}     /* activity inside the page keeps the sign-in alive */
+      if (name === 'home') { try { frames.home.contentWindow.addEventListener('resize', fitHomeSoon); } catch (e) {} fitHomeSoon(); setTimeout(fitHome, 1200); }
       var q = waiting[name] || []; waiting[name] = [];
       q.forEach(function(msg){ post(name, msg); });
     });
@@ -28806,6 +28813,7 @@ function mdToHtml(s){
     var m = raw;
     if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) {} }
     if (m && typeof m === 'object' && m.type === 'agc_keys') { setKeys(m.keys || m); return; }     /* keys stop here: never forwarded as-is, never sent up */
+    if (m && typeof m === 'object' && m.type === 'agc_partner_viewport') { heard.n++; setCap(m.height); return; }   /* the window's height, for the fit */
     heard.n++;
     var kind = (m && typeof m === 'object') ? String(m.type || 'no type').slice(0, 28) : typeof m;
     if (heard.types.indexOf(kind) < 0 && heard.types.length < 6) heard.types.push(kind);
@@ -28859,6 +28867,41 @@ function mdToHtml(s){
   }
   if (askHost()) var askT = setInterval(function(){ if (++askN > 180 || !askHost()) clearInterval(askT); }, 1000);
 
+  /* FIT THE BROWSER WINDOW (the same idea as the client portal)
+     The Wix box this page sits in has a fixed height; the browser window is usually shorter or taller.
+     So ask the Wix page how tall the window really is (it changes when the window is resized or the
+     page is zoomed) and cap the portal at that height: nav bar, views and sign-in card all fit what
+     is on screen, with no scrolling or zooming to line things up. Until the page answers, the
+     screen's own height is the cap. */
+  function setCap(h){ h = Math.round(+h || 0); if (h > 200) document.documentElement.style.setProperty('--agc-cap', h + 'px'); }
+  if (host) { try { setCap(screen.availHeight || 900); } catch (e) {} }      /* opened on its own, the page is already exactly one window tall */
+  var capT = 0;
+  function askCap(){ if (host) up({ type: 'agc_partner_viewport_request' }); }
+  window.addEventListener('resize', function(){ clearTimeout(capT); capT = setTimeout(askCap, 150); });
+  if (host) { setTimeout(askCap, 300); setInterval(askCap, 4000); }
+
+  /* HOME SHRINKS TO FIT A SHORT WINDOW
+     Home is a fixed design (greeting on top, three cards under it) about 800 px tall; My Projects and
+     My Profile stretch and scroll inside themselves, Home does not. When the window is shorter than
+     Home needs, Home is scaled down just enough to show all of it — what "zoom out until it fits"
+     used to do by hand. The phone layout scrolls on its own and is left alone. */
+  var HOME_FIT_MIN = 0.6, fitT = 0;
+  function fitHome(){
+    try {
+      var w = frames.home.contentWindow, sh = w.document.querySelector('.shell');
+      if (!sh) return;
+      sh.style.zoom = ''; sh.style.height = ''; sh.style.overflowY = '';
+      if (w.getComputedStyle(sh).overflowY !== 'hidden') return;          /* phone layout: scrolls by itself */
+      var have = sh.clientHeight, need = sh.scrollHeight + 6;
+      if (!have || need <= have + 6) return;                               /* everything already fits */
+      var z = Math.max(HOME_FIT_MIN, have / need);
+      sh.style.zoom = z;
+      sh.style.height = (w.innerHeight / z) + 'px';
+      if (have / need < HOME_FIT_MIN) sh.style.overflowY = 'auto';         /* a very short window: shrink as far as allowed, then scroll */
+    } catch (e) {}
+  }
+  function fitHomeSoon(){ clearTimeout(fitT); fitT = setTimeout(fitHome, 60); }
+
   /* Run something once this page has finished loading (or after maxWait ms if that never comes). */
   function whenLoaded(fn, maxWait){
     var done = false;
@@ -28882,7 +28925,7 @@ function mdToHtml(s){
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6044;
+  var AGC_BUILD = 6045;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
