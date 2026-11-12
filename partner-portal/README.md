@@ -13,3 +13,13 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 - Opened on its own (outside the Wix page) the portal stays on the sign-in screen: the Wix page is what
   tells it which installer is signing in.
 - No keys or tokens are in this file.
+- The portal fits the browser window: the Wix page tells it the window's height, and Home shrinks to
+  fit a short window.
+
+## The Wix side
+
+The **Vendor Portal** page holds one full-screen HTML box (`#html3`) that loads the address above, on
+desktop and on mobile, and nothing else. Its page code is kept here for reference in
+[`wix/vendor-portal.page.js`](wix/vendor-portal.page.js): it hands the portal the installer's record ID
+from the link (`/vendor-portal?id=rec…`) and the browser window's height. Changing that file here does
+not change Wix; paste it into the page's code panel in the Wix editor.
