@@ -5484,7 +5484,7 @@ window.AGC_LOOK_FIELD = {
     width:auto;max-width:none;margin:0;box-sizing:border-box;
     display:flex;align-items:center;justify-content:center;
     -webkit-line-clamp:unset;overflow:hidden;
-    padding:15px 10px 8px;                     /* 9px line + 6px above the title */
+    padding:11px 10px 8px;                     /* 5px line + 6px above the title */
     border-top:0;
     /* THE LINE IS TWO COLOURS: a dark partner colour (--c2, set on each card) on the left half, fading
        into the card's own colour on the right */
@@ -5493,7 +5493,7 @@ window.AGC_LOOK_FIELD = {
        so the left end is a deeper relative of the same colour, not a different colour */
     --cp:color-mix(in oklab, var(--c2, #000) 42%, var(--c));
     background:
-      linear-gradient(90deg, var(--cp) 0%, var(--c) 70%, var(--c) 100%) 0 0/100% 9px no-repeat,
+      linear-gradient(90deg, var(--cp) 0%, var(--c) 70%, var(--c) 100%) 0 0/100% 5px no-repeat,
       var(--strip, linear-gradient(180deg,#f3f4f6 0%,#d3d6dc 55%,#bfc3cb 100%));
     box-shadow:0 -2px 7px rgba(0,0,0,0.55);
     color:#000;-webkit-text-stroke:0.4px #000;text-shadow:none;filter:none;opacity:1;
@@ -5501,7 +5501,7 @@ window.AGC_LOOK_FIELD = {
   }
   /* Toolbox cards are narrow, so their titles run to two lines: every strip in the row is two lines tall */
   .cards .card:nth-child(2) .tool-grid .tool-btn:not(.no-icon):not(.soon) .tool-btn-label{
-    min-height:calc(2.16em + 23px);
+    min-height:calc(2.16em + 19px);
   }
   /* a profile step still to do: same strip, dimmer, so the finished ones stand out */
   .cards .card .tool-grid .tool-btn.step:not(.done) .tool-btn-label,
@@ -5550,7 +5550,7 @@ window.AGC_LOOK_FIELD = {
     /* small, and sitting directly above the coloured line: its foot is the height of the title strip
        (two lines of title + the strip's padding) plus a small gap */
     display:block;position:absolute;right:9px;z-index:1;pointer-events:none;
-    bottom:calc(2.16 * clamp(17px,1.12vw,21px) + 23px + 5px);
+    bottom:calc(2.16 * clamp(17px,1.12vw,21px) + 19px + 5px);
     /* solid white lettering (the embossed version could not be read at this size), with a dark edge
        above it so it still sits into the card */
     font-family:inherit;font-weight:900;font-size:clamp(13px,0.95vw,17px);line-height:1;
@@ -5831,7 +5831,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.96</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.97</span>
  </div>
 
  <div class="hero">
@@ -29421,7 +29421,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6096;
+  var AGC_BUILD = 6097;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
