@@ -149,7 +149,8 @@
   .agc-nav-hamb[aria-expanded="true"] span:nth-child(2){opacity:0}
   .agc-nav-hamb[aria-expanded="true"] span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
   /* the menu: a rounded glass panel that slides in under the bar */
-  .agc-menu-scrim{position:fixed;inset:0;z-index:1009;background:rgba(5,6,5,.55);opacity:0;visibility:hidden;transition:opacity .35s,visibility 0s .35s}
+  /* behind the open menu: plain black at 90% over the rest of the page (the bar stays clear, so the menu can be closed) */
+  .agc-menu-scrim{position:fixed;inset:0;z-index:1009;background:rgba(0,0,0,.9);opacity:0;visibility:hidden;transition:opacity .35s,visibility 0s .35s}
   .agc-menu-scrim.open{opacity:1;visibility:visible;transition:opacity .35s,visibility 0s}
   .agc-menu{position:fixed;top:83px;right:15px;z-index:1011;display:flex;flex-direction:column;gap:12px;padding:14px;width:min(392px,calc(100vw - 28px));
     max-height:calc(var(--agc-h) - var(--agc-nav) - 14px);overflow-y:auto;overscroll-behavior:contain;border-radius:22px;border:1px solid rgba(255,255,255,.14);
@@ -5475,7 +5476,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.49</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.50</span>
  </div>
 
  <div class="hero">
@@ -29066,7 +29067,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6049;
+  var AGC_BUILD = 6050;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
