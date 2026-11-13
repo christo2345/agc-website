@@ -161,7 +161,8 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
       '<td class="desc">' + (bul ? '<ul>' + bul + '</ul>' : '') + '</td><td class="amt">' + (info ? '' : (Number(L.a) > 0 ? money(L.a) + '<span class="cc">' + cur + '</span>' : 'Included')) + '</td></tr>';
   });
   var total = Number(D.tot) > 0 ? Number(D.tot) : sub;
-  var tax = D.tax ? esc(D.tax) : (cur === 'CAD' ? 'Exempt' : 'Not charged');
+  // AGC charges no tax (Chris, Nov 13 2026: AGC never charges tax right now; Wyoming is 0%), whatever the link carries
+  var tax = money(0) + '<span class="cc">' + cur + '</span>';
   var locs = (Array.isArray(D.loc) ? D.loc : []).filter(Boolean);
   var terms = (Array.isArray(D.terms) && D.terms.length ? D.terms : [
     'This estimate is based on the information we have today. Prices may change if the scope, sizes, quantities, site conditions or other details change.',
@@ -200,7 +201,7 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
           '<div class="row"><span>Subtotal</span><b>' + money(sub) + '<span class="cc">' + cur + '</span></b></div>' +
           '<div class="row"><span>Tax</span><b>' + tax + '</b></div>' +
           '<div class="row grand"><span>TOTAL</span><b>' + money(total) + '<small>' + cur + '</small></b></div>' +
-          '<div class="cur">All amounts in ' + curName + '</div>' +
+          '<div class="cur">All amounts in ' + curName + '. No tax charged.</div>' +
         '</div>' +
       '</div>' +
       (pm.nm ? '<div class="pm"><div><div class="lbl" style="margin-bottom:3px">Your project manager</div><div class="nm">' + esc(pm.nm) + '</div><div class="ct">' + [pm.em, pm.ph].filter(Boolean).map(esc).join(' · ') + '</div></div>' +

@@ -107,7 +107,7 @@ async function main() {
   const P = {v: 1, n: agc, t, d: ymd(today), x: ymd(until), co, cn, cur, loc, l: lines, tot: sum,
     pm: {nm: pmName || 'American Graphic Contractors', em: pmEmail, ph: pmPhone}};
   if (sched) P.dt = new Date(sched + 'T12:00:00Z').toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC'});
-  if (cur === 'CAD') P.tax = 'Canadian tax exempt';
+  // no tax line: AGC charges no tax (the page always shows $0)
   // change signature (content only, not the date) → rebuild only when something changed
   const content = JSON.stringify(Object.assign({}, P, {d: '', x: ''}));
   const sig = sha256(content).slice(0, 10);
