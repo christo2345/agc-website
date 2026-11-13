@@ -22,10 +22,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-height:100vh;
-  background-image:radial-gradient(circle at 15% 0%,rgba(146,198,75,.10),transparent 45%),radial-gradient(circle at 100% 100%,rgba(146,198,75,.06),transparent 40%);}
+body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-height:100vh}
 /* screen toolbar */
-.bar{max-width:8.5in;margin:0 auto;padding:22px 0 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;color:#cfcfcf;font-size:13px}
+.bar{max-width:8.5in;margin:0 auto;padding:22px 0 14px;display:flex;gap:10px;align-items:center;justify-content:flex-end;color:#cfcfcf;font-size:13px}
 .bar .who{display:flex;align-items:center;gap:10px;letter-spacing:.04em}
 .bar .who img{width:26px;height:26px}
 .bar .btns{display:flex;gap:8px;flex-wrap:wrap}
@@ -74,7 +73,6 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
 .terms{flex:1;font-size:10.5px;color:var(--ink-2);line-height:1.5}
 .terms ul{padding-left:15px;margin-top:2px}
 .totals{width:2.9in;background:var(--dark-1);color:#fff;border-radius:14px;padding:14px 16px;position:relative;overflow:hidden}
-.totals:after{content:"";position:absolute;right:-40px;bottom:-60px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(146,198,75,.35),transparent 70%)}
 .totals .row{display:flex;justify-content:space-between;font-size:11.5px;color:#bdbdbd;padding:3px 0;position:relative}
 .totals .row b{color:#fff}
 .totals .grand{border-top:1px solid #2f2f2f;margin-top:7px;padding-top:9px;align-items:baseline}
@@ -117,7 +115,6 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
 </head>
 <body>
 <div class="bar" id="bar" hidden>
-  <div class="who"><img src="agc-mark.webp" alt="">AMERICAN GRAPHIC CONTRACTORS · ESTIMATE</div>
   <div class="btns">
     <a class="btn" id="approve" href="#" hidden>Approve by email</a>
     <button class="btn primary" type="button" onclick="window.print()">⬇ Print / Save as PDF</button>
