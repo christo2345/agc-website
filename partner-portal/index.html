@@ -133,7 +133,11 @@
     background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.016) 45%),rgba(14,15,17,.92);
     border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 14px 30px -12px rgba(0,0,0,.8);
     backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%)}
-  .agc-nav-brand{display:flex;align-items:center;margin-right:auto;padding:0;border:0;background:none;cursor:pointer}
+  .agc-nav-brand{display:flex;align-items:center;flex:none;padding:0;border:0;background:none;cursor:pointer}
+  /* the AGC job name of the project open in My Projects, next to the mark (empty everywhere else; it also pushes the buttons to the right) */
+  .agc-nav-job{flex:1 1 0;min-width:0;margin:0 8px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-size:18px;font-weight:800;letter-spacing:-.2px;line-height:1.2;color:#fff;opacity:0;transition:opacity .3s}
+  .agc-nav-job.on{opacity:1;padding-left:16px;border-left:1px solid rgba(255,255,255,.18)}
   .agc-nav-brand img{display:block;height:32px;width:auto;transform-origin:50% 50%;animation:agcCoin 7s linear infinite;will-change:transform;-webkit-user-drag:none}
   @keyframes agcCoin{0%{transform:perspective(600px) rotateY(0deg)}100%{transform:perspective(600px) rotateY(360deg)}}
   .agc-nav-btn{position:relative;display:flex;align-items:center;justify-content:center;flex:none;width:46px;height:46px;padding:0;border-radius:50%;color:#fff;cursor:pointer;
@@ -180,7 +184,7 @@
   .agc-ap-ic svg{display:block;width:62%;height:62%}
   .agc-ap:hover .agc-ap-ic,.agc-ap:focus-visible .agc-ap-ic{transform:translateY(-2px) scale(1.06);box-shadow:0 8px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14),0 0 16px rgba(146,198,75,.25)}
   .agc-ap-t{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  @media (max-width:560px){:root{--agc-nav:72px}.agc-nav{padding:8px}.agc-nav-inner{height:56px;border-radius:16px;padding:0 8px 0 14px}.agc-nav-btn{width:42px;height:42px}.agc-nav-brand img{height:28px}.agc-menu{top:71px;right:8px;width:calc(100vw - 16px)}}
+  @media (max-width:560px){:root{--agc-nav:72px}.agc-nav{padding:8px}.agc-nav-inner{height:56px;border-radius:16px;padding:0 8px 0 14px}.agc-nav-btn{width:42px;height:42px}.agc-nav-brand img{height:28px}.agc-nav-job{font-size:14px;margin:0 4px}.agc-nav-job.on{padding-left:10px}.agc-menu{top:71px;right:8px;width:calc(100vw - 16px)}}
   @media (prefers-reduced-motion:reduce){.agc-nav-brand img{animation:none}.agc-menu,.agc-menu.open,.agc-menu-scrim{transition:none}}
   /* signed out (the sign-in pop-up is up): there is nothing to sign out of */
   .agc-locked .agc-ap[data-nav="signout"]{display:none}
@@ -714,6 +718,7 @@ body{background:transparent!important}
 <header class="agc-nav" id="agc-nav">
   <div class="agc-nav-inner">
     <button type="button" class="agc-nav-brand" data-nav="home" aria-label="AGC — American Graphic Contractors, back to Home"><img src="data:image/webp;base64,UklGRhoqAABXRUJQVlA4WAoAAAAQAAAAIwEAKwEAQUxQSMgQAAABsMb/t2m90X+vteM0qfVJbSTtpAzHVjlG3bFt257a7rh2atupbTfNs9da/xfR89x9zj33M68iYgLwf+pJchYR0ZzToEIVS52yDCAkAeOmfexn8+ZdMO/wj79vDQAqA4akwKv/PN+55AUXf28TQAcKAsw5hyRLsUWLkXz5b+siyeBAMfkvZJgHlxxWyOc/B8igIGPanQzjMkchz1kfOhhQvOlpDnFYY4j3rg8ZBChmL6BxuId475pJup/o6k/QOPyF50C7n+IwFo5k4b7IXU/xNhpH1P2xlSR1uyST7w8fGRoPRu52GX+icaSNr4N2OcUct+iBW8Zr6m5Jl7uTzpE3/gDa3RR/ZGEPhi3YDNrVFHO8RC/QeC40dbOkY2+mszcLPwntZoqf09ij4c+vnaSLKWa5Ra+w8J/IHSzpqBvo7F3jLtDulfEdGnvY44EVJXUtxfSFFr1E4wHQjpV03PU09rZxNrRbZfyMhT131ShNXUqxdbHoNRZ+D7lT6WU09nzY0FRId8r4Co0VGi8U7UyCaUMWNbBwX+SupHI+jVW6P7KCpG6k2JfGSo1/Re5EktZ8yr2WsJgN7UKKE2is1njdGE3dR/E2Gis2fgbaeZKOmx9ek/vjq4p0nYyfsLDqwoOgHUew9SsWdYX5DGi30XQhjZUbr0yaukzGXiys3vhx5A6TZJVHw+tzf2oNke6iOIDGBjQeBe0sijk0NqLFTGhHSTrqusbglUlTN1F8gYUNadwD2kkE6zxr0RTuD68g0kU0/Y+FjWk8ENpBFLvT2KAW20M7R5JJ94c3Ci9K3UPxMxobtXA35I4hacshi2bxuHc5Sd1CcQGNDVv4a+ROodibhU0b7lsl6RAiKz3m3jg0ngrtEBkHs7CBjbtCO4Nibhib2OOByZI6QtKxN7GZWPgL5I6Q8XUWNnPY0FbQTiAy5VmPhqLxrI6gOJHGxi58L3IHUOxGY3O737eCpL4vyeSHwxuMhb9F7vsUv6KxycMWTof2eYrtSolGo/Gcfi9JupzGhjd+ANrXZXychU3vcd9kSX2cpFWf8Wg8Gn+P3MdlHMzC5g97ZWtI36Z4DZ1taDwP2q8lHXNTtAMLP4Lcpym+SWM7ejwwUVJfJrLOixYtQeNvkPsyxX9pbMvwoY2T9GGKnVjYnsZToP1XkuUfCG8RGneF9l0Zv2dhm3rcP1FSnyXYasijVWj8BbTPyukiGts1bMFGSfoqxT40tq3x39B+Ksmqj3u0DgvfidxHKQ6hsX095k+Q1DcpZpuxjQu/itwvJR11A9sp/Kl1RfokxTdZ2M7G46D9kaQNX7ZoKRpfC+2LMk6ksa2d1yTphxRvprG9jftC+58kY2+KNnN/ZJKkvifjZyxs88JfQfsdxTT3aLWwhdOg/U46j8Z2N57V7yj2oLHtC9+D3M8kWflx99bzuH2MpD5GcQiN1bvXRuNXof2LYoYbK3cjSYu6wp9fK0m/klSvZm1O8s67SHpVNB4F7VcyPs3Cuo0PfnmzcRO2+ObjtKposSO0P5G07ksedRn/sxIWO2UevS5epn2K4mgaqzaer8iSkozCxGvCa2LhXtB+RPF6OivzrZGx2Iwdw6oKf3AlSf1H0jE3RGWFf0DGEjOOp9XEwt9D+w/F12is2uO+yZKWJGmtZz1qCh/aIkm/IWnDFy3qMu4ExVIq9qfVROOZyP2G4lQaqy48CRlLrelCWk007gbtLxRvZWHV4c9OSbJ0gmnmUZPHPeMl9RNJxt4ZXpfxY8hYxowfsdRE49eg/UTGD1lYtfF8KJY1yeib6TWFP792kv5BsIV5VBW2cCpkmZDxZpaaaDwE2j8ozqKxauNPoRhGxZG0msJiBrRfUHyQxqqd906SNBySVnvavSIaL0/9gsgKD7vXVfg2KIZVsT+tJhr3Ru4PFAfQWLXxMCiGWXEOvSaPhyZL6gcU24ax6vAnV5E0XIKNhywqYuHPkfsCuYxel/FjyBh2xY9pNYUPbQZpv4x9WFi1cV7SNHxJx99Ir4jG05O2nsgqT7pXFbZwSwhGUDHDrSYa3wFtu4wDWFi18cdQjGjG4Sw1edw0WlK7KWbTWbXHHWMljYyk1Z/0qIjGr0JbLWm+tjbju6AY4YzPsNQU/vzaSdpM8VUaqzYej4yRTqLX0Cui8URoi0nadIFFVeHPT0kyYhDMcqspjHOg7aU4hcaqC7+IjB5U/I1WEY1XqKa2UryFxqqdN4zW1Asiqz3hXhELP4TcUknH3BZeV/HZUPSkYg9aTR6PriSpnRTfZGHVxoOg6NEsF9IqYuEvkVtJ05YLLapyf3QVkV4RTF1oUVH40LQkrYTzaKzauB8UPZvxO5aKaDwF2kKK3Wis2nmpauodkZUfj6iIxrdAWyfJhAfC6zLuCEEPZ3yIpSbnLVlS2yh+SWPVhX9DRk8rzqBVROPnkVtGsI1ZVOXx+CqSekvSFq9YVBT+zGpJWiZdRmPVhR9BRo8rfkqriIWHQFsl4yM0Vm2cB0WvJ518f3hFYZwNbRGR5R8JryrKK9MqgGJ3WkU0Xiya2kNxKI1VG38ERYWazqJVROOeyK2heA2NVXvcNU5TDYKp5lGRx33jJbVEUr2hNuN7oagy428sFdH4Q2hLZHyJhVUbz4GiTpHVnvaoKPyVjZK0gqS1n3OvKqxMh1QCxSdpFdH4X7SD4t80Vm38BRS1JtWraRXR+EZoCyjeRWPV7o+uIKkaKF5d29WiqfGSjL41vC7jHlBUrDiZVhGN+0IbT/EdGqs2nisZNUva5EWPitwfWVlSw0na6CWPqsKGpkKrguKbtIpYeAC04RSn0lh14e+QUXeSCfeHVxRWpkIbTbETC6t2f3ylJJVB8UFaRTSe0mxJxt8TXpfx01DUnhSX0Sqi8e3QBsv4FY1VG68dJak6KGZ6XXHjWE2NpZgZxro9ZkPRgIojaRXR+HVoc+WrWZnxWCiaUNI6L3pUFP782kkaSvFxGqsOX7C+SCNA8TOWimg8FtpMSVZ6zKMu43eQ0YxJJj3kXhGNr4E2kuIvNFZtcddETQ0BxX60uq5TSQ2kmFssKuNOyGjKpKOuoVVE497IzZM0X09j1cYzoWhOxevoNXk8tqKkxsn4LAurDretGwWKU2kV0fhT5KaRtNazHnUV/hGKRknThjwqCl+weZKGUfyTxqrdH11eUqMg4xCWimg8BdosinfRWLdxXyiaVdJaz3pURONO0CZJOva2qMx4hSqaNuOzLDV5zB8rqUEUX6axbudr0DxJRt8SXhGN34A2h6T1nrOoy3gSFM2reCetJvdnVk/SGIr/0Fh1+EsbJGkgCM6mVcTCw6BNodiZhXUbv4uMJlZs614TjTtCmyHJ5HvD6/K4d4KkRoLiUFpdF0pDZPyWhXUb3w9FM0ta6wWPimj8MHITKLZ1Z93GCyBoasW3WWryeGCypCaQy2m1lW2gjZVk3F3hFbHwx8j1KfamsW7jQVA0t2IXWk3hL22QpDaRlR7zqCv8hSkiDQbFObSKaDwZWpviYBrrNn4bimbbMaqi8fXQuhRzw1i3x/yxkhoNiuNZanLeNEZSTUlGX8fajLtC0eySNnjZoyIWfgJaU8anWFi38Wwoml7xfVpN4Y+tLFKPpNWf8qjNprdAkrF3hFfEwt8j15NxBI11Fx4IRfMr3k+rKXzBhpBaFG+jsW73J1dN0gIQvY5WEY2nQStJMmZ+eGXG/ZHRhoo31UXjLtA6FF+nsW6PG0cJ2lFxGktNHneOkVSDpLVe9KjM+HZoS0jafIFFRTR+DlqD4mQa6zb+D4q2zPg1S03uT6wsqfcU72Jh3eEvbpCkNURWftK9Ihr/DO25JOPvDq/M+BVktKfiS7SawmxraK9l/IiFdRvvGCupRZKMuS28IhrnpV4TbP6KR3W7I6NNFbuxKhp3g/aW4iwa63beLCqpRZLkUfNoVcVdkyT1kuJ9NFZ33xgAoqq56VVFJAHAgXXR+C3kHkoy4f7w2uj83oZTRqE9R607/dsMVh3+0gZJekfxAxrrD/K5W889+o+/+/l3vvDxhv7MF774hS/99PcnnnvBvMtuXcD6jUdCe0bS+i97NACDbWvV0WMGtFcUp9HYjOFmpQVtUQ82oPHCnsl4H40d3fghaE8kmXCfe1fzuG+8pF7I+DULO3vh96A9oJheLLpb2AvrJOkBuZTGDl94BHTEFB+lsdObz4KOUJLlHwnveLw0jZTidzR2fOOHoCMiabpZdD2PByZJGhFcSmfnN34TOgKKj9DY/cNfWCfJsCWZ+JD7AIDGo6DDpvgNjQNBi1nQYVJsNWQxIOClw6eX0jggNL4feVgydmPhoNDj/uUkDUOSSfeFDwxY+A3kYcj4BQsHh+HPrZNkmQTTzGOAwMKjoMuk6XwaB4rmr4Yug+K9NA4WndeIpKVKMv7e8AEDjXtAlyrjZzQOGj0eXC6lpVBMXWgxcKDx28hLdTqNg8fwp9dMsgTFDBoHkcajoUtxCMtAgsYZ0MUkrPwsY1BxzBIydqVxMBl8ZjLSIooDowwoaNwJuojgUtqgovCryIu7YHBhPAWyuAsHGRctad4g4/yByCWLy/gRy+DieOgiinfSBhUlPoW8SMIKzzAGFMFtIYtAcRTLYMLjnnEJS5gVNpgo/D7y4qA4jTaICH9u9SRLSlsMWQwghvgNZCxZ8TmWwYPx6ixpKaA4jkODBvcXNoVgaVMadTGHBgth3AOKpReseAGHBgnu/BgyllUw/p90GxREIT+GjGUXyE+DZoOAKORdb0DGcKaEmeeTLObR4cKLkS/9ZkUohlmBXc4KkvSmjXB3t6YJDw+S4U0aJPnEHzYFFMMuAKZ/69R7XmJDR8M09CO3HLTHaoAmjKQmAKPXnzN37tw5c+e++tVz5zTizB12mDl71ozP05skYsFO28/YYZtXbbPj7DkNOHfunMVuOxkAVDDSkgWNfTqtQYw/QkNrTujJJNrIo2R7ejSGx/zxWVVVtGET2j7jSJbGMO4MRReVtNZzHg1hPBOKbqr4Iq0ZwstUSEdJMurmsEYw/gqKrqp4OxvB4/EVJXUWKP5DawDjx5DRXSVtNuT1OW9QSR0Git/Qqit8OxRdNskKj4ZXZvwXBN1WsT+trrAXN0xdBypX0aoyfh+KzoM5XpXH/RMldR4ojqNVZPwwMrqvpA1e8qjGeDE0dSAovkurJbxMh6ILJ5lwT3glhX+FohsrdqXVEf706iIdCYpzaVUYv4SM7jS1eFTgce9ESZ0Jit/RKjB+BBndOcmkh8J7znhxEnTpjI+xVDAb2qmSjL4xrMeMh0HRrRVvYY+Fv7xWko4FxX9oPWX8MRRdW7DOCx495PH4iiKdC4pv03qo8LPI6N5Jxt/r3jMet42T1MGg2JvWM8a3Q9HJNV9J6xHjeVB0NMzsnZjR2ZBxOK0njEdD0dUlrfWSRw+EPzslSWeD4vu0HjB+AxndPcmYO8NGzOO+iZI6HBQ7ceSMH0VGp1ecQRsh49VZ0e0lvcpH7rXoelAcQBsR4ylQdH1Ja7xoMQJhQ1OTdD4oPsuhERjid6EYAKqcyaFhKzwXmgYBKa1wDYeGyXjTKpIwEBSscRWHYjgKH9oAigGhYOI/SVsmL7xnSygGhoL05VcY5rGkMCPPXgOKAWJKmPZvkiylmFkpJOd/DFAMFhXY4YDbC5e4cN4+E5ESBo2SgLEb7fOJ3x55xMFf3mNdAIpBpCiWNmnCgDJJzqqqOQv+Hx1WUDggLBkAALCKAJ0BKiQBLAE+MRiKQ6IhoRJZNRggAwSzt3wvpIGYP0gvwAiRtrfpcbP8T+UX4k9J3vx34/EfmkTu9Un5L8w/7h2gPMA/VLph+ZX9Y/Vg9BvoAfqR/9Owe/cD2AP2R9LL9pfgn/bX9wvgL/Xr/79YBwJ34Rfo99MviX8P/V/xj/cbuL/C3r9nHftD9y/NP2l8QfVD6hH4r/Ff8Tw5NZ/QO9OPl3+I/rP9v/9f+I9B/+u9NfEA/iX8p/yn9x/JP1QPEb7l/tX3EfYB/Gv5L/kP7V+PH0lfyP+d/y37xf5v2oflH93/z/+G/ej/NfYF/Ev5H/d/7P/kP+z/ev///5/uY9lv6uewb+nXz///UlrjdVZhSGjLDgoBG4P3VH4pZb6+wOpvOlUV06hiAkgyKDXcwzxoglCCTAjTevfs8LZPkyPhJB2w6mRJBxuqu4N3DEYqk4odhtd9Ep2hufkbZSXgyueJWNx6ngLKu/OHPynytMS3KGJxSgT4TwuDmoYbcvfearw9NqN8z99/C2CyrvzLvS8FbRiMUIvd1cCPG0MyLOKIvtpjrPeAYSVelkb84dEfhytaVR9DIE97KZ/LXajrtkBkuYR61sPMEWddpcPJlwhTK19NS/N1V31yFNa4DZ1VbHd4O9emF32UMLcCmb3l3mfeNor62VS9XDXOUHj+78d2+tKBm/0zhkSQZ3oIMmVrHdBe1riNwJTxcpcUUvAyxvAB9jiNEfuD71ulyhr7MxRJS1jWI1m0oAM9ZnlMhhzUcAJAZ83NgwhbTdxxw/aoUyI0vj3CcPSR96/loGJvq4HMtJhAnhekzut5l6iltyyJ6EGIfSvnjvgA71P5HxhEX9ihZ+1JMcLtA9sA2Y7G3n+vLmQ+6GHOWCJTP2BKeV04gYjJDyvu7R5ToNUJPH1lyIDoONfluQ2fQch9cPKjPQVqwdt0YgQ3epDG+Uyr3pH6vJUf5rT/uJpxLRrEqPNLW3IfLgnNopzzgaO9pdJs55hq1qIRHqKC7horoqkaiqCo+T1oaPAxPDPUZGBsQy8nMI6VoPkrKfrxPgWBbceVFIEN2NGUSwtcby3lpdBxiGEHPR7D23HvWoxf148L4XsaIhoQayP9R1wMW6ZJrCjJ9/RSNvAqepcbfPLzn9rdw5WphaB2w+WeSNTFoLt9tcKgXZvUpDX2rMFYe8MwXoPAIPljBdOpUGtsUBtSAzqyLt6vCUuYZ4brjT6Vf6e7uI1myZGmvuH98oo8LD1mWax9oymwFIrwn0G5mSFF6wfXL/bnR8KTV6h2wOZPnfh5MJh5IO0zzhogCfpn39ujIgSXL0vH4qI7+EBuVofKnxKkUbUcf2OSjWRGZ2EphbFeQ9v89TAtPvHYYd+1XKy3Lz73TOHRJKKok5Yc/GgM7k00R0d+f/AXP7BZV35w6I5OyvsGN0PPR9sK/hstsj0CxCRASQcbqruhZNpcib6hLsAWVVxmP+V8Kxlc+akQEj3AAP773pWMnNoNXidcNlFCCaHv+a+jiuj5hnPagScR1kXkYnH+ev/6brDPMpGB2R3a330Hb1epsT5R6MVPW3G/6VDuBKIGvhqWLDjv+52aYry58DTxjMBheisXHY7j8iuHn07JHBe6Ahxp2CNXt5ng8rso7iSPsuhJtaPq0LH7npcXj1+zcPnQzAJqDlPPB+bcX25IJMQXaCAkzjNY80GuyoAsSBsEmJ7IKmTXA12BevW62Slt9YX3X2ZMz6elAmfyUvPw1oxwoULVZJZbduqZjO0XNz2Jd1//KkscU1DZ10fW8/w7B+uJ5J/cmjvRCY6DLnG0JRUr5gd9yPFYnPjGfoFJdM7qWD4y9rf6RPtojRzLVOsJP4kmBjCncYh+UNWDWcKCSg1/Y/XC6LJdSmQCFkp1o8gKoyycKNJEK5016qSTpsOJAu71rpgplb2+iF4dqWVnwGh7sSORlsV5bWMU8EBrCmpwds0GcKWsTBGD7xyFX63xUHxSY0Jsvf/vGQBy/skbmGv8pGXqjUCBlQerRMzz0ghPG3AaHmufQ4fGocPKQcqO7AOUBA06zz0S44KNGXDL0G4KwxF37HBSxRVmSbkUB0TQlZolxbwE0v3ob7bCJQPGSS6DG9RMYLIajm3Jvr/vLHYOX+IKpViPQPL0VBPDCxTIsLcU9FwH7j4lMlQQDNsp3ujdN6zNlRSF7X7c+/lxz5Nms9975DMKANEsci7EpE4jy3iWRLrwE2aeI+XM4Ov6N5mKWXG6MT1n5WdayHmC0ogau/w7RRo40uRP7qSz/HdNc41eOgD2qEufyAXyppVu2pHLKHkQavrG1fWdr+Dwnt+ndjXp1AnR4R/QyXVrcbg57fe3r/pBr8hqxmJFay9IzyeX29xdeYytQ02fv7L+t3iIqWedbVpluSJwVDNIlG4nxOGuNQcFCGJg5W7QZEBY1cDBAEE3Y/bnjflcOo4rwAmcbDXIEmEiIAM/8ci+gH8Z+g1vU4e+vNb1yQbeBzsateu9CipdwYPOsC8dHyRX6j1UYX8RVvbnJTno+oy5vuzSvENGCiYzQT6UAFVvAEkoW8OohyMjVBhkhgdOjq7xxZm3EQ52Na0wb+t6TWt2ca2TtR7Y8yMkx0frk1GfSF8hsYJBVs/ckPFa4UYfeh+1JnkDibW2F+dbITeiL56oOk1EEpSji7AKSQcuHDmvgYfXyu7BN2SYcB1oOzq4PgM2Xd6d/TAA7ADf/msPAK2T3tGGQ/g/XG5CugXtyM/Ex9NnlZhZpN7FnXdS4kjcR/wLcBIUhFLhxNVHBYt8hbIz0nCIFAFf9hx1gmcbWkUCoeHUd0pVJNqGxBzLPmOMvQW8+pjFuwExcNE+rBBwmtNnsU+i8xBEStWaCYjCpvZ6JQ8fnqsvwjMN53qkGmgB5WjELDJsISnEnuchWjIlyfmmCkpy78451V0r3wor37FgZ5PLO3UZsgpt95RRV62wHA3Sax9gkSPfpz/ZpZPt84oc6/2R7+5/ssr8qixzwQpTAA1stmv2XE2zwXexDej/pSD4RYP9khBDXEZJpLX9NQbwJPex6O3lYLB78d83Co3qgNBr0tXo/JY8NnpEV/0TFXKaZV53tCDrRItOasNlL6nqB5iUiVx3/HSK7PbhaYehyS5A3iRS0j0LBlRWe+lHJVhEoYHjj9YPDA6+UVvyZ+ZjmFzHy8Q5QyTTyPpy3VX367H633btqpYU0+5+Tmuk9DOK0D0OtbK/1EOcDHfR+yztMgFa3pp8UvzMQnZ+s5QxVSyPLpl6LFNeIul5oTffHhUM7dw/PBRbGbjWb498eWfTIO6EFuEjg7zy2uYpdSJzDgWhj8C2xf+KB+89US9OLssdq5uzwp6WMyzAbiMqS/oBRCmUHkCRJgdOlksAv5JKz7yVZKccZwQdFwfhl+KhJEE51bSMaUOt7ggSBwv1ldi6ElJlxAO0GwHF699ys+fZn7Bk7HVYWpXdbAMTzxg390f3YD/PjPOeTKgfJLskLb06PClkdW7ZfgmsoaLwkebT/1XqeVnlnWlsLcZWTTPojVoKknvBUHD02C2d7/SxF7/w5NJRSwchYjMEkqJQeoiW5LovI52Yh3DLaC8q/hUVwoc0VTb0OaavReFdKUWCly0RZ9LX+zPlXhi/L5ZoM1LPB7yQIVHqHEU9qFx3LDIX4JPCCOR8atBcrMnP9Aa+9ZRp+xTI+VjkKOwfyLlgMvNT5F8/NO/F3BQbc+0F2S2SA/nCycMQudtJH26s2JW8KgH5UDK4FCDOUq4dh3e4VN9BrCaYoexoaxHSr9CLdFp218jhdAQbeYL8wfdLmTKa8AH/Cs3rIzVyIzfpdJ/S6aowmTkNFhRYH8fjHHbr1XBDzH1YOaSwuaiJPkslWntkbHvLj2gl/y06is6Ip3khSStSYWpbWt5IGg2NkBie0tn0P/EmS8f4tgmPmde5LmTHFfAKkcxtgAD3Zs8a6lSq25G/YTQFTZKXokj2ltHDY+vQmiNF+JGFj3RqBwT4xDQtC1Cc+UQwG0vwAhNzSnik8b8P6iL6v5n94z5QBlBEcqwwg5Ussu2tLbnhvpKi33H0Pep7ZHLArjXopPg3ZZiXJ5g439sRarzmnGtztpg5eNXDfuGYbv8R62j64obncDRNxpU6blI8P/3255WwjsemiBS32VuKUQBzqtHeYgln1ol5ePpfbJD/UR4F+IPgcx8blZde/HWyiJJIXVBqlcdp3hvYWKn67ERfzb+KtzqJW1dPgEY+4vzlqDgdxrwK0TfK9R+ltiI58xiGfwbjDy5EoFoZ+OjS+EV6N7tc8SWasW0MQCWZRniCt50qyY3MrOw3PWU8D5Yn46dN3+yQiPT17Mx3Y0xnenp3f57HDs+kH3/dXaXUy+Yd23xnOVFct/xwxPO19c2m+FH5Nt0fh2+0wEvvBi37aKzUXvc+h1kMdwqHbRhqnDzo6hIJN/K+gJy7jOA8g4H2AXHG7WDGyq50KiPNWBTWOvz2GF9KsFEXtMA5JMF/7uUrMFXsiLbEy3uoq7MvXQO7eDS71yKWjBvi65vxaL+nbMIQg+qUXfSlGBlAgdkaXyznd+Eh5asRqAeHR8hvSVjK7FFLdcB8/6KSx2HJL+pWrwXzYqRgeaMQW7UUIM9nvuEVmzmUI/3NpgS8KXeLnwA8DS13Q2PnSeD/yIrGSbohVIM0nEYiQPWgTTFVFzBlmNsLfvZlm5X6fKUabq3ht5by7MrE7u7eWdCyZfT4yDcRgOaW1Nxbc4LNg1eJA3dLXilKU38yhdgYTgMVMW41FBK9JyjdacO3rwmWAzGRoH8pT3S5WHUJ7NRNe/k962zpK01A36iJb5rqjkUJ0LXbFVmfYFPjfzcpyGnOWSFa96ahvE0HiSWPy73c4eP76YOYXj6YD5A4T6cf/CzyDEykTgLL8wn+tOwKQOPvE/mvOQdhXn6s2gI1bbSCiISnUuML85hIcUDxKo197ENeVvbPR9ep5kG1aegh3UG0gbNwJD826sz/ATVkb5ecL83VYEr6gIt6ft6EZxXC0+/S99tUbtY3MaOmCGId+msBdc0BTsE6VzQhN42ZzQ3qcho/a6OGuuqLDi5z7YaP7IC1RiY7jWP4gWXakoiKvATeHjEI6zzQuO3kKHfRF0rQf47dckPFf2I1xpTy9FsIkm/U9QYguNVWqfW8WxT32/KkKPOy+t7MLTAeYACvrceHaYBywhNbwbih+I2Q6bmzEIYf8RBG9apOowij3JmCRDU95Lu0k4lcZQBZVuBIqOZAvRnM5u248whpJC982S4TeTg0LBYxMzVy+kxWxXp5uwP6UjA4zs8XjPHP15rgQVfATXRXm9jzBnohreZJrYj3Atxw5PO4ZO9+qUbm96mFD1xEVexpNYv3WErIDHN+Bk/CDcI9nT3i4X2BANlo6dI0DyF8+6pMaSCbJEhzlCwy/K0nIK80OcvPciHAuzEtk9CvdLn+Zf8zu4ypEyYJhZRKWeAUdvA1wTsr/0h4eAH+S02fEk2KO1RjctcM7UydLjGjffnSKSA41X5HAVczfOpOjZ1NENnwp7P17jd6ppGP1HuWfnlQhM1Y5gJuVRpI77Gzx+Td+mr80fhdWeFAYuvQ6ZarL+VE7QxpBWk/cQ9ILpvh9za8Wdi8UcWh/vvqyoQmsBZ2ZnUo+78/5MKlBqlzwaDtNDA8EaG46mPvmc0NvvrW93ZSO+MDGaB4aKudI1sQVhwVAGjQrQnAHjAjAswDhB9RbyBW1WqgUqVteqBue6CCT9pmOLpgApeyESnu0jEo2eWLJlGQDCXFpLJAuJ8xF8ohHZmHA5tUYnd/96IUHhgH7+p0orRXTDuTVVQXI/wjeZXA2dm2LRSBU+4Z/ErekkePf/99D1ES8KDNfoW1wOQ5j5EcTFBtN9jo0/w8z7/VgY9S0inoAckYwAhSBah1PzL9CrAmK2AGP2/LImQWT6bcwF+cuN2iWX5lHckMrxicKTpUNcQb9upsSmqWqUeYz8jRTaCDONVQLaInggvr7X1mwLjTJNzxGawnTDugKPf9gW0QO/qMqP2ymBJ2T6YPyn1efWNh9iUjW134RLZ6IHXEU/TQMXsVaylSvrkOYbfzVcUA24GyzE/tJcQ9NUZip2DgsomTqMOr5WJrKijhBFxqyHYBj2t1fWPIKg61cv2ztkNJvIIsGvvTAFH4uRR4yuAKQcVmXAMbjwKaAbp+oUCQweBvs38W9rpO3Q/Ip7zyMI/paXZh7Tn1OWbLosrLPViw8jcR+01psY67o60zziiuNNBmaQCUkaEyNbee1tWpvd1TJ/4MadPnOYurexisCB0PE3HX5CvYg261j9P0bjqszhtlAdI9Ao1bXmDBNiFUUm0O6O6gS5+M8ivySJPSuo58fhcMaNUBEzoxFztyKKMWGcMkzaoLQc84mePPXISwhqb7gBOoslFPYBJG+cNin5HugeYDNw8XiQxWLX7kF0ZQq4zKqaARbHSHkQr2eqkxr4G+QMXE0p20dTC1+aLb6obvAh/Id1YV8abE02jtiD3eHYhHx5wiv29zkLs3VTpcpr1iBHQnWNV9hCqjM6fR+tiO5g+sLmdXkjXUEXfRAA+lfaLyFXhTnAEH/Meql5dUTtrlPbsy9k08+X/3+QPQiHQEZKEhuY/TXosV+xbOquZzKqOnx7lQU/qqahXBe2/ExcTi+V1/PxfgCCBP9zWe+sz0sps6+odsKe7vo7wMCd6XX7owX/DJYeK39Bt2JVG/3dL/twhRTxKiGAtZEhv88jxGIIFBajw7nVGQD6xo/9kPkEGbvPGpolpRfw8i61dncnwD17/C3f7/So4koyCUhdLsvMNlgpfbcvQyzwtZ7Pdg++6Gz4VHqS5pWm4+A3Wy7OhTTd/ZQplrGnfn5niay3k1lPeYrftRghDvziFL6eytEN2YsdkyCiKbH8TDwuka4mh1nIhAcNb0JWz6Z5ZMlSjJQ16bJiwO9xfNJsqpHvjqQp3LdpIbdN0H3Hcp6EkP2E1QL37UJKnwB0J4oa+38cAJp436nkIuroc6WHH8zdOAEfCrMUB6jVQIg7eQ8ncS/SUgEjve76rnrbaqVxyJJXajDYUgH4m6NKtGmgkFBlUecezvgIyI2fK78GhKWBY9SLQvmNSgjiRVsg6tFt1H30z+/fQylsNTTYY2bVPXeNrFcs5S2nmp1CqdQqnUK9TItFDlGv5Dv2mThQBE5Kxfz5VKayxoP79v+/HMD3nHaZDvC7fxfN9zVf26Chrf0m6bgFEPO0r645XRcDSwA1ZlxsUK2Q5h5RZcr1IA0xsYU4vSj0+ivGCA7/RnxNwwe4sRW4NJ5ugd5q6SeOPBSuLKb5yLA+aOldMCjXgsm/wHgCe+N+bUOOb8S0XKGqFjmhn/JAc0F5xWx321HGBLfrzK261FDzujbPTF6us40BwkyScJfxlj3hmCGoBWBpxCLCpX9EOKTlImasCw4WzyZMdEhHNw4hFmjC72sxFvWq1mNcI+JaDrbEUYwYjlYiQtv9PdPDvzfo9XdwA7+Xmx3pOLHKvAL14216b195jkiir9b10dKzefa2kwB4gr1ceJzDQRfxUC/hUMgU0WqwPX2L43TZ1diPnk8e3Bh115kb1viB2/qWl0N5HOmn7JqbMzoyMebgnQdw94x+ySMcBcSlHkUOH2oQAbN4t0pNAxy3C+JCoJlYn084ssjonhBYtr07e7bOElUxJceAMsBfbjC1HBmR8wh3R/EDiN0hgdTOBxfQExwITzRqnLG5+34QcCOSsYc8TOEbaeIP+ob9rzgIB2Z4vsPP6M6wTJmp8AE6JzgC22uad1ghsAF6jj22MlQgVCk6YmrBLGTf9UyaDYZrdQAQneL/SMVxl2QTGKWVTk7hq+QO9BkaRICatj+KFc58qntBsEEhDWUBWKB2ilcgVy2gFF/o3B5jACb8QtB6hR+xtM//Rgj8jnGJcLdR7+Q79YaBIyDpEsi1AaWEAFgReEDB1qHyCGQnrC1x1AVf/q6vKFstTlTXz4R2T6gKpG9ujJgZ8PQG8c8s6x2360691HoV/eWOjnxYXuotKxXBbPH+qNxDS2TgAeyRUidps6odXTMny+W5seAO8YOIJ5YnmAhPowEQ2B+iieAfXfbqYSeJWKcr8T5RvAbgj/qHZ0qRE6UEWjLfR2VnGGDdh7dFFJ3kvpLoKeOMAO9pG+IPSQHnCEj6Kw2k9DxkLewvvCuZfCCud1xiKMuZHcQ+aSG9rLPYk+RjxYWCIZC8q6olh5DGRh/NqEcQAHLd251pX3pqQ745KEGtS/pbuzsq1i+oBDG0VbdkXD5fViW4Q5TGIC73CQhIv47B4C5rbt74C6j8LN0jA+Gdt/7KyBuXFgFYurt/fV4Hctq+pOmKxGtfZ1wUdVKX+QL0TKMDqw4EwYtEl/BzNG1F0VlLGMdDru+08K11zc0BqhW0khjeYLkcW0HGgg//ewJRQmd7VK27hnNNju9XMLJ7lgzrl6l7uF4S9nTkf/f6gO29elF4m6+85TVPy85sS16Xdn35cxRozMNXRQbPcdP4/nlC+1W1CPLfZF5W52xF8derjfeJMc8ZWWJVCJoMA/l+zCCVhp68joAAAAAA==" alt="" draggable="false"/></button>
+    <div class="agc-nav-job" id="agc-nav-job" aria-live="polite"></div>
     <button type="button" class="agc-nav-btn" id="agc-nav-profile" data-nav="home" aria-label="My Portal — back to your three cards" title="My Portal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button>
     <button type="button" class="agc-nav-btn agc-nav-hamb" id="agc-nav-hamb" aria-label="Open menu" aria-expanded="false" aria-controls="agc-menu"><span></span><span></span><span></span></button>
   </div>
@@ -5496,7 +5501,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.54</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.55</span>
  </div>
 
  <div class="hero">
@@ -12851,6 +12856,23 @@ function fitHeaderTitle(){
  }
 }
 window.addEventListener('resize',()=>{requestAnimationFrame(fitHeaderTitle);});
+
+// Tell the portal's top bar which project is open: it shows the AGC job name next to the
+// spinning AGC mark while this view is on screen. Sent whenever #header-project-title changes;
+// an empty name means no project is open.
+(function(){
+ const el=document.getElementById('header-project-title');
+ if(!el||!window.MutationObserver||window.parent===window)return;
+ let last=null;
+ const tell=()=>{
+   let name='';
+   try{ if(_selected) name=(el.textContent||'').trim(); }catch(e){}
+   if(name===last)return; last=name;
+   try{ window.parent.postMessage({type:'agc_project_title',title:name},'*'); }catch(e){}
+ };
+ new MutationObserver(tell).observe(el,{childList:true,characterData:true,subtree:true});
+ tell();
+})();
 
 function updateHeaderForProject(){
  const t=document.getElementById('header-project-title');
@@ -28640,6 +28662,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     box.hidden = false; box.classList.remove('is-leaving'); gateSky(true);
     document.documentElement.classList.add('agc-locked');                 /* the bar's menu hides "Sign out" */
     gateFit(); setTimeout(gateFit, 250);
+    try { navJobPaint(); } catch (e) {}                                   /* no job name on the bar while signed out */
     NAMES.forEach(function(n){ try { frames[n].inert = true; frames[n].setAttribute('aria-hidden', 'true'); } catch (e) {} });
     if (form && gate.armed) setTimeout(function(){ try { (mode === 'email' ? gel('email') : gel('pw')).focus(); } catch (e) {} }, 80);
   }
@@ -28677,6 +28700,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     gate.open = true; gate.rid = r || null; gateActive();
     var box = document.getElementById('agc-lock');
     document.documentElement.classList.remove('agc-locked');
+    try { navJobPaint(); } catch (e) {}
     box.classList.add('is-leaving');
     clearTimeout(gate.hideT);
     gate.hideT = setTimeout(function(){ box.hidden = true; gateSky(false); }, 460);
@@ -28802,6 +28826,15 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      projects / profile / calendar / invoice / area still work if a tile is
      ever given one of those names.
      ═════════════════════════════════════════════════════════════════════════ */
+  /* The AGC job name of the project open in My Projects (that page sends it: agc_project_title).
+     Shown next to the mark only while My Projects is the view on screen and someone is signed in. */
+  var navJobEl = document.getElementById('agc-nav-job'), navJobName = '';
+  function navJobPaint(){
+    var t = (current === 'projects' && gate.open) ? navJobName : '';
+    if (t) { navJobEl.textContent = t; navJobEl.title = t; } else navJobEl.removeAttribute('title');
+    navJobEl.classList.toggle('on', !!t);
+  }
+  function navJob(name){ navJobName = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 200); navJobPaint(); }
   var navMenu = document.getElementById('agc-menu'), navScrim = document.getElementById('agc-menu-scrim'), navHamb = document.getElementById('agc-nav-hamb');
   function navOpen(on){
     navMenu.classList.toggle('open', on); navScrim.classList.toggle('open', on);
@@ -28867,6 +28900,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     if (NAMES.indexOf(name) < 0) return;
     start(name);
     current = name;
+    navJobPaint();                                        /* the job name shows in My Projects only */
     NAMES.forEach(function(n){ frames[n].classList.toggle('is-active', n === name); post(n, { type: 'agc_view', active: n === name }); });
     if (name === 'home') {
       /* Home fades itself out before it navigates; bring it back. */
@@ -28918,6 +28952,9 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     var t = m && m.type;
     if (READY[t]) { if (recordId) giveRid(src); else up(m); return; }
     switch (t) {
+      case 'agc_project_title':                           /* My Projects: the project that is open → the bar */
+        if (src === 'projects') navJob(m.title);
+        return;
       case 'agc_intro_loaded':
         start('projects'); start('profile'); up(m); return;
       case 'agc_go_to_projects':
@@ -29087,7 +29124,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6054;
+  var AGC_BUILD = 6055;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
