@@ -5500,16 +5500,19 @@ window.AGC_LOOK_FIELD = {
   }
 }
 /* ── "BETA" ON SITE MONKEY ───────────────────────────────────────────────────
-   The word sits along the top of the card, to the right of the icon, and is pressed into the card exactly
-   like the icon: no colour, same hollow, same inner shadow, same lit lip (#agc-deboss-flat is the icon's
-   filter with its light turned to match the icon's tilt, so both read as lit from the same side). */
+   The word is small and sits at the right of the card, directly above the coloured line. It is pressed
+   into the card like the icon: no colour, hollow, inner shadow, lit lip (#agc-deboss-text is the icon's
+   emboss drawn finer for small lettering, lit from the same side as the tilted icon). */
 .tool-btn-embeta{display:none;}
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
   .cards .card .tool-btn > .tool-btn-embeta{
-    display:block;position:absolute;top:9%;right:8%;z-index:1;pointer-events:none;
-    font-family:inherit;font-weight:900;font-size:clamp(20px,1.75vw,34px);line-height:1;
-    letter-spacing:1.5px;text-transform:uppercase;color:#fff;-webkit-text-stroke:1.2px #fff;
-    filter:url(#agc-deboss-flat);
+    /* small, and sitting directly above the coloured line: its foot is the height of the title strip
+       (two lines of title + the strip's padding) plus a small gap */
+    display:block;position:absolute;right:9px;z-index:1;pointer-events:none;
+    bottom:calc(2.16 * clamp(17px,1.12vw,21px) + 23px + 5px);
+    font-family:inherit;font-weight:900;font-size:clamp(12px,0.9vw,16px);line-height:1;
+    letter-spacing:1.4px;text-transform:uppercase;color:#fff;-webkit-text-stroke:0.5px #fff;
+    filter:url(#agc-deboss-text);
   }
 }
 /* ── DESKTOP: "UPDATE MY PROFILE" MATCHES THE EARNINGS BOX ───────────────────
@@ -5784,7 +5787,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.87</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.88</span>
  </div>
 
  <div class="hero">
@@ -29372,7 +29375,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6087;
+  var AGC_BUILD = 6088;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
