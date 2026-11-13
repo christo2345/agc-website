@@ -5466,7 +5466,7 @@ window.AGC_LOOK_FIELD = {
    All mini cards with an icon (My Projects, My Toolbox and the five My Profile steps): the card is dark
    with its embossed icon, and the title is solid black on a light strip that runs the full width of the
    card along its foot, edge to edge (the card's rounded corners crop it). The card's own colour (--tc on
-   the tools, the step colour --pc on the profile steps) is a two-tone line along the top of the strip.
+   the tools, the step colour --pc on the profile steps) is a two-colour line along the top of the strip.
    No coloured dots, no coloured titles. A profile step that is not done yet has a dimmer strip.
    "Update My Profile" is not a mini card (it is the pressed-in area) and stays as it is. */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
@@ -5478,11 +5478,11 @@ window.AGC_LOOK_FIELD = {
     -webkit-line-clamp:unset;overflow:hidden;
     padding:15px 10px 8px;                     /* 9px line + 6px above the title */
     border-top:0;
-    /* THE LINE IS TWO-TONE: a band of the card's colour over a narrower band of a deeper shade of it */
+    /* THE LINE IS TWO COLOURS: a dark partner colour (--c2, set on each card) on the left half, fading
+       into the card's own colour on the right */
     --c:var(--tc, var(--pc, #92C64B));
-    --c2:color-mix(in srgb, var(--c) 52%, #000);
     background:
-      linear-gradient(180deg, var(--c) 0, var(--c) 5.5px, var(--c2) 5.5px, var(--c2) 9px, transparent 9px),
+      linear-gradient(90deg, var(--c2, #222) 0%, var(--c2, #222) 28%, var(--c) 82%, var(--c) 100%) 0 0/100% 9px no-repeat,
       var(--strip, linear-gradient(180deg,#f3f4f6 0%,#d3d6dc 55%,#bfc3cb 100%));
     box-shadow:0 -2px 7px rgba(0,0,0,0.55);
     color:#000;-webkit-text-stroke:0.4px #000;text-shadow:none;filter:none;opacity:1;
@@ -5803,7 +5803,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.89</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.91</span>
  </div>
 
  <div class="hero">
@@ -5899,7 +5899,7 @@ window.AGC_LOOK_FIELD = {
 
      <\!-- Action mini-cards — toolbox-style 3D buttons in a 2-col grid. -->
      <div class="tool-grid tool-grid--two">
-       <button style="--tc:#a3d65a;" class="tool-btn beta" onclick="goToProjects(event)" aria-label="View Projects">
+       <button style="--tc:#a3d65a;--c2:#1f6b3a;" class="tool-btn beta" onclick="goToProjects(event)" aria-label="View Projects">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e06a"/><stop offset="1" stop-color="#6aa22e"/></linearGradient></defs>
@@ -5918,7 +5918,7 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-label">View Projects</span>
          <span class="tool-btn-beta-label">Active</span>
        </button>
-       <button style="--tc:#2dd4bf;" class="tool-btn beta" onclick="event.stopPropagation();event.preventDefault();agcMorphOpen(this,openCalendarFullscreen,'#cal-fs',null);" aria-label="View Calendar">
+       <button style="--tc:#2dd4bf;--c2:#1d4ed8;" class="tool-btn beta" onclick="event.stopPropagation();event.preventDefault();agcMorphOpen(this,openCalendarFullscreen,'#cal-fs',null);" aria-label="View Calendar">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fe0d0"/><stop offset="1" stop-color="#0f9488"/></linearGradient></defs>
@@ -5966,7 +5966,7 @@ window.AGC_LOOK_FIELD = {
      <div class="tool-grid tool-grid--row">
        <\!-- 1. Upload Invoice — invoice document with green upload arrow.
             Beta (active) — opens an in-portal popup, not an external URL. -->
-       <button style="--tc:#fbbf24;" class="tool-btn beta" onclick="openTool(event,'upload_invoice')">
+       <button style="--tc:#fbbf24;--c2:#c2410c;" class="tool-btn beta" onclick="openTool(event,'upload_invoice')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd655"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
@@ -5983,7 +5983,7 @@ window.AGC_LOOK_FIELD = {
        </button>
 
        <\!-- 2. Service Area — map pin centered in a coverage radius. Active. -->
-       <button style="--tc:#ff6fb0;" class="tool-btn beta" onclick="openTool(event,'service_area')">
+       <button style="--tc:#ff6fb0;--c2:#6d28d9;" class="tool-btn beta" onclick="openTool(event,'service_area')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff86c0"/><stop offset="1" stop-color="#db2777"/></linearGradient></defs>
@@ -5999,7 +5999,7 @@ window.AGC_LOOK_FIELD = {
        </button>
 
        <\!-- 3. Site Monkey (formerly Site Survey) — READY -->
-       <button style="--tc:#8ea0ff;" class="tool-btn beta" onclick="openTool(event,'site_survey')">
+       <button style="--tc:#8ea0ff;--c2:#3730a3;" class="tool-btn beta" onclick="openTool(event,'site_survey')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93a4ff"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs>
@@ -6079,11 +6079,11 @@ window.AGC_LOOK_FIELD = {
             cell deliberately has no icon (per request) — the centered
             label is the entire visual, with the Active banner pinning
             the bottom. -->
-       <button style="--tc:#a3d65a;" class="tool-btn beta no-icon" onclick="goToProfile(event)" aria-label="Update My Profile">
+       <button style="--tc:#a3d65a;--c2:#1f6b3a;" class="tool-btn beta no-icon" onclick="goToProfile(event)" aria-label="Update My Profile">
          <span class="tool-btn-label">Update My Profile</span>
          <span class="tool-btn-beta-label">Active</span>
        </button>
-       <button class="tool-btn step" data-step="1" style="--pc:#ef4444;" onclick="gotoProfileStep(event,1)" aria-label="Step 1: Basic Info">
+       <button class="tool-btn step" data-step="1" style="--pc:#ef4444;--c2:#7f1d1d;" onclick="gotoProfileStep(event,1)" aria-label="Step 1: Basic Info">
          <span class="tool-btn-stepnum">01</span>
          <span class="step-badge-warn" aria-label="Not completed"><span>i</span></span>
          <span class="step-status-tag" aria-hidden="true"></span>
@@ -6105,7 +6105,7 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-label">Basic Info</span>
        </button>
 
-       <button class="tool-btn step" data-step="2" style="--pc:#f97316;" onclick="gotoProfileStep(event,2)" aria-label="Step 2: Contract">
+       <button class="tool-btn step" data-step="2" style="--pc:#f97316;--c2:#9f1239;" onclick="gotoProfileStep(event,2)" aria-label="Step 2: Contract">
          <span class="tool-btn-stepnum">02</span>
          <span class="step-badge-warn" aria-label="Not completed"><span>i</span></span>
          <span class="step-status-tag" aria-hidden="true"></span>
@@ -6125,7 +6125,7 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-label">Contract</span>
        </button>
 
-       <button class="tool-btn step" data-step="3" style="--pc:#eab308;" onclick="gotoProfileStep(event,3)" aria-label="Step 3: Banking">
+       <button class="tool-btn step" data-step="3" style="--pc:#eab308;--c2:#b45309;" onclick="gotoProfileStep(event,3)" aria-label="Step 3: Banking">
          <span class="tool-btn-stepnum">03</span>
          <span class="step-badge-warn" aria-label="Not completed"><span>i</span></span>
          <span class="step-status-tag" aria-hidden="true"></span>
@@ -6143,7 +6143,7 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-label">Banking</span>
        </button>
 
-       <button class="tool-btn step" data-step="4" style="--pc:#92C64B;" onclick="gotoProfileStep(event,4)" aria-label="Step 4: Insurance">
+       <button class="tool-btn step" data-step="4" style="--pc:#92C64B;--c2:#1f6b3a;" onclick="gotoProfileStep(event,4)" aria-label="Step 4: Insurance">
          <span class="tool-btn-stepnum">04</span>
          <span class="step-badge-warn" aria-label="Not completed"><span>i</span></span>
          <span class="step-status-tag" aria-hidden="true"></span>
@@ -6161,7 +6161,7 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-label">Insurance</span>
        </button>
 
-       <button class="tool-btn step" data-step="5" style="--pc:#3b82f6;" onclick="gotoProfileStep(event,5)" aria-label="Step 5: Tax Forms">
+       <button class="tool-btn step" data-step="5" style="--pc:#3b82f6;--c2:#1e3a8a;" onclick="gotoProfileStep(event,5)" aria-label="Step 5: Tax Forms">
          <span class="tool-btn-stepnum">05</span>
          <span class="step-badge-warn" aria-label="Not completed"><span>i</span></span>
          <span class="step-status-tag" aria-hidden="true"></span>
@@ -7825,7 +7825,8 @@ function detectCompletedSteps(f){
   const pickVal=(...keys)=>{for(const k of keys){if(hasVal(f[k]))return f[k];}return null;};
 
   // ── Step 1 — Basic Info ──
-  // Required: first name, last name, email, phone, address, SKILLS, availability
+  // Required: first name, last name, email, phone, address, availability.
+  // Services (SKILLS) and Notes are optional and never hold the step back.
   const availKey=Object.keys(f).find(k=>k.toUpperCase().startsWith('AVAIL'));
   const s1=
     hasVal(pickVal('FIRST NAME','First Name'))&&
@@ -7833,7 +7834,6 @@ function detectCompletedSteps(f){
     hasVal(pickVal('EMAIL 1','EMAIL','Email','Email 1'))&&
     hasVal(pickVal('PHONE','Phone'))&&
     hasVal(pickVal('ADDRESS','Address'))&&
-    !!pickArr('SKILLS','Skills')&&
     (availKey?hasVal(f[availKey]):false);
   if(s1)done.add(1);
 
@@ -22129,8 +22129,7 @@ function mdToHtml(s){
       case 1: {
         if (typeof _s1 === 'undefined' || !_s1) return false;
         if (!_s1.fname || !_s1.lname || !_s1.email || !_s1.phone || !_s1.address) return false;
-        const hasSkills = _s1.skillValues && (Array.isArray(_s1.skillValues) ? _s1.skillValues.length > 0 : String(_s1.skillValues).trim().length > 0);
-        if (!hasSkills) return false;
+        // Services and Notes are optional (Nov 13 2026): they never hold the step back.
         if (!_s1.availability) return false;
         return true;
       }
@@ -22807,8 +22806,8 @@ function mdToHtml(s){
   function validatePart(part) {
     const v = id => (document.getElementById(id)?.value || '').trim();
     switch(part) {
-      case 1: { if (!v('p1-fname')) return 'First Name is required'; if (!v('p1-lname')) return 'Last Name is required'; if (!v('p1-email')) return 'Email is required'; if (!v('p1-phone')) return 'Phone is required'; if (!v('p1-address')) return 'Address is required'; const _skillCount=document.querySelectorAll('#ms-dropdown input[type="checkbox"]:checked:not(#union-check)').length; if(!_skillCount) return 'Please select at least one service'; return null; }
-      case 2: { const checked = document.querySelectorAll('#ms-dropdown input[type="checkbox"]:checked:not(#union-check)').length; if (!checked) return 'Please select at least one service'; return null; }
+      case 1: { if (!v('p1-fname')) return 'First Name is required'; if (!v('p1-lname')) return 'Last Name is required'; if (!v('p1-email')) return 'Email is required'; if (!v('p1-phone')) return 'Phone is required'; if (!v('p1-address')) return 'Address is required'; return null; }
+      case 2: return null;   // Services are optional
       case 3: { if (!v('p3-availability')) return 'Please select your availability status'; return null; }
       case 4: return null;
     }
@@ -22823,8 +22822,6 @@ function mdToHtml(s){
         const em = g('p1-email') || _s1.email; if (!em) return 'Email is required in Basic Info';
         const ph = g('p1-phone') || _s1.phone; if (!ph) return 'Phone is required in Basic Info';
         const ad = g('p1-address') || _s1.address; if (!ad) return 'Address is required in Basic Info';
-        const sk = document.querySelectorAll('#ms-dropdown input[type="checkbox"]:checked:not(#union-check)').length;
-        if (sk === 0) return 'Please select at least one service';
         const av = g('p3-availability') || _s1.availability; if (!av) return 'Please select your availability';
         return null;
       }
@@ -22924,11 +22921,7 @@ function mdToHtml(s){
       if (!(g('p1-address') || _s1.address)) return 'Address is required';
       return null;
     }
-    if (part === 2) {
-      const n = document.querySelectorAll('#ms-dropdown input[type="checkbox"]:checked:not(#union-check)').length
-             || ((_s1.skillValues && _s1.skillValues.length) || 0);
-      return n ? null : 'Please select at least one service';
-    }
+    if (part === 2) return null;   // Services are optional
     if (part === 3) {
       return (g('p3-availability') || _s1.availability) ? null : 'Please select your availability status';
     }
@@ -22965,9 +22958,20 @@ function mdToHtml(s){
         const n = parseInt(tab.getAttribute('data-part'), 10);
         const active = n === currentPart;
         tab.classList.toggle('is-active', active);
-        // Notes has no required fields, so it only reads as done once the
-        // whole step has been saved.
-        const done = n === 4 ? _stepsCompleted.has(1) : _s1PartError(n) === null;
+        // Services and Notes are optional. They are never shown as something
+        // still to do: each reads as done when it has something in it, or once
+        // the whole step has been saved.
+        let done;
+        if (n === 2) {
+          const hasSvc = document.querySelectorAll('#ms-dropdown input[type="checkbox"]:checked:not(#union-check)').length
+                      || ((_s1.skillValues && _s1.skillValues.length) || 0);
+          done = !!hasSvc || _stepsCompleted.has(1);
+        } else if (n === 4) {
+          const noteEl = document.getElementById('p4-notes') || document.querySelector('#part-4 textarea');
+          done = !!((noteEl && noteEl.value.trim()) || (_s1 && _s1.notes)) || _stepsCompleted.has(1);
+        } else {
+          done = _s1PartError(n) === null;
+        }
         tab.classList.toggle('is-done', done);
         tab.setAttribute('aria-selected', active ? 'true' : 'false');
       });
@@ -25236,9 +25240,8 @@ function mdToHtml(s){
     if (onContractPage || onBankingPage || onInsurancePage || onTaxPage) return;
     const g = id => (document.getElementById(id)?.value || '').trim();
     const hasInfo = g('p1-fname') && g('p1-lname') && g('p1-email') && g('p1-phone') && g('p1-address');
-    const hasSkills = document.querySelectorAll('#ms-dropdown input:checked:not(#union-check)').length > 0;
     const hasAvail = !!g('p3-availability');
-    const complete = !!(hasInfo && hasSkills && hasAvail);
+    const complete = !!(hasInfo && hasAvail);   // Services and Notes are optional
     if (complete) {
       btn1.classList.add('done');
     } else {
@@ -26981,9 +26984,8 @@ function mdToHtml(s){
       }
 
       const _s1RequiredFilled = _s1&&_s1.fname&&_s1.lname&&_s1.email&&_s1.phone&&_s1.address;
-      const _s1HasSkills = _s1&&_s1.skillValues&&(Array.isArray(_s1.skillValues)?_s1.skillValues.length>0:String(_s1.skillValues).trim().length>0);
       const _s1HasAvail = _s1&&_s1.availability;
-      if(_s1RequiredFilled&&_s1HasSkills&&_s1HasAvail&&!_stepsCompleted.has(1)){
+      if(_s1RequiredFilled&&_s1HasAvail&&!_stepsCompleted.has(1)){
         console.log('AGC: Step 1 fully complete in Airtable — auto-locking');
         setTimeout(()=>{
           if(typeof markStepDone==='function') markStepDone(1);
@@ -29391,7 +29393,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6089;
+  var AGC_BUILD = 6091;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
