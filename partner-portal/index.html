@@ -5425,6 +5425,30 @@ window.AGC_LOOK_FIELD = {
   .cards .card .projects-summary-row > .weather-alerts{min-height:0;overflow:hidden;}
   .cards .card .tool-grid.tool-grid--two{flex:1 1 0;margin-top:10px;}
 }
+/* ── DESKTOP: ACTIVE MINI CARDS ─────────────────────────────────────────────
+   The mini cards that used to carry the green "Active" banner along the bottom (View Projects,
+   View Calendar, Upload Invoice, Service Area, Update My Profile): the banner is gone, the whole
+   card is AGC green, the label is black and the icon is larger and in full colour.
+   "Beta" (orange banner) and "Coming Soon" cards are untouched. */
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) > .tool-btn-beta-label{display:none;}
+  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)){
+    padding-bottom:10px;                     /* the room that was kept for the banner goes back to the card */
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.05) 30%, transparent 58%),
+      radial-gradient(ellipse 100% 70% at 25% -10%, rgba(255,255,255,0.20) 0%, transparent 60%),
+      #92C64B;
+    border-top-color:rgba(255,255,255,0.7);
+    border-left-color:rgba(255,255,255,0.4);
+  }
+  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)):hover{filter:brightness(1.07);}
+  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) .tool-btn-label{color:#000;text-shadow:none;}
+  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) .tool-btn-icon,
+  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) .tool-btn-icon svg{width:60px;height:60px;}
+  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) .tool-btn-icon svg{
+    filter:saturate(1.3) brightness(1.08) drop-shadow(0 3px 6px rgba(0,0,0,0.45));
+  }
+}
   /* === MOBILE FIX: guarantee the three main cards are always visible ===
      The shell was a strict 100vh box with overflow:hidden, so in a short
      mobile iframe the stacked cards were clipped and the auto-height
@@ -5553,7 +5577,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.63</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.64</span>
  </div>
 
  <div class="hero">
@@ -29308,7 +29332,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6063;
+  var AGC_BUILD = 6064;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
