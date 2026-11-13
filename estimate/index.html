@@ -32,7 +32,8 @@ body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-heigh
 .btn:hover{transform:translateY(-1px);border-color:var(--green)}
 .btn.primary{background:var(--green);border-color:var(--green);color:#0d0d0d}
 /* the sheet */
-.sheet{width:8.5in;min-height:11in;margin:0 auto 40px;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;border-radius:6px}
+.pages{display:flex;flex-direction:column;align-items:center;gap:28px;padding-bottom:40px}
+.page{width:8.5in;height:11in;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;border-radius:6px;flex:none}
 .top{background:var(--dark-1);color:#fff;padding:.3in .43in .3in;margin:.12in .12in 0;border-radius:10px;position:relative;overflow:hidden}
 .top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--green)}
 .top-row{display:flex;justify-content:space-between;align-items:center;gap:24px;position:relative}
@@ -47,7 +48,7 @@ body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-heigh
 .doc dl{margin-top:8px;display:grid;grid-template-columns:auto auto;gap:3px 14px;font-size:11.5px;justify-content:end}
 .doc dt{color:#8d8d8d;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;padding-top:2px}
 .doc dd{font-weight:700;color:#fff}
-.body{padding:.3in .55in .2in;flex:1;display:flex;flex-direction:column;gap:.2in}
+.body{padding:.3in .55in .2in;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:.2in}
 .cards{display:grid;grid-template-columns:1fr 1.35fr;gap:14px}
 .card{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .lbl{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--green-dark);margin-bottom:6px}
@@ -102,31 +103,16 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
 .msg img{width:64px;margin-bottom:16px}
 .msg h1{font-size:22px;color:#fff;margin-bottom:8px}
 @media screen and (max-width:900px){
-  .bar{padding:14px 12px;flex-direction:column;align-items:stretch}
-  .bar .btns{justify-content:stretch}.btn{flex:1;justify-content:center}
-  .sheet{width:auto;min-height:0;margin:0 8px 24px;border-radius:10px}
-  .top,.body,.foot{padding-left:18px;padding-right:18px}
-  .top{margin:6px 6px 0}
-  .top-row,.sum,.pm{flex-direction:column;align-items:stretch}
-  .doc{text-align:left}.doc dl{justify-content:start}
-  .cards,.next{grid-template-columns:1fr}.totals{width:auto}.pm .ok{text-align:left}
-  td.svc{width:auto}
+  .bar{padding:12px;justify-content:stretch}.bar .btns{width:100%}.btn{flex:1;justify-content:center}
+  .pages{zoom:calc(100vw / 8.9in);gap:16px}
 }
-/* print: page 1 bleeds to the top (dark header), every page keeps a .4in bottom margin with
-   'AGC #### · Estimate' and 'Page x of y'; later pages get a top margin too.
-   Totals, terms, PM box and next steps never split across two pages; table rows never split and the
-   table header repeats on the next page. */
-@page{size:letter;margin:.45in 0 .4in;
-  @bottom-left{content:var(--pg-left, 'AMERICAN GRAPHIC CONTRACTORS LLC · Estimate');font-family:Arial,sans-serif;font-size:7.5pt;color:#8a8a8a;padding-left:.55in}
-  @bottom-right{content:'Page ' counter(page) ' of ' counter(pages);font-family:Arial,sans-serif;font-size:7.5pt;color:#8a8a8a;padding-right:.55in}}
-@page:first{margin:0 0 .4in}
+@page{size:letter;margin:0}
 @media print{
   body{background:#fff}
   .bar{display:none}
-  .sheet{width:8.5in;min-height:10.6in;margin:0;box-shadow:none;border-radius:0}
-  .sum,.totals,.terms,.pm,.next,.cards,.card,.curnote{break-inside:avoid;page-break-inside:avoid}
-  .sum{break-before:auto}
-  table{break-inside:auto}
+  .pages{display:block;padding:0;zoom:1}
+  .page{margin:0;box-shadow:none;border-radius:0;break-after:page;page-break-after:always}
+  .page:last-child{break-after:auto;page-break-after:auto}
 }
 </style>
 </head>
@@ -161,13 +147,13 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
   function money(v){ var n = Number(v) || 0, s = n.toLocaleString('en-US', {minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2}); return '$' + s; }
   function fdate(s){ if (!s) return ''; var p = String(s).split('-'); if (p.length < 3) return esc(s); var dt = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2], 12)); return dt.toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC'}); }
   var lines = Array.isArray(D.l) ? D.l : [];
-  var rows = '', k = 0, sub = 0;
+  var rowList = [], k = 0, sub = 0;
   lines.forEach(function(L){
     var info = !(Number(L.a) > 0) && L.i;
     if (!info) { k++; sub += Number(L.a) || 0; }
     var bul = (Array.isArray(L.d) ? L.d : [L.d]).filter(Boolean).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('');
-    rows += '<tr class="' + (info ? 'info' : '') + '"><td class="svc"><div class="w">' + (info ? '' : '<span class="n">' + k + '</span>') + '<span>' + esc(L.s || (info ? 'Additional information' : 'Service')) + '</span></div></td>' +
-      '<td class="desc">' + (bul ? '<ul>' + bul + '</ul>' : '') + '</td><td class="amt">' + (info ? '' : (Number(L.a) > 0 ? money(L.a) + '<span class="cc">' + cur + '</span>' : 'Included')) + '</td></tr>';
+    rowList.push('<tr class="' + (info ? 'info' : '') + '"><td class="svc"><div class="w">' + (info ? '' : '<span class="n">' + k + '</span>') + '<span>' + esc(L.s || (info ? 'Additional information' : 'Service')) + '</span></div></td>' +
+      '<td class="desc">' + (bul ? '<ul>' + bul + '</ul>' : '') + '</td><td class="amt">' + (info ? '' : (Number(L.a) > 0 ? money(L.a) + '<span class="cc">' + cur + '</span>' : 'Included')) + '</td></tr>');
   });
   var total = Number(D.tot) > 0 ? Number(D.tot) : sub;
   // AGC charges no tax (Chris, Nov 13 2026: AGC never charges tax right now; Wyoming is 0%), whatever the link carries
@@ -182,29 +168,30 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
   var pm = D.pm || {};
   var who = [D.co, D.cn].filter(Boolean);
   document.title = 'AGC ' + D.n + ' · Estimate' + (D.t ? ' · ' + D.t : '');
-  app.innerHTML =
-  '<div class="sheet">' +
-    '<div class="top"><div class="top-row">' +
+  var header = '<div class="top"><div class="top-row">' +
       '<div class="brand"><img src="agc-mark.webp" alt="AGC"><div class="word"><div class="co">AMERICAN GRAPHIC CONTRACTORS LLC</div>' +
       '<div class="addr">' + esc(D.ad || '#30 N Gould St Ste R, Sheridan, WY 82801, USA') + '</div></div></div>' +
       '<div class="doc"><div class="kind">ESTIMATE</div><dl>' +
         '<dt>Estimate</dt><dd>AGC ' + esc(D.n) + (D.r > 1 ? ' · rev ' + esc(D.r) : '') + '</dd>' +
         '<dt>Date</dt><dd>' + fdate(D.d) + '</dd>' +
         (D.x ? '<dt>Valid until</dt><dd>' + fdate(D.x) + '</dd>' : '') +
-        '<dt>Currency</dt><dd><span class="curbadge">' + cur + '</span></dd>' +
         (D.po ? '<dt>Your ref.</dt><dd>' + esc(D.po) + '</dd>' : '') +
       '</dl></div>' +
-    '</div></div>' +
-    '<div class="body">' +
-      '<div class="cards">' +
+    '</div></div>';
+  var footer = function(i, n){ return '<div class="foot"><div><b>americangraphiccontractors.com</b> &nbsp;·&nbsp; projects@americangraphiccontractors.com &nbsp;·&nbsp; 1 (877) 395-7435</div>' +
+    '<div class="code">AGC ' + esc(D.n) + ' &nbsp;·&nbsp; PAGE ' + i + ' OF ' + n + (D.h && i === n ? ' &nbsp;·&nbsp; CHECK ' + esc(D.h) : '') + '</div></div>'; };
+  var THEAD = '<thead><tr><th>Service</th><th>Description</th><th>Amount</th></tr></thead>';
+  // the content, block by block (each price line is its own block, so a long table carries on to the next page)
+  var blocks = [];
+  blocks.push('<div class="cards">' +
         '<div class="card"><div class="lbl">Prepared for</div><div class="big">' + esc(who[0] || 'Our client') + '</div>' + (who[1] ? '<div class="sub">' + esc(who[1]) + '</div>' : '') + '</div>' +
         '<div class="card"><div class="lbl">Project</div><div class="big">' + esc(D.n) + (D.t ? ' / ' + esc(D.t) : '') + '</div>' +
           (locs.length ? '<ul class="locs">' + locs.slice(0, 6).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + (locs.length > 6 ? '<li>+ ' + (locs.length - 6) + ' more locations</li>' : '') + '</ul>' : '') +
           (D.dt ? '<div class="sub" style="margin-top:6px"><b>Target date:</b> ' + esc(D.dt) + '</div>' : '') + '</div>' +
-      '</div>' +
-      '<div class="curnote"><span class="curbadge">' + cur + '</span>All prices on this estimate are in ' + curName + '.</div>' +
-      '<table><thead><tr><th>Service</th><th>Description</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="sum">' +
+      '</div>');
+  blocks.push('<div class="curnote"><span class="curbadge">' + cur + '</span>All prices on this estimate are in ' + curName + '.</div>');
+  rowList.forEach(function(r){ blocks.push({row: r}); });
+  blocks.push('<div class="sum">' +
         '<div class="terms"><div class="lbl">Terms</div><ul>' + terms.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
         '<div class="totals">' +
           '<div class="row"><span>Subtotal</span><b>' + money(sub) + '<span class="cc">' + cur + '</span></b></div>' +
@@ -212,26 +199,45 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
           '<div class="row grand"><span>TOTAL</span><b>' + money(total) + '<small>' + cur + '</small></b></div>' +
           '<div class="cur">All amounts in ' + curName + '. No tax charged.</div>' +
         '</div>' +
-      '</div>' +
-      (pm.nm ? '<div class="pm"><div><div class="lbl" style="margin-bottom:3px">Your project manager</div><div class="nm">' + esc(pm.nm) + '</div><div class="ct">' + [pm.em, pm.ph].filter(Boolean).map(esc).join(' · ') + '</div></div>' +
-        '<div class="ok">Ready to go ahead? Reply to our email with your PO name or number and we will lock in your install.</div></div>' : '') +
-      '<div class="next">' +
+      '</div>');
+  if (pm.nm) blocks.push('<div class="pm"><div><div class="lbl" style="margin-bottom:3px">Your project manager</div><div class="nm">' + esc(pm.nm) + '</div><div class="ct">' + [pm.em, pm.ph].filter(Boolean).map(esc).join(' · ') + '</div></div>' +
+        '<div class="ok">Ready to go ahead? Reply to our email with your PO name or number and we will lock in your install.</div></div>');
+  blocks.push('<div class="next">' +
         '<div class="step"><i>1</i><b>Approve + PO</b>Reply with your PO name or number and we book your date.</div>' +
         '<div class="step"><i>2</i><b>Install</b>A vetted local installation partner completes the work on site.</div>' +
         '<div class="step"><i>3</i><b>Photo closeout</b>You get completion photos for every location.</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="foot"><div><b>americangraphiccontractors.com</b> &nbsp;·&nbsp; projects@americangraphiccontractors.com &nbsp;·&nbsp; 1 (877) 395-7435</div>' +
-      (D.h ? '<div class="code">CHECK ' + esc(D.h) + '</div>' : '') + '</div>' +
-  '</div>';
-  // the company name is sized to exactly the width of the address under it
-  var fit = function(){ var co = document.querySelector('.word .co'), ad = document.querySelector('.word .addr'); if (!co || !ad) return;
-    co.style.fontSize = '17px'; var w = co.getBoundingClientRect().width, t = ad.getBoundingClientRect().width;
-    if (w && t) co.style.fontSize = (17 * t / w).toFixed(2) + 'px'; };
-  fit(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-  window.addEventListener('beforeprint', fit);
-  try { var ps = document.createElement('style'); var lbl = ('AMERICAN GRAPHIC CONTRACTORS LLC · Estimate AGC ' + D.n + (D.r > 1 ? ' rev ' + D.r : '')).replace(/["\\]/g, '');
-    ps.textContent = '@page{@bottom-left{content:"' + lbl + '"}}'; document.head.appendChild(ps); } catch (e) {}
+      '</div>');
+  // the company name is sized to exactly the width of the address under it (every page)
+  var fit = function(root){ (root || document).querySelectorAll('.word').forEach(function(w){ var co = w.querySelector('.co'), ad = w.querySelector('.addr'); if (!co || !ad) return;
+    co.style.fontSize = '17px'; var a = co.getBoundingClientRect().width, t = ad.getBoundingClientRect().width;
+    if (a && t) co.style.fontSize = (17 * t / a).toFixed(2) + 'px'; }); };
+  // pagination: every printed page is a full Letter page with the header at the top and the footer at the bottom
+  var paginate = function(){
+    var wrap = document.createElement('div'); wrap.className = 'pages'; app.innerHTML = ''; app.appendChild(wrap);
+    var pages = [], body, table;
+    var newPage = function(){ var pg = document.createElement('div'); pg.className = 'page';
+      pg.innerHTML = header + '<div class="body"></div><div class="foot-slot"></div>'; wrap.appendChild(pg); pages.push(pg);
+      pg.querySelector('.foot-slot').outerHTML = footer(1, 1);
+      body = pg.querySelector('.body'); table = null; };
+    var over = function(){ return body.scrollHeight > body.clientHeight + 1; };
+    var startTable = function(row){ table = document.createElement('table'); table.innerHTML = THEAD + '<tbody>' + row + '</tbody>'; body.appendChild(table); };
+    newPage();
+    blocks.forEach(function(b){
+      if (b && b.row) {
+        if (!table) startTable(b.row); else table.querySelector('tbody').insertAdjacentHTML('beforeend', b.row);
+        if (over()) { var tb = table.querySelector('tbody');
+          if (tb.children.length > 1) { tb.lastElementChild.remove(); newPage(); startTable(b.row); }
+          else if (body.children.length > 1) { table.remove(); newPage(); startTable(b.row); } }
+        return;
+      }
+      table = null; body.insertAdjacentHTML('beforeend', b);
+      if (over() && body.children.length > 1) { var el = body.lastElementChild; el.remove(); newPage(); body.appendChild(el); }
+    });
+    pages.forEach(function(pg, i){ pg.querySelector('.foot').outerHTML = footer(i + 1, pages.length); });
+    fit(wrap);
+  };
+  fit(); paginate();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ paginate(); });
   var bar = document.getElementById('bar'); bar.hidden = false;
   if (pm.em) {
     var a = document.getElementById('approve'); a.hidden = false;
