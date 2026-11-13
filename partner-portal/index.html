@@ -5510,26 +5510,40 @@ window.AGC_LOOK_FIELD = {
     color:#16161a;-webkit-text-stroke:0.3px #16161a;
   }
 }
-/* ── MY PROFILE STEPS: NO NUMBERS, A PLAIN GREEN TICK, A LARGER RED DOT ──────
-   The step numbers (01–05) are gone. A finished step shows one green tick with no circle round it,
-   larger than the old badge. The red "!" dot on a step still to do is larger to match. */
+/* ── MY PROFILE STEPS: NO NUMBERS; TICK AND WARNING SIT IN AN EMBOSSED CIRCLE ─
+   The step numbers (01–05) are gone. In the top-right corner of each step there is a small round well
+   pressed into the card (dark hollow, shadow inside its upper edge, lit lip under its lower edge: the same
+   light as the embossed icons). A finished step has a plain green tick in the well; a step still to do
+   has the red "!" dot in it (amber when insurance is about to expire). Only the dot pulses, not the well. */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
   .cards .card .tool-grid .tool-btn.step .tool-btn-stepnum{display:none !important;}
   .cards .card .tool-grid .tool-btn.step .step-badge-warn,
   .cards .card .tool-grid .tool-btn.step .step-badge-check{
-    top:6px;right:7px;width:clamp(26px,1.75vw,34px);height:clamp(26px,1.75vw,34px);
+    top:6px;right:7px;width:clamp(30px,1.95vw,38px);height:clamp(30px,1.95vw,38px);
+    border-radius:50%;border:0 !important;
+    background:rgba(0,0,0,0.42) !important;
+    box-shadow:inset 0.7px 2.2px 4px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(0,0,0,0.35), 0.4px 1.3px 0 rgba(255,255,255,0.28) !important;
+    animation:none !important;filter:none;
   }
-  .cards .card .tool-grid .tool-btn.step .step-badge-check{
-    background:none;border:0;box-shadow:none;border-radius:0;color:#92C64B;
-    filter:drop-shadow(0 1px 2px rgba(0,0,0,0.85));
+  .cards .card .tool-grid .tool-btn.step .step-badge-check{color:#92C64B;}
+  .cards .card .tool-grid .tool-btn.step .step-badge-check svg{width:64%;height:64%;stroke-width:3.6;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.7));}
+  .cards .card .tool-grid .tool-btn.step .step-badge-warn::after{
+    content:'!';display:flex;align-items:center;justify-content:center;
+    width:calc(100% - 9px);height:calc(100% - 9px);border-radius:50%;
+    background:var(--wb,#ef4444);color:#fff;
+    font-size:clamp(14px,0.95vw,18px);font-weight:900;line-height:1;transform:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.6);
+    animation:stepBadgeWarnPulse 2s ease-in-out infinite;
   }
-  .cards .card .tool-grid .tool-btn.step .step-badge-check svg{width:100%;height:100%;stroke-width:3.6;}
-  .cards .card .tool-grid .tool-btn.step .step-badge-warn::after{font-size:clamp(16px,1.1vw,21px);}
+  .cards .card .tool-grid .tool-btn.step.warn-expired .step-badge-warn{--wb:#dc2626;}
+  .cards .card .tool-grid .tool-btn.step.warn-expired .step-badge-warn::after{animation:stepBadgeExpiringPulse 1.4s ease-in-out infinite;}
+  .cards .card .tool-grid .tool-btn.step.warn-expiring .step-badge-warn{--wb:#f59e0b;}
+  .cards .card .tool-grid .tool-btn.step.warn-expiring .step-badge-warn::after{animation:stepBadgeExpiringPulse 1.8s ease-in-out infinite;}
+  .cards .card.steps-gated .tool-grid .tool-btn.step .step-badge-warn::after{animation:none;}
 }
 /* ── "BETA" ON SITE MONKEY ───────────────────────────────────────────────────
-   The word is small and sits at the right of the card, directly above the coloured line. It is pressed
-   into the card like the icon: no colour, hollow, inner shadow, lit lip (#agc-deboss-text is the icon's
-   emboss drawn finer for small lettering, lit from the same side as the tilted icon). */
+   The word is small and sits at the right of the card, directly above the coloured line, in solid
+   white so it can be read. */
 .tool-btn-embeta{display:none;}
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
   .cards .card .tool-btn > .tool-btn-embeta{
@@ -5537,9 +5551,11 @@ window.AGC_LOOK_FIELD = {
        (two lines of title + the strip's padding) plus a small gap */
     display:block;position:absolute;right:9px;z-index:1;pointer-events:none;
     bottom:calc(2.16 * clamp(17px,1.12vw,21px) + 23px + 5px);
-    font-family:inherit;font-weight:900;font-size:clamp(12px,0.9vw,16px);line-height:1;
-    letter-spacing:1.4px;text-transform:uppercase;color:#fff;-webkit-text-stroke:0.5px #fff;
-    filter:url(#agc-deboss-text);
+    /* solid white lettering (the embossed version could not be read at this size), with a dark edge
+       above it so it still sits into the card */
+    font-family:inherit;font-weight:900;font-size:clamp(13px,0.95vw,17px);line-height:1;
+    letter-spacing:1.6px;text-transform:uppercase;color:#fff;-webkit-text-stroke:0.4px #fff;
+    filter:none;text-shadow:0 -1px 0 rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.8);
   }
 }
 /* ── DESKTOP: "UPDATE MY PROFILE" MATCHES THE EARNINGS BOX ───────────────────
@@ -5815,7 +5831,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.94</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.96</span>
  </div>
 
  <div class="hero">
@@ -29405,7 +29421,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6094;
+  var AGC_BUILD = 6096;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
