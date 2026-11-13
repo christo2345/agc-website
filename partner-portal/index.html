@@ -200,6 +200,12 @@
   @media (prefers-reduced-motion:reduce){.agc-nav-brand img{animation:none}.agc-menu,.agc-menu.open,.agc-menu-scrim{transition:none}}
   /* signed out (the sign-in pop-up is up): there is nothing to sign out of */
   .agc-locked .agc-ap[data-nav="signout"]{display:none}
+  .agc-locked .agc-acct{display:none}
+  /* the person button's pop-up: the menu's glass panel, narrower, two tiles */
+  .agc-acct{width:min(270px,calc(100vw - 28px))}
+  .agc-acct .agc-ap-grid{grid-template-columns:repeat(2,1fr)}
+  .agc-acct .agc-ap-h{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #agc-nav-profile[aria-expanded="true"]{border-color:rgba(146,198,75,.6);color:#92C64B}
 
 
 </style>
@@ -735,7 +741,7 @@ body{background:transparent!important}
       <div class="agc-nav-budget-top"><span id="agc-nav-budget-label">Project Budget</span><span class="agc-nav-budget-bill" id="agc-nav-budget-bill"></span></div>
       <div class="agc-nav-budget-amt" id="agc-nav-budget-amt"></div>
     </div>
-    <button type="button" class="agc-nav-btn" id="agc-nav-profile" data-nav="home" aria-label="My Portal — back to your three cards" title="My Portal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button>
+    <button type="button" class="agc-nav-btn" id="agc-nav-profile" aria-label="My account" title="My account" aria-expanded="false" aria-controls="agc-acct"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button>
     <button type="button" class="agc-nav-btn agc-nav-hamb" id="agc-nav-hamb" aria-label="Open menu" aria-expanded="false" aria-controls="agc-menu"><span></span><span></span><span></span></button>
   </div>
 </header>
@@ -743,6 +749,10 @@ body{background:transparent!important}
 <nav class="agc-menu" id="agc-menu" aria-label="Menu">
   <div class="agc-ap-panel"><div class="agc-ap-h">Explore AGC</div><div class="agc-ap-grid"><a class="agc-ap" href="https://www.americangraphiccontractors.com/" data-nav="site" data-to=""><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" fill="currentColor" fill-opacity=".22"/></svg></span><span class="agc-ap-t">Home</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/#services" data-nav="site" data-to="services"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 20.5 8 12 12.5 3.5 8z" fill="currentColor" fill-opacity=".22"/><path d="M3.5 12 12 16.5 20.5 12M3.5 16 12 20.5 20.5 16"/></svg></span><span class="agc-ap-t">Services</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/#rollouts" data-nav="site" data-to="rollouts"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20.5s-3.5-3.4-3.5-6.3a3.5 3.5 0 0 1 7 0C9.5 17.1 6 20.5 6 20.5z" fill="currentColor" fill-opacity=".22"/><circle cx="6" cy="14.2" r="1.1"/><path d="M18 9.5s-3-2.9-3-5.3a3 3 0 0 1 6 0c0 2.4-3 5.3-3 5.3z"/><path d="M9 20.5h4.5a3 3 0 0 0 0-6h-1a3 3 0 0 1 0-6H15"/></svg></span><span class="agc-ap-t">Rollouts</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/#portals" data-nav="site" data-to="portals"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="2.5" fill="currentColor" fill-opacity=".22"/><path d="M3 8.5h18M8.5 8.5v12M11.5 12.5h6M11.5 16h4"/></svg></span><span class="agc-ap-t">AGC Flow</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/#assist" data-nav="site" data-to="assist"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1.1 5.2 3.8 7.9 9 9-5.2 1.1-7.9 3.8-9 9-1.1-5.2-3.8-7.9-9-9 5.2-1.1 7.9-3.8 9-9z" fill="currentColor" fill-opacity=".22"/><path d="M19 3.5v3M17.5 5h3"/></svg></span><span class="agc-ap-t">AiSSIST</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/#industries" data-nav="site" data-to="industries"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="9" width="7" height="11.5" rx="1" fill="currentColor" fill-opacity=".22"/><path d="M10.5 20.5V4.5l10 3v13M2.5 20.5h19M6 12.5h2M6 16h2M13.5 10.5h3.5M13.5 14h3.5M13.5 17.5h3.5"/></svg></span><span class="agc-ap-t">Industries</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/#proof" data-nav="site" data-to="proof"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor" fill-opacity=".22"/><path d="M7 5.5H4.5a2.5 2.5 0 0 0 2.6 3.5M17 5.5h2.5A2.5 2.5 0 0 1 16.9 9M12 13v3.5M8.5 20.5h7M9.5 20.5c0-2.2 1-4 2.5-4s2.5 1.8 2.5 4"/></svg></span><span class="agc-ap-t">Proof</span></a><a class="agc-ap" href="https://maps.google.com/?cid=1201450209615531135" target="_blank" rel="noopener"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4h0A2.5 2.5 0 0 1 4 13.5z" fill="currentColor" fill-opacity=".22"/><path d="m12 6.2 1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z"/></svg></span><span class="agc-ap-t">Reviews</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/#faq" data-nav="site" data-to="faq"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5h16v10H10l-4 4v-4H4z" fill="currentColor" fill-opacity=".22"/><path d="M10.2 8.7a1.9 1.9 0 1 1 2.5 1.8c-.5.2-.7.6-.7 1.1M12 13.4h.01"/></svg></span><span class="agc-ap-t">FAQ</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/99-questions" target="_blank" rel="noopener"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="3.5" width="15" height="17" rx="2.5" fill="currentColor" fill-opacity=".22"/><path d="m8 8.5 1.3 1.3L11.8 7.3M8 14l1.3 1.3 2.5-2.5M14 8.6h2.5M14 14.1h2.5"/></svg></span><span class="agc-ap-t">99 Questions</span></a><a class="agc-ap" href="https://www.americangraphiccontractors.com/#contact" data-nav="site" data-to="contact"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9.5L5 20v-4H4z" fill="currentColor" fill-opacity=".22"/><path d="M8 9.5h8M8 12.5h5"/></svg></span><span class="agc-ap-t">Contact</span></a><button type="button" class="agc-ap" data-nav="home"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity=".22"/><circle cx="12" cy="10" r="3.2"/><path d="M6.3 18.4c1.2-2.3 3.2-3.5 5.7-3.5s4.5 1.2 5.7 3.5"/></svg></span><span class="agc-ap-t">My Portal</span></button></div></div>
   <div class="agc-ap-grid agc-ap-more"><a class="agc-ap" href="tel:+18773957435"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.5h3l1.4 4-2 1.2a11 11 0 0 0 6.3 6.3l1.2-2 4 1.4v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 5.7a2 2 0 0 1 2.1-2.2z" fill="currentColor" fill-opacity=".22"/></svg></span><span class="agc-ap-t">Call us</span></a><a class="agc-ap" href="mailto:projects@americangraphiccontractors.com"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2" fill="currentColor" fill-opacity=".22"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span><span class="agc-ap-t">Email us</span></a><button type="button" class="agc-ap" data-nav="signout"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4.5H6a1.500 1.500 0 0 0-1.500 1.500v12A1.500 1.500 0 0 0 6 19.500h4" fill="currentColor" fill-opacity=".22"/><path d="M14.500 8.500 18 12l-3.500 3.500M18 12H9.500"/></svg></span><span class="agc-ap-t">Sign out</span></button></div>
+</nav>
+<!-- The person button's pop-up (signed in only): who is signed in, back to the three cards, sign out -->
+<nav class="agc-menu agc-acct" id="agc-acct" aria-label="My account">
+  <div class="agc-ap-panel"><div class="agc-ap-h" id="agc-acct-name">My account</div><div class="agc-ap-grid"><button type="button" class="agc-ap" data-nav="home"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity=".22"/><circle cx="12" cy="10" r="3.2"/><path d="M6.3 18.4c1.2-2.3 3.2-3.5 5.7-3.5s4.5 1.2 5.7 3.5"/></svg></span><span class="agc-ap-t">My Portal</span></button><button type="button" class="agc-ap" data-nav="signout"><span class="agc-ap-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4.5H6a1.500 1.500 0 0 0-1.500 1.500v12A1.500 1.500 0 0 0 6 19.500h4" fill="currentColor" fill-opacity=".22"/><path d="M14.500 8.500 18 12l-3.500 3.500M18 12H9.500"/></svg></span><span class="agc-ap-t">Sign out</span></button></div></div>
 </nav>
 
 
@@ -4018,11 +4028,13 @@ window.AGC_LOOK_FIELD = {
  }
  /* The figure is white; only the "$" is green, half size and set against the top of the figure.
     A small currency code (CAD / USD / MXN, from the installer's country) follows it. */
+ .card-budget-amount .cb-sym,.card-budget-amount .cb-cur{line-height:1;}
  .card-budget-amount .cb-sym{color:var(--green);font-size:50%;letter-spacing:0;display:inline-block;vertical-align:top;margin:0.06em 0.08em 0 0;}
  .card-budget-amount .cb-cur{color:#cfd0d4;font-size:30%;font-weight:800;letter-spacing:1px;display:inline-block;vertical-align:top;margin:0.3em 0 0 0.45em;}
  .card-budget-amount{
    font-size:48px;font-weight:900;letter-spacing:-1.5px;
    color:#fff;line-height:1;
+   white-space:nowrap;   /* one line always: a wrapped total made this block taller and squeezed the mini cards under it (fitBudgetAmount shrinks the type instead) */
    font-variant-numeric:tabular-nums;
    transform:translateZ(0);
    transition:transform 0.35s cubic-bezier(0.2,0.8,0.2,1);
@@ -5521,7 +5533,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.58</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.60</span>
  </div>
 
  <div class="hero">
@@ -6641,7 +6653,33 @@ function paintBudgetAmount(){
   if(m){const s=document.createElement('span');s.className='cb-sym';s.textContent=m[1];amtEl.appendChild(s);}
   amtEl.appendChild(document.createTextNode(m?m[2]:_budgetShown));
   if(m&&_agcCurrency){const c=document.createElement('span');c.className='cb-cur';c.textContent=_agcCurrency;amtEl.appendChild(c);}
+  fitBudgetAmount();
 }
+// Keeps the total on one line inside its block. When the block is narrow (the weather-alerts box
+// sits beside it) and the figure is long, the type is scaled down to fit, never wrapped: a second
+// line made the block taller, which made the two mini cards under it smaller than the others.
+function fitBudgetAmount(){
+  const a=document.getElementById('projects-budget-amount');
+  const box=a&&a.closest('.card-budget');
+  if(!a||!box)return;
+  a.style.removeProperty('font-size');a.style.removeProperty('line-height');
+  const cs=getComputedStyle(box);
+  const room=box.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);
+  const need=a.scrollWidth;   // layout px, like clientWidth (the page may be zoomed to fit a short window)
+  if(room>40&&need>room+0.5){
+    const base=parseFloat(getComputedStyle(a).fontSize)||48;
+    // smaller type, same line height: the block keeps exactly the height it has with the full-size figure
+    a.style.setProperty('line-height',base+'px','important');
+    a.style.setProperty('font-size',Math.max(base*0.45,base*room/need-0.5).toFixed(1)+'px','important');
+  }
+}
+try{
+  window.addEventListener('resize',()=>requestAnimationFrame(fitBudgetAmount));
+  if(window.ResizeObserver){
+    let _fitW=0;
+    new ResizeObserver(es=>{const w=Math.round(es[0].contentRect.width);if(w!==_fitW){_fitW=w;fitBudgetAmount();}}).observe(document.getElementById('projects-budget'));
+  }
+}catch(_e){}
 // The currency an installer is paid in, from the country on their own record
 // (Airtable Installers → Country): Canada → CAD, USA → USD, Mexico → MXN. '' when unknown.
 function agcCurrencyFor(f){
@@ -28903,7 +28941,8 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      the cart. Anything with data-nav="…" goes somewhere:
        home    → the portal's three-card view (the person button and "My Portal")
        site    → the AGC website (AGC_SITE_HOME); data-to names the section
-       signout → signs out and asks for the password again
+       signout → signs out: the portal reloads to the sign-in screen
+     The person button opens the account pop-up (My Portal, Sign out) while signed in.
      While signed out the bar still shows: only the website tiles (and Call / Email) do anything.
      projects / profile / calendar / invoice / area still work if a tile is
      ever given one of those names.
@@ -28944,10 +28983,16 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     navJobPaint();
   }
   var navMenu = document.getElementById('agc-menu'), navScrim = document.getElementById('agc-menu-scrim'), navHamb = document.getElementById('agc-nav-hamb');
-  function navOpen(on){
-    navMenu.classList.toggle('open', on); navScrim.classList.toggle('open', on);
-    navHamb.setAttribute('aria-expanded', on ? 'true' : 'false');
-    navHamb.setAttribute('aria-label', on ? 'Close menu' : 'Open menu');
+  /* Two pop-ups hang off the bar: the menu (hamburger) and the account pop-up (person button).
+     Only one is open at a time; they share the dark mask. navOpen(false) closes both. */
+  var navAcct = document.getElementById('agc-acct'), navProf = document.getElementById('agc-nav-profile');
+  function navOpen(on, which){
+    var menu = !!on && which !== 'acct', acct = !!on && which === 'acct';
+    navMenu.classList.toggle('open', menu); navAcct.classList.toggle('open', acct); navScrim.classList.toggle('open', menu || acct);
+    navHamb.setAttribute('aria-expanded', menu ? 'true' : 'false');
+    navHamb.setAttribute('aria-label', menu ? 'Close menu' : 'Open menu');
+    navProf.setAttribute('aria-expanded', acct ? 'true' : 'false');
+    if (acct) document.getElementById('agc-acct-name').textContent = gate.name ? 'Signed in as ' + gate.name : 'My account';
   }
   /* Press one of Home's own tiles, so its pop-up opens exactly the way it does from Home. */
   function homeTool(re){
@@ -28997,6 +29042,11 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     var go = el.closest('[data-nav]');
     if (go) { e.preventDefault(); navGo(go.getAttribute('data-nav'), go.getAttribute('data-to')); return; }
     if (el.closest('#agc-nav-hamb')) { navOpen(!navMenu.classList.contains('open')); return; }
+    if (el.closest('#agc-nav-profile')) {
+      /* signed in: the account pop-up (My Portal, Sign out). Signed out: nothing to show, point at the sign-in box. */
+      if (gate.open) navOpen(!navAcct.classList.contains('open'), 'acct'); else navGo('home');
+      return;
+    }
     if (el === navScrim || el.closest('.agc-menu a')) navOpen(false);
   });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') navOpen(false); });
@@ -29232,7 +29282,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6058;
+  var AGC_BUILD = 6060;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
