@@ -5442,15 +5442,13 @@ window.AGC_LOOK_FIELD = {
       radial-gradient(ellipse 100% 70% at 25% -10%, rgba(255,255,255,0.16) 0%, transparent 60%),
       linear-gradient(165deg, rgba(66,66,74,0.97) 0%, rgba(32,32,38,0.94) 50%, rgba(12,12,14,0.92) 100%);
   }
-  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)):hover .tool-btn-label{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
 }
 /* ── DESKTOP: MINI-CARD ICONS ───────────────────────────────────────────────
    Every mini card that has an icon: the icon is large, tilted a little, and set in the card's
    top-left corner so that it runs off the edge. The card crops it (overflow:hidden), so part of
    the icon is missing off the card. The label sits along the bottom (above the banner on Beta and
    Coming Soon cards). Sizes are relative to the card (% of its height), so it holds at any window size.
-   Colour: active cards and completed profile steps are in strong full colour; Coming Soon cards and
-   profile steps not yet done stay grey, as before. */
+   The icon itself has no colour (it is embossed into the card); the card's colour is in its title. */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
   .cards .card .tool-btn:not(.no-icon){overflow:hidden;justify-content:flex-end;}
   .cards .card .tool-btn:not(.no-icon) .tool-btn-icon{
@@ -5466,19 +5464,34 @@ window.AGC_LOOK_FIELD = {
   .cards .card .tool-btn:not(.no-icon):hover .tool-btn-icon{transform:translate(-21%,-25%) rotate(-8deg) scale(1.06);}
   .cards .card .tool-btn:not(.no-icon) .tool-btn-label{position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.85);}
   .cards .card .tool-btn:not(.no-icon) .tool-btn-stepnum{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
-  /* strong full colour: active cards (View Projects, View Calendar, Upload Invoice, Service Area), the Beta card …
-     (their icons are drawn in the same style as the profile steps: a coloured tile with a white glyph) */
-  .cards .card .tool-btn:not(.step):not(.soon):not(.no-icon) .tool-btn-icon svg,
-  .cards .card .tool-btn:not(.step):not(.soon):not(.no-icon):hover .tool-btn-icon svg{
-    filter:saturate(1.6) contrast(1.05) brightness(1.08) drop-shadow(0 4px 8px rgba(0,0,0,0.55));
+  /* THE TITLE CARRIES THE COLOUR. Active cards and completed profile steps: bold, in the card's own
+     colour (--tc on the tool cards, the step colour --pc on the profile steps). Coming Soon cards
+     and steps not yet done keep their muted grey title. */
+  .cards .card .tool-btn .tool-btn-label{font-weight:900;}
+  .cards .card .tool-btn:not(.soon):not(.step) .tool-btn-label,
+  .cards .card .tool-btn:not(.soon):not(.step):hover .tool-btn-label,
+  .cards .card .tool-btn.step.done .tool-btn-label,
+  .cards .card .tool-btn.step.done:hover .tool-btn-label{
+    color:var(--tc, var(--pc, #fff));
+    text-shadow:0 1px 2px rgba(0,0,0,0.9);
   }
-  /* … and completed profile steps (they used to turn into a blank white square) */
+  /* THE ICON HAS NO COLOUR: it is pressed into the card. The tile becomes a darker dent in the glass,
+     its symbol a slightly lighter relief, with a dark lip along the top edge and a lit lip along the
+     bottom (light from above). Same treatment on every mini card, whatever its state. */
+  .cards .card .tool-btn:not(.no-icon) .tool-btn-icon,
+  .cards .card .tool-btn:not(.no-icon):hover .tool-btn-icon,
   .cards .card .tool-btn.step.done .tool-btn-icon,
-  .cards .card .tool-btn.step.done:hover .tool-btn-icon{filter:none;}
-  .cards .card .tool-btn.step.done .tool-btn-icon svg,
+  .cards .card .tool-btn.step.done:hover .tool-btn-icon{
+    opacity:0.36;
+    filter:drop-shadow(0 -1.5px 1px rgba(0,0,0,0.95)) drop-shadow(0 1.5px 0 rgba(255,255,255,0.6));
+  }
+  .cards .card .tool-btn:not(.no-icon):hover .tool-btn-icon{opacity:0.5;}
+  .cards .card .tool-btn:not(.no-icon) .tool-btn-icon svg,
+  .cards .card .tool-btn:not(.no-icon):hover .tool-btn-icon svg,
+  .cards .card .tool-btn.soon:not(.no-icon) .tool-btn-icon svg,
   .cards .card .tool-btn.step.done:not(:hover) .tool-btn-icon svg,
   .cards .card .tool-btn.step.done:hover .tool-btn-icon svg{
-    filter:saturate(1.6) contrast(1.05) brightness(1.08) drop-shadow(0 4px 8px rgba(0,0,0,0.55));
+    filter:grayscale(1) brightness(0.55) contrast(8);      /* tile → black, symbol → white; the opacity above blends both into the card */
   }
 }
   /* === MOBILE FIX: guarantee the three main cards are always visible ===
@@ -5609,7 +5622,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.67</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.69</span>
  </div>
 
  <div class="hero">
@@ -5722,7 +5735,7 @@ window.AGC_LOOK_FIELD = {
 
      <\!-- Action mini-cards — toolbox-style 3D buttons in a 2-col grid. -->
      <div class="tool-grid tool-grid--two">
-       <button class="tool-btn beta" onclick="goToProjects(event)" aria-label="View Projects">
+       <button style="--tc:#a3d65a;" class="tool-btn beta" onclick="goToProjects(event)" aria-label="View Projects">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e06a"/><stop offset="1" stop-color="#6aa22e"/></linearGradient></defs>
@@ -5739,7 +5752,7 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-label">View Projects</span>
          <span class="tool-btn-beta-label">Active</span>
        </button>
-       <button class="tool-btn beta" onclick="event.stopPropagation();event.preventDefault();agcMorphOpen(this,openCalendarFullscreen,'#cal-fs',null);" aria-label="View Calendar">
+       <button style="--tc:#2dd4bf;" class="tool-btn beta" onclick="event.stopPropagation();event.preventDefault();agcMorphOpen(this,openCalendarFullscreen,'#cal-fs',null);" aria-label="View Calendar">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fe0d0"/><stop offset="1" stop-color="#0f9488"/></linearGradient></defs>
@@ -5805,7 +5818,7 @@ window.AGC_LOOK_FIELD = {
      <div class="tool-grid">
        <\!-- 1. Upload Invoice — invoice document with green upload arrow.
             Beta (active) — opens an in-portal popup, not an external URL. -->
-       <button class="tool-btn beta" onclick="openTool(event,'upload_invoice')">
+       <button style="--tc:#fbbf24;" class="tool-btn beta" onclick="openTool(event,'upload_invoice')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd655"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
@@ -5820,7 +5833,7 @@ window.AGC_LOOK_FIELD = {
        </button>
 
        <\!-- 2. Service Area — map pin centered in a coverage radius. Active. -->
-       <button class="tool-btn beta" onclick="openTool(event,'service_area')">
+       <button style="--tc:#ff6fb0;" class="tool-btn beta" onclick="openTool(event,'service_area')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff86c0"/><stop offset="1" stop-color="#db2777"/></linearGradient></defs>
@@ -5834,7 +5847,7 @@ window.AGC_LOOK_FIELD = {
        </button>
 
        <\!-- 3. Site Monkey (formerly Site Survey) — READY -->
-       <button class="tool-btn beta" onclick="openTool(event,'site_survey')">
+       <button style="--tc:#8ea0ff;" class="tool-btn beta" onclick="openTool(event,'site_survey')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93a4ff"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs>
@@ -5977,7 +5990,7 @@ window.AGC_LOOK_FIELD = {
             cell deliberately has no icon (per request) — the centered
             label is the entire visual, with the Active banner pinning
             the bottom. -->
-       <button class="tool-btn beta no-icon" onclick="goToProfile(event)" aria-label="Update My Profile">
+       <button style="--tc:#a3d65a;" class="tool-btn beta no-icon" onclick="goToProfile(event)" aria-label="Update My Profile">
          <span class="tool-btn-label">Update My Profile</span>
          <span class="tool-btn-beta-label">Active</span>
        </button>
@@ -6026,39 +6039,39 @@ window.AGC_LOOK_FIELD = {
          <span class="step-badge-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#74d65a"/><stop offset="1" stop-color="#2f9e22"/></linearGradient></defs>
+             <defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd84d"/><stop offset="1" stop-color="#eab308"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#g3)"/>
              <circle cx="24" cy="24" r="11" fill="#fff"/>
-             <text x="24" y="29.8" font-family="Arial,sans-serif" font-size="17" font-weight="900" text-anchor="middle" fill="#2f9e22">$</text>
+             <text x="24" y="29.8" font-family="Arial,sans-serif" font-size="17" font-weight="900" text-anchor="middle" fill="#ca8a04">$</text>
            </svg>
          </span>
          <span class="tool-btn-label">Banking</span>
        </button>
 
-       <button class="tool-btn step" data-step="4" style="--pc:#3b82f6;" onclick="gotoProfileStep(event,4)" aria-label="Step 4: Insurance">
+       <button class="tool-btn step" data-step="4" style="--pc:#92C64B;" onclick="gotoProfileStep(event,4)" aria-label="Step 4: Insurance">
          <span class="tool-btn-stepnum">04</span>
          <span class="step-badge-warn" aria-label="Not completed"><span>i</span></span>
          <span class="step-status-tag" aria-hidden="true"></span>
          <span class="step-badge-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5aa6ff"/><stop offset="1" stop-color="#1d6fe0"/></linearGradient></defs>
+             <defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e06a"/><stop offset="1" stop-color="#7ab33a"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#g4)"/>
              <path d="M24 11 L34 14.5 V22 C34 29 29.5 33 24 35.5 C18.5 33 14 29 14 22 V14.5 Z" fill="#fff"/>
-             <path d="M19.6 23.8 L22.8 27.2 L29.2 19.6" stroke="#1d6fe0" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+             <path d="M19.6 23.8 L22.8 27.2 L29.2 19.6" stroke="#7ab33a" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
            </svg>
          </span>
          <span class="tool-btn-label">Insurance</span>
        </button>
 
-       <button class="tool-btn step" data-step="5" style="--pc:#92C64B;" onclick="gotoProfileStep(event,5)" aria-label="Step 5: Tax Forms">
+       <button class="tool-btn step" data-step="5" style="--pc:#3b82f6;" onclick="gotoProfileStep(event,5)" aria-label="Step 5: Tax Forms">
          <span class="tool-btn-stepnum">05</span>
          <span class="step-badge-warn" aria-label="Not completed"><span>i</span></span>
          <span class="step-status-tag" aria-hidden="true"></span>
          <span class="step-badge-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <defs><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b794f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs>
+             <defs><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#g5)"/>
              <path d="M11 19 L24 11 L37 19 Z" fill="#fff"/>
              <rect x="12" y="20.2" width="24" height="2.6" rx="0.6" fill="#fff"/>
@@ -29237,7 +29250,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6067;
+  var AGC_BUILD = 6069;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
