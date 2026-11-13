@@ -95,7 +95,7 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
 .step{background:var(--dark-2);color:#d6d6d6;border-radius:12px;padding:12px 14px;font-size:10.5px;line-height:1.45}
 .step b{display:block;color:#fff;font-size:12px;margin-bottom:3px}
 .step i{font-style:normal;display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--green);color:#0d0d0d;font-weight:800;font-size:10.5px;align-items:center;justify-content:center;margin-bottom:7px}
-.foot{background:var(--dark-1);color:#bcbcbc;padding:.16in .55in;display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.03em}
+.foot{background:var(--dark-1);color:#bcbcbc;padding:.16in .55in;display:flex;justify-content:center;align-items:center;font-size:10px;letter-spacing:.03em;white-space:nowrap}
 .foot b{color:var(--green)}
 .foot .code{color:#6e6e6e;font-size:8.5px;letter-spacing:.06em}
 /* states */
@@ -179,7 +179,7 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
       '</dl></div>' +
     '</div></div>';
   var footer = function(i, n){ return '<div class="foot"><div><b>americangraphiccontractors.com</b> &nbsp;·&nbsp; accounting@americangraphiccontractors.com &nbsp;·&nbsp; 1 (877) 395-7435</div>' +
-    '<div class="code">AGC ' + esc(D.n) + ' &nbsp;·&nbsp; PAGE ' + i + ' OF ' + n + (D.h && i === n ? ' &nbsp;·&nbsp; CHECK ' + esc(D.h) : '') + '</div></div>'; };
+    '</div>'; };
   var THEAD = '<thead><tr><th>Service</th><th>Description</th><th>Amount</th></tr></thead>';
   // the content, block by block (each price line is its own block, so a long table carries on to the next page)
   var blocks = [];
