@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.99 = 6099). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.100 = 6100). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
