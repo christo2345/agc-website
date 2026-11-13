@@ -167,7 +167,7 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
   ]);
   var pm = D.pm || {};
   var who = [D.co, D.cn].filter(Boolean);
-  document.title = 'AGC ' + D.n + ' · Estimate' + (D.t ? ' · ' + D.t : '');
+  document.title = 'AGC ' + D.n + ' - ESTIMATE - ' + (D.r || 1); // the browser names the saved PDF from this
   var header = '<div class="top"><div class="top-row">' +
       '<div class="brand"><img src="agc-mark.webp" alt="AGC"><div class="word"><div class="co">AMERICAN GRAPHIC CONTRACTORS LLC</div>' +
       '<div class="addr">' + esc(D.ad || '#30 N Gould St Ste R, Sheridan, WY 82801, USA') + '</div></div></div>' +
