@@ -732,6 +732,10 @@ body{background:transparent!important}
       <div class="agc-lock-spin" id="agc-lock-spin" aria-hidden="true"></div>
     </div>
     <div class="agc-lock-body" id="agc-lock-body" hidden>
+      <label class="agc-lock-field" id="agc-lock-email-row" hidden>
+        <span class="agc-lock-label">Email</span>
+        <span class="agc-lock-input"><input type="hidden" id="agc-lock-email"/></span>
+      </label>
       <label class="agc-lock-field" id="agc-lock-pw-row">
         <span class="agc-lock-label" id="agc-lock-pw-label">Password</span>
         <span class="agc-lock-input">
@@ -5465,7 +5469,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.45</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.46</span>
  </div>
 
  <div class="hero">
@@ -11937,10 +11941,11 @@ function goToHomeCalendar(){
 
 // ─── LOAD ─────────────────────────────────────────────────────────────────
 async function loadProjects(){
- if(TEST_MODE||TEST_MODE_FORCED){
+ if(TEST_MODE_FORCED){
    _allProjects=TEST_PROJECTS.slice();
    renderSidebar(); hideMainLoading(); setTimeout(autoSelectFirst,80); return;
  }
+ if(TEST_MODE){ _allProjects=[]; renderSidebar(); hideMainLoading(); return; }   /* not signed in yet: nothing to show */
  if(_loading)return;
  _loading=true;
  // The big center spinner used to dominate the screen during loads. It's
@@ -15323,7 +15328,8 @@ let _mbReady=false;
 const toLngLat=c=>c?[c[1],c[0]]:null;
 
 async function fetchInstallerInfo(){
- if(TEST_MODE||TEST_MODE_FORCED){_installerAddr=TEST_INSTALLER_ADDR;_installerName='Tyler Murdock Studios';return;}
+ if(TEST_MODE_FORCED){_installerAddr=TEST_INSTALLER_ADDR;_installerName='Tyler Murdock Studios';return;}
+ if(TEST_MODE)return;
  if(!_recordId)return;
  // Idempotent — return existing in-flight promise so multiple callers don't
  // fire duplicate requests.
@@ -25836,6 +25842,23 @@ function mdToHtml(s){
     return null;
   }
 
+  // Only send what changed since the record was loaded (or last saved). Masked banking
+  // numbers ("••••1234", as the backend shows them) are never sent back.
+  function _agcNorm(v){
+    if (v === false || v === null || v === undefined || v === '') return '';
+    if (Array.isArray(v)) return v.length ? JSON.stringify(v.map(x => (x && typeof x === 'object') ? (x.id || x.url || x.name || JSON.stringify(x)) : String(x).trim())) : '';
+    if (typeof v === 'object') return String(v.id || v.url || v.name || JSON.stringify(v));
+    return String(v).trim();
+  }
+  function _agcOnlyChanged(fields){
+    const out = {};
+    for (const k of Object.keys(fields)) {
+      const v = fields[k];
+      if (typeof v === 'string' && v.indexOf('\u2022') >= 0) continue;
+      if (_agcNorm(v) !== _agcNorm(_lastAirtableFields[k])) out[k] = v;
+    }
+    return out;
+  }
   async function upsertRecord(){
     try{
       let fields = collectFormData();
@@ -25845,6 +25868,7 @@ function mdToHtml(s){
       }
       const recId=getRecordId();
       if(!recId&&!fields[FM.email])return;
+      if(recId){ fields=_agcOnlyChanged(fields); if(!Object.keys(fields).length) return; }
       const sendPatch = (body) => api.patchInstaller(recId, body);
       if(recId){
         console.log('AGC: saving fields →',JSON.stringify(fields));
@@ -25933,6 +25957,7 @@ function mdToHtml(s){
         }
         if (r.ok) {
           console.log('AGC: ✅ saved to Airtable');
+          Object.assign(_lastAirtableFields, fields);
           // Use the existing _currentStepNum() helper (defined later in this
           // IIFE) to identify which step the user was on when the save fired.
           // Wrapped in typeof so an early save (before _currentStepNum is
@@ -28203,6 +28228,167 @@ function mdToHtml(s){
 </html>
 </script>
 
+<!-- ═══════════ AGC SECURE BRIDGE (copied into each of the three pages by buildPage) ═══════════ -->
+<script type="text/plain" id="agc-bridge-src">
+/* AGC SECURE BRIDGE v2 (Nov 13 2026)
+   No Airtable or ImgBB key is in this page. Every call the page makes to Airtable
+   (api.airtable.com / content.airtable.com) or ImgBB is sent to AGC's own backend
+   (/_functions, Wix backend/http-functions.js) instead, with the installer's
+   sign-in session ("Authorization: Bearer <token>"). The backend works out who the
+   installer is from that session and only answers with their own record, their own
+   projects, closeouts and uploads. The portal shell hands the session in after sign-in. */
+(function(){
+  if (window.__agcBridge) return; window.__agcBridge = true;
+  var FN = 'https://www.americangraphiccontractors.com/_functions';
+  /* Testing only: the portal opened with ?agcdev=1 talks to /_functions-dev (saved, unpublished backend). */
+  var DEV = false; try { DEV = /[?&]agcdev=1(&|$)/.test(window.parent.location.search) || /[?&]agcdev=1(&|$)/.test(location.search); } catch (e) {}
+  if (DEV) FN += '-dev';
+  var OPEN = /\/_functions(?:-dev)?\/(createInstaller|getInstallerSchema|getProjectInvoiceField)(?:\?|$)/;
+  var PROJ = 'tblziZ2NmNH2m3HfJ', INST = 'tblMBJZ7INhXhjDAC', CLOSE = 'tblHPffa25hrjdf03', STORES = 'tblmO5352IqyYu7Pd';
+  var _fetch = window.fetch.bind(window);
+  var token = '', waiters = [], told = false;
+  window.addEventListener('message', function(e){
+    if (e.source !== window.parent) return;
+    var m = e.data;
+    if (m && typeof m === 'object' && m.type === 'agc_session' && typeof m.token === 'string') {
+      token = m.token; told = false; projCache = null;
+      waiters.splice(0).forEach(function(f){ f(); });
+    }
+  });
+  function needToken(){ return token ? Promise.resolve() : new Promise(function(res){ waiters.push(res); setTimeout(res, 20000); }); }
+  function withAuth(url, init){
+    init = Object.assign({}, init || {});
+    var h = new Headers(init.headers || {});
+    if (token) h.set('Authorization', 'Bearer ' + token);
+    init.headers = h;
+    return _fetch(url, init).then(function(r){
+      if (r.status === 401 && !told) { told = true; try { window.parent.postMessage({ type: 'agc_session_expired' }, '*'); } catch (e) {} }
+      return r;
+    });
+  }
+  function backend(url, init){ return OPEN.test(url) ? _fetch(url, init) : needToken().then(function(){ return withAuth(url, init); }); }
+  function jres(obj, status){ return new Response(JSON.stringify(obj), { status: status || 200, headers: { 'Content-Type': 'application/json' } }); }
+  function getJ(name, qs){ return backend(FN + '/' + name + (qs ? '?' + qs : ''), { method: 'GET' }); }
+  function postJ(name, body){ return backend(FN + '/' + name, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+  function bodyOf(init){ try { return init && typeof init.body === 'string' ? JSON.parse(init.body) : {}; } catch (e) { return {}; } }
+  function recIds(s){ return String(s || '').match(/rec[A-Za-z0-9]{14,17}/g) || []; }
+  function toB64(blob){ return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ var s = String(r.result || ''); res(s.slice(s.indexOf(',') + 1)); }; r.onerror = rej; r.readAsDataURL(blob); }); }
+  var projCache = null;
+  function projects(){
+    if (projCache) return projCache;
+    projCache = getJ('getProjects')
+      .then(function(r){ return r.ok ? r.json() : { records: [] }; })
+      .then(function(d){ return d.records || []; })
+      .catch(function(){ projCache = null; return []; });
+    return projCache;
+  }
+  async function airtable(url, init){
+    var method = ((init && init.method) || 'GET').toUpperCase();
+    var u = new URL(url);
+    var parts = u.pathname.replace(/^\/v0\//, '').split('/');
+    var formula = u.searchParams.get('filterByFormula') || '';
+    if (parts[0] === 'meta') {
+      /* Schema: only the two things the portal reads (the invoice field, the store name field) */
+      var pf = [];
+      try { var r = await getJ('getProjectInvoiceField'); if (r.ok) { var d = await r.json(); if (d.fieldId) pf.push({ id: d.fieldId, name: d.fieldName, type: 'multipleAttachments' }); } } catch (e) {}
+      return jres({ tables: [{ id: PROJ, name: 'AGC PROJECTS', fields: pf }, { id: STORES, name: 'STORES', fields: [{ id: '', name: 'Name', type: 'singleLineText' }] }] });
+    }
+    var table = parts[1], rec = parts[2];
+    if (table === INST) {
+      /* Always the signed-in installer's own record (the backend ignores any other id). */
+      if (method === 'GET' && rec) return getJ('getInstaller');
+      if (method === 'GET') { var me = await getJ('getInstaller'); if (!me.ok) return me; var one = await me.json(); return jres({ records: [one] }); }
+      if (method === 'PATCH') return postJ('patchInstaller', { fields: bodyOf(init).fields || ((bodyOf(init).records || [])[0] || {}).fields || {} });
+    }
+    if (table === PROJ) {
+      if (rec) {
+        if (method === 'GET') return getJ('getProject', 'id=' + encodeURIComponent(rec));
+        if (method === 'PATCH') { projCache = null; return postJ('patchProject', { id: rec, fields: bodyOf(init).fields || {} }); }
+      } else if (method === 'GET') {
+        var agc = formula.match(/\{AGC #\}\s*=\s*'((?:\\'|[^'])*)'/);
+        if (agc) {
+          var num = agc[1].replace(/\\'/g, "'");
+          var r2 = await postJ('findProjectByAgcNum', { agcNum: num });
+          if (r2.status === 404) return jres({ records: [] });
+          if (!r2.ok) return r2;
+          var d2 = await r2.json();
+          return jres({ records: [{ id: d2.projectId, fields: { 'AGC #': num } }] });
+        }
+        var all = await projects();
+        var want = /RECORD_ID\(\)/.test(formula) ? recIds(formula) : [];
+        return jres({ records: want.length ? all.filter(function(p){ return want.indexOf(p.id) >= 0; }) : all });
+      }
+    }
+    if (table === CLOSE) {
+      if (method === 'GET' && !rec) {
+        var ps = await projects(), out = [], seen = {};
+        var only = recIds(formula).filter(function(id){ return ps.some(function(p){ return p.id === id; }); });
+        var list = only.length ? ps.filter(function(p){ return only.indexOf(p.id) >= 0; }) : ps;
+        for (var i = 0; i < list.length; i += 6) {
+          var chunk = await Promise.all(list.slice(i, i + 6).map(function(p){
+            return getJ('getCloseouts', 'projectId=' + encodeURIComponent(p.id))
+              .then(function(r){ return r.ok ? r.json() : { records: [] }; })
+              .catch(function(){ return { records: [] }; });
+          }));
+          chunk.forEach(function(d){ (d.records || []).forEach(function(x){ if (!seen[x.id]) { seen[x.id] = 1; out.push(x); } }); });
+        }
+        return jres({ records: out });
+      }
+      if (method === 'POST' && !rec) {
+        var b = bodyOf(init), f0 = b.fields || ((b.records || [])[0] || {}).fields || {};
+        var rc = await postJ('upsertCloseout', { fields: f0 });
+        if (!rc.ok || !b.records) return rc;
+        var one2 = await rc.json(); return jres({ records: [one2] });
+      }
+      if (method === 'PATCH' && rec) return postJ('upsertCloseout', { id: rec, fields: bodyOf(init).fields || {} });
+      if (method === 'DELETE' && rec) return postJ('deleteCloseout', { id: rec });
+    }
+    if (method === 'GET' && !rec && /RECORD_ID\(\)/.test(formula)) {
+      if (table !== STORES) return jres({ records: [] });
+      var r3 = await postJ('getStoreNames', { ids: recIds(formula).slice(0, 200) });
+      if (!r3.ok) return r3;
+      var d3 = await r3.json(), names = d3.names || {};
+      return jres({ records: Object.keys(names).map(function(id){ return { id: id, fields: { Name: names[id] } }; }) });
+    }
+    return jres({ error: { type: 'NOT_ALLOWED', message: 'This portal action is not available.' } }, 403);
+  }
+  async function content(url, init){
+    /* https://content.airtable.com/v0/<base>/<recordId>/<fieldId>/uploadAttachment */
+    var p = new URL(url).pathname.split('/'), b = bodyOf(init);
+    return postJ('uploadInvoiceAttachment', { projectId: p[3], contentType: b.contentType, file: b.file, filename: b.filename });
+  }
+  async function imgbb(url, init){
+    var fd = init && init.body, data = '', name = '';
+    if (fd && typeof fd.get === 'function') {
+      var img = fd.get('image'); name = fd.get('name') || '';
+      data = (typeof img === 'string') ? img : (img ? await toB64(img) : '');
+    } else if (typeof fd === 'string') {
+      try { var q = new URLSearchParams(fd); data = q.get('image') || ''; name = q.get('name') || ''; } catch (e) {}
+    }
+    var r = await postJ('uploadFile', name ? { data: data, filename: String(name) } : { data: data });
+    if (!r.ok) return jres({ success: false, error: { message: 'upload failed' } }, r.status);
+    var d = await r.json();
+    return jres({ success: true, status: 200, data: { url: d.url, display_url: d.display_url, thumb: { url: d.thumb_url }, delete_url: d.delete_url } });
+  }
+  window.fetch = function(input, init){
+    var url = typeof input === 'string' ? input : ((input && input.url) || '');
+    try {
+      if (url.indexOf('https://api.airtable.com/v0/') === 0) return airtable(url, init);
+      if (url.indexOf('https://content.airtable.com/v0/') === 0) return content(url, init);
+      if (url.indexOf('https://api.imgbb.com/1/upload') === 0) return imgbb(url, init);
+      if (/^https:\/\/(www\.)?americangraphiccontractors\.com\/_functions(-dev)?\//.test(url)) return backend(DEV ? url.replace(/\/_functions\//, '/_functions-dev/') : url, init);
+    } catch (e) { return Promise.reject(e); }
+    return _fetch(input, init);
+  };
+})();
+</script>
+<script>
+/* Keys for Home and My Projects. No secret key belongs here. Airtable and ImgBB need no key in this
+   page any more (the bridge sends those calls to AGC's backend with the installer's session);
+   "bridge" just tells the pages to go ahead. The public Mapbox browser key (pk.…) is handed in by
+   the Wix page code (agc_keys), because GitHub's secret scanner will not accept it in this file. */
+window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
+</script>
 <script>
 /* ═════════════════════════════════════════════════════════════════════════
    THE ROUTER
@@ -28239,6 +28425,13 @@ function mdToHtml(s){
   /* Build a page: its original HTML + the shared tokens + its look layer (+ the pixel field). */
   function buildPage(name){
     var html = unescapeBlock(text('agc-page-' + name)).replace(/^\s+/, '');
+    /* the secure bridge goes in before any of the page's own scripts */
+    var br = text('agc-bridge-src');
+    if (br) {
+      var bt = '<' + 'script data-agc-bridge>\n' + br + '\n<' + '/script>';
+      var hm = /<head[^>]*>/i.exec(html);
+      html = hm ? html.slice(0, hm.index + hm[0].length) + bt + html.slice(hm.index + hm[0].length) : bt + html;
+    }
     var css = text('agc-look-tokens') + '\n' + text('agc-look-' + name);
     var i = html.indexOf('</head>');
     if (i > -1) html = html.slice(0, i) + '<style data-agc-look>\n' + css + '\n</style>\n' + html.slice(i);
@@ -28274,6 +28467,7 @@ function mdToHtml(s){
   function prime(name){
     post(name, { type: 'agc_view', active: name === current });     /* only the view on screen animates its stars */
     if (keys && name !== 'profile') post(name, { type: 'agc_keys', keys: keys });
+    gateSession(name);
     if (name === 'home') post('home', { type: 'agc_router', morph: true });
   }
   /* Load a page again from scratch (used when keys arrive after it already tried to load its data). */
@@ -28299,7 +28493,7 @@ function mdToHtml(s){
     var out = {}, any = false;
     ['airtable', 'invoice', 'imgbb', 'mapbox', 'foursquare'].forEach(function(n){ if (typeof k[n] === 'string' && k[n]) { out[n] = k[n]; any = true; } });
     if (!any) return;
-    keys = out;
+    keys = Object.assign({}, keys || {}, out);      /* keys from Wix add to the ones already here */
     ['home', 'projects'].forEach(function(n){
       if (!started[n]) return;
       if (ridSent[n]) restart(n); else post(n, { type: 'agc_keys', keys: keys });
@@ -28358,172 +28552,110 @@ function mdToHtml(s){
     post(name, { type: 'recordId', recordId: recordId });
   }
   function learnRid(r){
-    if (!r || r === recordId) return;
-    recordId = r;
-    if (gateOpenFor(r)) NAMES.forEach(giveRid); else gateCheck();     /* a new record id always means: sign in first */
+    /* The installer is named only by the server sign-in (agc_partner_init). An id on the address
+       or in any other message is not trusted: the Wix page passes the link's id to the sign-in itself. */
   }
 
-  /* ═════════════════════════════════════════════════════════════════════════
-     SIGN-IN GATE
-     The pop-up (#agc-lock) sits over all three views. Until the installer has
-     created or entered their password, the pages are NOT given the record id,
-     so they load nothing of the installer's.
+  /* SIGN-IN (Nov 13 2026: checked on the server)
+     The pop-up (#agc-lock) sits over all three views. Until the installer has signed in,
+     the pages are NOT given the record id or a session, so they load nothing of theirs.
 
-     Where the password lives: Airtable, Installers table, field
-     "PORTAL PASSWORD (ENCRYPTED)". It holds a salted one-way hash
-     (PBKDF2-SHA256), never the password. Clearing that cell resets the
-     password: the installer is asked to create a new one next time.
-     "PORTAL PASSWORD SET ON" is stamped when a password is created.
-
-     How it is read and written: through the same Wix backend functions
-     My Profile uses (getInstaller / patchInstaller). No key is needed here.
-     The backend must allow those two field names in its writable list.
-
-     Developer bypass: shown only when this file is NOT running on the Wix
-     site AND no installer record is connected (demo data only). Set
-     AGC_DEV_BYPASS to false to remove the button completely.
-     ═════════════════════════════════════════════════════════════════════════ */
-  var AGC_DEV_BYPASS = true;
-  var PW_FIELD = 'PORTAL PASSWORD (ENCRYPTED)', PW_DATE_FIELD = 'PORTAL PASSWORD SET ON', PW_NAME_FIELD = 'FIRST NAME';
-  var PW_MIN = 8, PW_ITER = 600000;
-  var PW_API = 'https://www.americangraphiccontractors.com/_functions';
-  var SANDBOX = !/(^|\.)(filesusr\.com|wixsite\.com|wix\.com|wixstudio\.com|editorx\.com|americangraphiccontractors\.com|github\.io)$/i.test(location.hostname || '');
-  var gate = { open: false, rid: null, mode: 'wait', preview: 'enter', hash: '', name: '', busy: false, pendingPw: null, pendingT: 0, fails: 0, until: 0, held: [], hideT: 0 };
+     How it works: this page never sees a password hash. It passes what the installer types
+     to the Wix page (Vendor Portal page code), which asks backend/partnerPortal.web.js. That
+     checks the password against PORTAL PASSWORD (ENCRYPTED) on the server and, if it is right,
+     answers with the installer's id and a session token. The token goes to the three pages,
+     which send it with every data call; the backend only answers with that installer's own data.
+       portal → Wix:  agc_partner_ready, agc_partner_login {password | email+password},
+                      agc_partner_create_password {password}, agc_partner_forgot_password {email},
+                      agc_partner_logout
+       Wix → portal:  agc_partner_login_required {linked, firstName, emailHint, needsSetup, message},
+                      agc_partner_init {recordId, firstName, notice, token},
+                      agc_partner_login_failed {error}, agc_partner_forgot_sent, agc_partner_error {error}
+     Clearing PORTAL PASSWORD (ENCRYPTED) in Airtable resets the password (and ends any session). */
+  var PW_MIN = 8;
+  var gate = { open: false, rid: null, mode: 'wait', name: '', linked: false, emailHint: '', busy: false, held: [], hideT: 0, answered: false, waitT: 0, token: '' };
   function gel(id){ return document.getElementById('agc-lock-' + id); }
   function gateOpenFor(r){ return gate.open && gate.rid === (r || null); }
 
-  function gateBusy(b){ gate.busy = b; var go = gel('go'); go.disabled = b; go.classList.toggle('busy', b); }
+  function gateBusy(b){ gate.busy = b; var go = gel('go'); go.disabled = b; go.classList.toggle('busy', b); clearTimeout(gate.waitT);
+    if (b) gate.waitT = setTimeout(function(){ if (gate.busy) { gateBusy(false); gateErr("The portal didn't answer. Please try again."); } }, 25000); }
   function gateErr(t){ gel('msg').textContent = t || ''; }
-  function gateShow(mode){
+  function gateShow(mode, message){
     gate.mode = mode;
-    var form = (mode === 'create' || mode === 'enter' || mode === 'pending' || mode === 'sandbox');
-    var create = (mode === 'create' || (mode === 'sandbox' && gate.preview === 'create'));
+    var form = (mode === 'create' || mode === 'enter' || mode === 'email');
+    var create = mode === 'create';
     var hi = gate.name ? ', ' + gate.name : '';
     var title = 'Welcome', sub = 'Checking your account…', go = 'Sign in';
-    if (mode === 'offline' && gate.missing) { title = "We couldn't find your account"; sub = "This link doesn't match an AGC partner account. Open the portal from your AGC link, or contact AGC."; go = 'Try again'; }
-    else if (mode === 'offline') { title = "Can't reach the portal"; sub = "We couldn't check your account. Check your connection and try again."; go = 'Try again'; }
-    else if (mode === 'broken') { title = 'Password needs a reset'; sub = "Your saved password can't be read. Please contact AGC and we'll reset it."; }
+    if (mode === 'offline') { title = "Can't reach the portal"; sub = message || "We couldn't check your account. Check your connection and try again."; go = 'Try again'; }
+    else if (mode === 'nohost') { title = 'Open your AGC portal link'; sub = 'The Partner Portal opens from the AGC website. Use the portal link AGC sent you.'; }
     else if (create) { title = 'Welcome' + hi; sub = "Create a password to protect your Partner Portal. You'll enter it each time you sign in."; go = 'Create password'; }
+    else if (mode === 'email') { title = 'Welcome back'; sub = 'Sign in with your email and Partner Portal password.'; }
     else if (form) { title = 'Welcome back' + hi; sub = 'Enter your password to open your Partner Portal.'; }
     gel('title').textContent = title; gel('sub').textContent = sub;
     gel('spin').hidden = mode !== 'wait';
-    gel('body').hidden = (mode === 'wait' || mode === 'broken');
-    gel('new').hidden = true;
+    gel('body').hidden = (mode === 'wait' || mode === 'nohost');
+    gel('new').hidden = mode !== 'email';
+    gel('email-row').hidden = mode !== 'email';
     gel('pw-row').hidden = !form;
     gel('pw2-row').hidden = !create;
     gel('pw-label').textContent = create ? 'Create password (' + PW_MIN + '+ characters)' : 'Password';
     gate.create = create; if (gate.armed) gel('pw').setAttribute('autocomplete', create ? 'new-password' : 'current-password');
     gel('go').textContent = go;
+    gel('go').hidden = !(form || mode === 'offline');
     gel('forgot').hidden = !form || create;
-    gel('flip').hidden = mode !== 'sandbox';
-    gel('flip').textContent = gate.preview === 'create' ? 'Preview the sign-in screen' : 'Preview the create-password screen';
-    gel('dev').hidden = !(mode === 'sandbox' && AGC_DEV_BYPASS);
-    gel('hint').textContent = mode === 'sandbox' ? 'Sandbox preview: no installer record is connected, so there is no password to save or check here.' : '';
+    gel('flip').hidden = true;
+    gel('dev').hidden = true;
+    gel('hint').textContent = (form && message) ? message : ((mode === 'enter' && gate.emailHint) ? 'Signing in as ' + gate.emailHint : '');
     gel('pw').value = ''; gel('pw2').value = '';
     gateErr(''); gateBusy(false);
     clearTimeout(gate.hideT);
     var box = document.getElementById('agc-lock');
     box.hidden = false; box.classList.remove('is-leaving');
     NAMES.forEach(function(n){ try { frames[n].inert = true; frames[n].setAttribute('aria-hidden', 'true'); } catch (e) {} });
-    if (form && gate.armed) setTimeout(function(){ try { gel('pw').focus(); } catch (e) {} }, 80);
+    if (form && gate.armed) setTimeout(function(){ try { (mode === 'email' ? gel('email') : gel('pw')).focus(); } catch (e) {} }, 80);
   }
   /* WHY THE PASSWORD BOXES ARE SWITCHED ON LATE
      Wix only starts passing messages to and from an HTML embed once the embed has finished loading.
-     Password managers (LastPass and others) add a pop-up frame of their own next to a password box
-     the moment one appears or takes the cursor; if that happens while this page is still loading,
-     the page never counts as "finished", Wix never opens its channel, and the installer's ID never
-     arrives ("We couldn't find your account"). So the boxes sit in the page as plain hidden inputs
-     and only become real password boxes here, once loading is over. */
+     Password managers add a pop-up frame of their own next to a password box the moment one appears;
+     if that happens while this page is still loading, the page never counts as "finished" and Wix
+     never opens its channel. So the boxes sit in the page as plain hidden inputs and only become
+     real password boxes here, once loading is over. */
   function gateArm(){
     if (gate.armed) return;
     gate.armed = true;
-    var a = gel('pw'), b = gel('pw2');
+    var a = gel('pw'), b = gel('pw2'), m = gel('email');
     a.type = 'password'; a.name = 'password'; a.setAttribute('autocomplete', gate.create ? 'new-password' : 'current-password');
     b.type = 'password'; b.name = 'confirm'; b.setAttribute('autocomplete', 'new-password');
+    m.type = 'email'; m.name = 'email'; m.setAttribute('autocomplete', 'username');
     document.getElementById('agc-lock').classList.add('is-armed');
-    if (!gate.open && !gel('pw-row').hidden && !gel('body').hidden) setTimeout(function(){ try { a.focus(); } catch (e) {} }, 80);
+    if (!gate.open && !gel('pw-row').hidden && !gel('body').hidden) setTimeout(function(){ try { (gate.mode === 'email' ? m : a).focus(); } catch (e) {} }, 80);
   }
+  function gateSession(name){ if (gate.token) post(name, { type: 'agc_session', token: gate.token }); }
   function gateUnlock(r){
-    gate.open = true; gate.rid = r || null; gate.fails = 0; gateActive();
+    gate.open = true; gate.rid = r || null; gateActive();
     var box = document.getElementById('agc-lock');
     box.classList.add('is-leaving');
     clearTimeout(gate.hideT);
     gate.hideT = setTimeout(function(){ box.hidden = true; }, 460);
     NAMES.forEach(function(n){ try { frames[n].inert = false; frames[n].removeAttribute('aria-hidden'); } catch (e) {} });
     if (r) {
+      NAMES.forEach(gateSession);                    /* the session first, so the pages' first calls carry it */
       NAMES.forEach(giveRid);
       gate.held.splice(0).forEach(function(raw){ post('home', raw); post('projects', raw); });   /* what Wix sent while locked */
-      /* Home's greeting ("Hey …"): the name is already known from the sign-in check, so hand it over
-         rather than leave Home waiting on its own Airtable lookup. */
       if (gate.name) post('home', { type: 'agc_installer_name', firstName: gate.name });
     }
     try { frames[current].focus(); } catch (e) {}
   }
 
-  /* ── the account, through the Wix backend ── */
-  function pwFetch(path, init){
-    var ctl = (typeof AbortController === 'function') ? new AbortController() : null;
-    var t = setTimeout(function(){ if (ctl) ctl.abort(); }, 15000);
-    init = init || {}; if (ctl) init.signal = ctl.signal;
-    return fetch(PW_API + path, init).then(function(res){
-      clearTimeout(t);
-      if (!res.ok) { var er = new Error('HTTP ' + res.status); er.status = res.status; throw er; }
-      return res.json();
-    }, function(e){ clearTimeout(t); throw e; });
-  }
-  function readAccount(r){
-    return pwFetch('/getInstaller?id=' + encodeURIComponent(r)).then(function(rec){
-      var f = (rec && rec.fields) || {};
-      return { hash: typeof f[PW_FIELD] === 'string' ? f[PW_FIELD].trim() : '', name: typeof f[PW_NAME_FIELD] === 'string' ? f[PW_NAME_FIELD].trim().split(/\s+/)[0] : '' };
-    });
-  }
-  function saveHash(r, hash){
-    var fields = {}; fields[PW_FIELD] = hash; fields[PW_DATE_FIELD] = new Date().toISOString();
-    return pwFetch('/patchInstaller', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: r, fields: fields }) })
-      .then(function(){ return readAccount(r); })
-      .then(function(acc){ if (acc.hash !== hash) throw new Error('password field was not saved by the backend'); });   /* never unlock on a write that did not stick */
-  }
-
-  /* ── hashing (in the browser; only the salted hash ever leaves it) ── */
-  function b64(buf){ var b = new Uint8Array(buf), s = ''; for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); }
-  function unb64(s){ var bin = atob(s), b = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i); return b; }
-  function derive(pw, salt, iter){
-    if (!(window.crypto && crypto.subtle && window.TextEncoder)) return Promise.reject(new Error('no web crypto'));
-    return crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits'])
-      .then(function(k){ return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: iter }, k, 256); });
-  }
-  function parseHash(h){
-    var p = String(h || '').split('$');
-    if (p.length !== 4 || p[0] !== 'pbkdf2-sha256') return null;
-    var iter = parseInt(p[1], 10);
-    if (!(iter >= 10000 && iter <= 5000000)) return null;
-    try { return { iter: iter, salt: unb64(p[2]), out: p[3] }; } catch (e) { return null; }
-  }
-  function makeHash(pw){
-    var salt = crypto.getRandomValues(new Uint8Array(16));
-    return derive(pw, salt, PW_ITER).then(function(bits){ return 'pbkdf2-sha256$' + PW_ITER + '$' + b64(salt) + '$' + b64(bits); });
-  }
-  function checkHash(pw, stored){
-    var p = parseHash(stored);
-    if (!p) return Promise.reject(new Error('unreadable hash'));
-    return derive(pw, p.salt, p.iter).then(function(bits){
-      var a = b64(bits), b = p.out, d = a.length ^ b.length;
-      for (var i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ (b.charCodeAt(i) || 0);
-      return d === 0;
-    });
-  }
-  /* Nothing is remembered between page loads: refreshing the page always signs
-     the installer out, and so does AGC_IDLE_MS without touching the portal. */
-  function remembered(r){ return ''; }
-  function remember(r, h){}
+  /* Nothing is remembered between page loads: refreshing the page always signs the installer
+     out, and so does AGC_IDLE_MS without touching the portal. */
   function gateNotice(t){ try { if (t) sessionStorage.setItem('agc_portal_notice', t); else sessionStorage.removeItem('agc_portal_notice'); } catch (e) {} }
   function gateSignOut(why){
     gateNotice(why || '');
-    try { ['agc_portal_last'].concat(recordId ? ['agc_portal_unlock_' + recordId] : []).forEach(function(k){ sessionStorage.removeItem(k); }); } catch (e) {}
-    try { location.reload(); } catch (e) {}
+    up({ type: 'agc_partner_logout' });
+    try { sessionStorage.removeItem('agc_portal_last'); } catch (e) {}
+    setTimeout(function(){ try { location.reload(); } catch (e) {} }, 60);
   }
-  /* Signed out automatically after this long with no mouse, touch, scroll or
-     key press anywhere in the portal. Only runs while an installer is signed in. */
   var AGC_IDLE_MS = 5 * 60 * 1000;
   var lastActive = Date.now();
   function gateActive(){ lastActive = Date.now(); }
@@ -28534,86 +28666,59 @@ function mdToHtml(s){
   setInterval(function(){
     if (gate.open && gate.rid && Date.now() - lastActive >= AGC_IDLE_MS) gateSignOut('You were signed out after 5 minutes without activity. Please sign in again.');
   }, 5000);
-  function gateCheck(){
-    var r = recordId;
-    gate.open = false; gate.rid = null;
-    var early = gate.mode === 'pending';            /* the password box is already showing: leave it up while the account is looked up */
-    if (!early) gateShow('wait');
-    readAccount(r).then(function(acc){
-      if (r !== recordId) return;
-      gate.hash = acc.hash; gate.name = acc.name;
-      var typed = early ? gel('pw').value : '', sent = early ? gate.pendingPw : null;
-      clearTimeout(gate.pendingT); gate.pendingPw = null;
-      var next = !acc.hash ? 'create' : (parseHash(acc.hash) ? 'enter' : 'broken');
-      gateShow(next);
-      gateSaid();
-      if (next === 'enter' && typed) {              /* keep what was typed; if Sign in was already pressed, carry on with it */
-        gel('pw').value = typed;
-        if (sent) gateSubmit({ preventDefault: function(){} });
-      } else if (next === 'create' && (typed || sent)) {
-        gel('hint').textContent = 'This account has no password yet. Create one to get started.';
-      }
-    }, function(e){
-      if (r !== recordId) return;
-      try { console.warn('[AGC portal] sign-in: could not read the installer record', e && e.message); } catch (x) {}
-      gate.missing = !!(e && e.status === 404);      /* the backend answered: no such installer */
-      gateShow('offline');
-    });
+
+  /* What the Wix page says about signing in. Returns true when the message was a sign-in message. */
+  function gateFromHost(m){
+    var t = m && m.type;
+    if (!t || String(t).indexOf('agc_partner_') !== 0) return false;
+    switch (t) {
+      case 'agc_partner_login_required':
+        gate.answered = true;
+        if (gate.open) { gate.open = false; gate.rid = null; }       /* a brand-new partner who just started a profile */
+        gate.name = String(m.firstName || '').trim().split(/\s+/)[0] || '';
+        gate.linked = !!m.linked; gate.emailHint = String(m.emailHint || '');
+        gateShow(m.needsSetup ? 'create' : (m.linked ? 'enter' : 'email'), m.message || '');
+        gateSaid();
+        return true;
+      case 'agc_partner_init':
+        gate.answered = true;
+        if (typeof m.token !== 'string' || !m.token || !RID_FULL.test(String(m.recordId || ''))) { gateShow('offline', 'Your sign-in could not be completed. Please try again.'); return true; }
+        gate.token = m.token;
+        if (m.firstName) gate.name = String(m.firstName).trim().split(/\s+/)[0];
+        recordId = m.recordId;
+        gateUnlock(recordId);
+        return true;
+      case 'agc_partner_login_failed':
+        gate.answered = true;
+        gateBusy(false); gateErr(m.error || "That didn't work. Please try again.");
+        try { gel('pw').select(); } catch (e) {}
+        return true;
+      case 'agc_partner_forgot_sent':
+        gateBusy(false);
+        gel('hint').textContent = m.error ? m.error : "AGC has been told. Once your password is reset, open the portal from your AGC link to create a new one.";
+        return true;
+      case 'agc_partner_error':
+        gate.answered = true;
+        gateShow('offline', m.error || '');
+        return true;
+      case 'agc_partner_viewport':
+        return false;
+    }
+    return false;
   }
   function gateSubmit(ev){
     ev.preventDefault();
     if (gate.busy) return;
-    var mode = gate.mode, pw = gel('pw').value, cf = gel('pw2').value, r = recordId;
-    if (mode === 'offline') { gateCheck(); return; }
-    if (mode !== 'create' && mode !== 'enter' && mode !== 'pending' && mode !== 'sandbox') return;
-    var create = (mode === 'create' || (mode === 'sandbox' && gate.preview === 'create'));
+    var mode = gate.mode, pw = gel('pw').value, cf = gel('pw2').value, mail = (gel('email').value || '').trim();
+    if (mode === 'offline') { gateShow('wait'); askHost(true); return; }
+    if (mode !== 'create' && mode !== 'enter' && mode !== 'email') return;
+    if (mode === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { gateErr('Please enter your email address.'); gel('email').focus(); return; }
     if (!pw) { gateErr('Please enter your password.'); gel('pw').focus(); return; }
-    if (create && pw.length < PW_MIN) { gateErr('Please use at least ' + PW_MIN + ' characters.'); gel('pw').focus(); return; }
-    if (create && pw !== cf) { gateErr('The two passwords do not match.'); gel('pw2').focus(); return; }
-    if (mode === 'sandbox') { gateErr('No installer record is connected here, so a password cannot be saved or checked. Use Developer bypass to look around.'); return; }
-    if (Date.now() < gate.until) { gateErr('Too many tries. Please wait a moment, then try again.'); return; }
+    if (mode === 'create' && pw.trim().length < PW_MIN) { gateErr('Please use at least ' + PW_MIN + ' characters.'); gel('pw').focus(); return; }
+    if (mode === 'create' && pw !== cf) { gateErr('The two passwords do not match.'); gel('pw2').focus(); return; }
     gateErr(''); gateBusy(true);
-    if (mode === 'pending') {
-      /* Sign in pressed before Wix has said who this is: hold the password and use it the moment the account is known. */
-      gate.pendingPw = pw;
-      clearTimeout(gate.pendingT);
-      gate.pendingT = setTimeout(function(){
-        if (gate.mode !== 'pending') return;
-        gate.pendingPw = null; gateBusy(false); gateNoAccount();
-      }, 8000);
-      return;
-    }
-    if (mode === 'create') {
-      readAccount(r).then(function(acc){
-        if (acc.hash) { var x = new Error('exists'); x.exists = acc; throw x; }       /* set in another tab meanwhile: never overwrite */
-        return makeHash(pw);
-      }).then(function(h){ return saveHash(r, h).then(function(){ return h; }); })
-        .then(function(h){ if (r !== recordId) return; gate.hash = h; remember(r, h); gateUnlock(r); },
-              function(e){
-                if (r !== recordId) return;
-                if (e && e.exists) { gate.hash = e.exists.hash; gateShow(parseHash(gate.hash) ? 'enter' : 'broken'); gateErr('A password already exists for this account. Please sign in.'); return; }
-                try { console.warn('[AGC portal] sign-in: could not save the password', e && e.message); } catch (x) {}
-                gateBusy(false); gateErr("We couldn't save your password. Please try again, or contact AGC if this keeps happening.");
-              });
-    } else {
-      checkHash(pw, gate.hash).then(function(ok){
-        if (r !== recordId) return;
-        if (ok) { remember(r, gate.hash); gateUnlock(r); return; }
-        gateBusy(false);
-        if (++gate.fails >= 5) { gate.fails = 0; gate.until = Date.now() + 30000; }
-        gateErr("That password isn't right. Please try again."); try { gel('pw').select(); } catch (e) {}
-      }, function(){ gateBusy(false); gateErr("This browser can't check passwords securely. Please update it, or try another browser."); });
-    }
-  }
-  /* The password box is up but nobody has been identified: say so, and offer the way in for a brand-new partner. */
-  function gateNoAccount(){
-    if (gate.mode !== 'pending' || recordId) return;
-    gateErr("We couldn't find your account yet. Open the portal from your AGC link, or contact AGC.");
-    gel('new').hidden = false;
-    /* which part is missing, for whoever is fixing it (message types only, nothing private) */
-    gel('hint').textContent = 'Ref: the page has not sent an installer ID · asked ' + askN + ' times · loading ' +
-      (document.readyState === 'complete' ? 'finished' : 'NOT finished') + ' · ' +
-      (heard.n ? heard.n + ' message' + (heard.n === 1 ? '' : 's') + ' received (' + heard.types.join(', ') + ')' : 'no messages received from the page');
+    if (mode === 'create') up({ type: 'agc_partner_create_password', password: pw });
+    else up({ type: 'agc_partner_login', password: pw, email: mode === 'email' ? mail : '' });
   }
   function gateSaid(){
     var t = ''; try { t = sessionStorage.getItem('agc_portal_notice') || ''; } catch (e) {}
@@ -28629,21 +28734,17 @@ function mdToHtml(s){
       this.classList.toggle('on', show); this.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     });
     gel('forgot').addEventListener('click', function(){
-      gateErr(''); gel('hint').textContent = "Contact your AGC coordinator and we'll reset it. After that, open the portal again to create a new password.";
+      gateErr('');
+      var mail = (gel('email').value || '').trim();
+      if (gate.mode === 'email' && !mail) { gateErr('Enter your email first, then press "Forgotten your password?" again.'); gel('email').focus(); return; }
+      gel('hint').textContent = 'Sending…';
+      up({ type: 'agc_partner_forgot_password', email: gate.mode === 'email' ? mail : '' });
     });
-    gel('flip').addEventListener('click', function(){ gate.preview = gate.preview === 'create' ? 'enter' : 'create'; gateShow('sandbox'); });
     /* someone with no installer record yet: straight to My Profile to start one (nothing of anyone's is loaded) */
-    gel('new').addEventListener('click', function(){ if (!recordId) { gateUnlock(null); show('profile'); } });
-    gel('dev').addEventListener('click', function(){ if (gate.mode === 'sandbox' && AGC_DEV_BYPASS && !recordId) gateUnlock(null); });
+    gel('new').addEventListener('click', function(){ if (!gate.token) { gateUnlock(null); show('profile'); } });
     var v = /id="portal-version"[^>]*>([^<]+)</.exec(text('agc-page-home'));
     gel('ver').textContent = v ? v[1] : '';
-    if (recordId) return;                       /* an id on the address: the check is already running */
-    /* Nobody identified yet: show the password box straight away. As soon as Wix names the installer
-       it becomes that person's sign-in, or the create-a-password screen if they have none. If no name
-       has come after a few seconds, say so. */
-    gateShow(SANDBOX ? 'sandbox' : 'pending');
-    gateSaid();
-    if (!SANDBOX) setTimeout(function(){ if (!gate.busy) gateNoAccount(); }, 8000);
+    gateShow(host ? 'wait' : 'nohost');
   }
 
 
@@ -28799,7 +28900,10 @@ function mdToHtml(s){
         if (lastStepState) post(src, lastStepState);
         return;
       case 'agc_recordId':
-        learnRid(ridOf(m)); up(m); return;
+        up(m); return;                 /* a brand-new partner's profile: the Wix page asks them to create a password */
+      case 'agc_session_expired':
+        if (gate.token) gateSignOut('Your session has ended. Please sign in again.');
+        return;
       case 'agc_nav_morph':
         if (src === 'home') morphNavigate(m);
         return;
@@ -28814,6 +28918,7 @@ function mdToHtml(s){
     if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) {} }
     if (m && typeof m === 'object' && m.type === 'agc_keys') { setKeys(m.keys || m); return; }     /* keys stop here: never forwarded as-is, never sent up */
     if (m && typeof m === 'object' && m.type === 'agc_partner_viewport') { heard.n++; setCap(m.height); return; }   /* the window's height, for the fit */
+    if (m && typeof m === 'object' && gateFromHost(m)) { heard.n++; return; }                                     /* sign-in answers stop here */
     heard.n++;
     var kind = (m && typeof m === 'object') ? String(m.type || 'no type').slice(0, 28) : typeof m;
     if (heard.types.indexOf(kind) < 0 && heard.types.length < 6) heard.types.push(kind);
@@ -28857,15 +28962,20 @@ function mdToHtml(s){
   var ridTop = null; try { if (host) ridTop = ridFromUrl(window.top.location.href); } catch (e) {}
   learnRid(ridFromUrl(window.location.href) || ridTop || ridFromUrl(document.referrer));
 
-  /* Ask the Wix page who this is, and keep asking until it answers: every "ready" name the three
-     pages used to send, plus a plain request. Stops the moment a record id arrives (or after 30 s). */
-  var askN = 0;
-  function askHost(){
-    if (!host || recordId) return false;
-    up({ type: 'agc_request_record_id' }); up({ type: 'agc_iframe_ready' }); up({ type: 'agc_intro_ready' }); up({ type: 'agc_projects_ready' });
-    return true;
+  /* Tell the Wix page the portal is ready, and keep telling it until it answers (Wix only opens
+     its channel once this embed has loaded). The answer is a sign-in screen or the session. */
+  var askN = 0, askT = 0;
+  function askHost(again){
+    if (!host) return;
+    if (again) { gate.answered = false; askN = 0; }
+    clearInterval(askT);
+    function tick(){
+      if (gate.answered) { clearInterval(askT); return; }
+      if (++askN > 40) { clearInterval(askT); gateShow('offline', "The AGC website didn't answer. Please refresh the page."); return; }
+      up({ type: 'agc_partner_ready' });
+    }
+    tick(); askT = setInterval(tick, 1500);
   }
-  if (askHost()) var askT = setInterval(function(){ if (++askN > 180 || !askHost()) clearInterval(askT); }, 1000);
 
   /* FIT THE BROWSER WINDOW (the same idea as the client portal)
      The Wix box this page sits in has a fixed height; the browser window is usually shorter or taller.
@@ -28919,13 +29029,14 @@ function mdToHtml(s){
   var first = (location.hash || '').replace('#', '');
   try { if (window.AGC_KEYS) setKeys(window.AGC_KEYS); } catch (e) {}
   gateStart();
+  askHost();
 
   /* NEWEST VERSION, AUTOMATICALLY (the copy served from GitHub only)
      GitHub keeps handing out a saved copy of this page for a few minutes after an update. So on
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6045;
+  var AGC_BUILD = 6046;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){

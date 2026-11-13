@@ -17,6 +17,9 @@ import wixLocation from 'wix-location-frontend';
 import wixWindowFrontend from 'wix-window-frontend';
 
 const HTML_ID = '#html3';
+// The public Mapbox browser key (starts with pk.) for the project maps. Public by design, but it is set
+// here in Wix only: GitHub's secret scanner blocks it in the repository copy of this file.
+const MAPBOX_PUBLIC_KEY = '';
 
 const linkId = () => {
   try {
@@ -44,7 +47,7 @@ $w.onReady(() => {
   const html = findPortal();
   if (!html) { console.error('AGC Partner Portal: no HTML embed found (set the HTML box ID to "html3").'); return; }
   const send = (msg) => html.postMessage(msg);
-  let starting = false;
+  let starting = false, keysSent = false;
 
   async function askToSignIn(message) {
     let who = {};
@@ -63,6 +66,7 @@ $w.onReady(() => {
     const m = event.data || {};
     switch (m.type) {
       case 'agc_partner_ready': {
+        if (MAPBOX_PUBLIC_KEY && !keysSent) { keysSent = true; send({ type: 'agc_keys', keys: { mapbox: MAPBOX_PUBLIC_KEY } }); }
         if (starting) return;
         starting = true;
         try {
