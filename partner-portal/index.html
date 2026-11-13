@@ -5120,6 +5120,10 @@ window.AGC_LOOK_FIELD = {
     grid-template-columns:1fr !important;
     grid-template-rows:repeat(6,minmax(0,1fr)) !important;
   }
+  /* My Toolbox has three mini cards now (the Coming Soon ones were removed): three rows, not six. */
+  .cards .card:nth-child(2) .tool-grid.tool-grid--row{
+    grid-template-rows:repeat(3,minmax(0,1fr)) !important;
+  }
 
   /* Toolbox + Profile mini cards become horizontal ROWS: icon pinned to the
      left, text beside it (left-aligned). */
@@ -5432,6 +5436,14 @@ window.AGC_LOOK_FIELD = {
   .cards .card .projects-summary-row > .weather-alerts{min-height:0;overflow:hidden;}
   .cards .card .tool-grid.tool-grid--two{flex:1 1 0;margin-top:10px;}
 }
+/* ── DESKTOP: MY TOOLBOX HAS ONE ROW OF THREE ───────────────────────────────
+   (The three Coming Soon cards were removed.) Its three cards run the full height of the two rows the
+   other cards have, so their tops and bottoms still line up with the neighbours'. The icon keeps the
+   size it has on an ordinary mini card (it is sized from the card's height, which has doubled). */
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  .cards .card .tool-grid.tool-grid--row{grid-template-rows:1fr;}
+  .cards .card .tool-grid--row .tool-btn:not(.no-icon) .tool-btn-icon{height:72%;}
+}
 /* ── DESKTOP: ACTIVE MINI CARDS ─────────────────────────────────────────────
    The mini cards that used to carry the green "Active" banner along the bottom (View Projects,
    View Calendar, Upload Invoice, Service Area, Update My Profile): the banner is gone and the
@@ -5661,7 +5673,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.75</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.77</span>
  </div>
 
  <div class="hero">
@@ -5710,27 +5722,10 @@ window.AGC_LOOK_FIELD = {
      <div class="card-face card-face--back">
      <div class="card-icon">
        <svg class="card-icon-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-         <\!-- Pole shadow -->
-         <rect x="29.5" y="42" width="5" height="22" fill="rgba(0,0,0,0.35)"/>
-         <\!-- Pole -->
-         <rect x="30" y="40" width="4" height="22" fill="#7a7a7a"/>
-         <rect x="30" y="40" width="1.5" height="22" fill="#b0b0b0"/>
-         <\!-- Sign shadow -->
-         <rect x="7" y="11" width="50" height="30" rx="3" fill="rgba(0,0,0,0.35)"/>
-         <\!-- Sign body (AGC green) -->
-         <rect x="6" y="10" width="50" height="30" rx="3" fill="#92C64B"/>
-         <\!-- Sign glossy top edge highlight -->
-         <rect x="6" y="10" width="50" height="4" rx="3" fill="rgba(255,255,255,0.28)"/>
-         <\!-- Sign bottom inner shadow -->
-         <rect x="6" y="36" width="50" height="4" fill="rgba(0,0,0,0.15)"/>
-         <\!-- Sign content — abstract logo / text -->
-         <circle cx="16" cy="25" r="5" fill="#fff"/>
-         <path d="M13.5,25 L15,27 L18.5,23.5" stroke="#92C64B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-         <rect x="25" y="18" width="24" height="4" rx="1" fill="#fff"/>
-         <rect x="25" y="25" width="18" height="2.5" rx="1" fill="rgba(255,255,255,0.7)"/>
-         <rect x="25" y="30" width="21" height="2.5" rx="1" fill="rgba(255,255,255,0.7)"/>
-         <\!-- Mounting bolts on pole -->
-         <circle cx="32" cy="44" r="1.2" fill="#444"/>
+         <\!-- solid AGC green, one flat shape (details are cut-outs) -->
+         <path fill-rule="evenodd" fill="#92C64B" d="M15 9H49a6 6 0 0 1 6 6V33a6 6 0 0 1-6 6H15a6 6 0 0 1-6-6V15a6 6 0 0 1 6-6ZM18 18.5v4.6h28v-4.6ZM18 27v4.6h19V27Z"/>
+         <rect x="29.2" y="39" width="5.6" height="17" fill="#92C64B"/>
+         <rect x="21" y="54.5" width="22" height="5" rx="2.5" fill="#92C64B"/>
        </svg>
      </div>
      <div class="card-title">My Projects</div>
@@ -5830,35 +5825,15 @@ window.AGC_LOOK_FIELD = {
      <div class="card-face card-face--back">
      <div class="card-icon">
        <svg class="card-icon-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-         <\!-- Toolbox body shadow -->
-         <rect x="9" y="25" width="46" height="30" rx="3" fill="rgba(0,0,0,0.4)"/>
-         <\!-- Toolbox body (AGC green) -->
-         <rect x="8" y="24" width="46" height="30" rx="3" fill="#92C64B"/>
-         <\!-- Toolbox darker bottom -->
-         <rect x="8" y="44" width="46" height="10" rx="0" fill="#6fa43a"/>
-         <\!-- Toolbox top lid highlight -->
-         <rect x="8" y="24" width="46" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
-         <\!-- Toolbox handle base (shadow) -->
-         <rect x="19" y="12" width="26" height="14" rx="3" fill="#2d3e1f"/>
-         <\!-- Handle opening (cutout) -->
-         <rect x="24" y="8" width="16" height="8" rx="2" fill="#2a2a2e"/>
-         <\!-- Handle highlight -->
-         <rect x="24" y="8" width="16" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
-         <\!-- Toolbox latch/lock -->
-         <rect x="28" y="33" width="8" height="6" rx="1" fill="#444"/>
-         <circle cx="32" cy="36" r="1.3" fill="#ffb81f"/>
-         <\!-- Peeking tool (screwdriver handle) -->
-         <rect x="15" y="20" width="3" height="8" rx="1.5" fill="#d89010"/>
-         <rect x="15.5" y="14" width="2" height="10" fill="#c0c0c0"/>
-         <\!-- Peeking wrench -->
-         <rect x="44" y="18" width="2.5" height="12" rx="1.25" fill="#b0b0b0"/>
-         <circle cx="45.25" cy="16" r="3" fill="none" stroke="#b0b0b0" stroke-width="1.5"/>
+         <\!-- solid AGC green, one flat shape (details are cut-outs) -->
+         <path fill-rule="evenodd" fill="#92C64B" d="M13 23H51a6 6 0 0 1 6 6V50a6 6 0 0 1-6 6H13a6 6 0 0 1-6-6V29a6 6 0 0 1 6-6ZM7 35.5v3.2h20.5v-3.2ZM36.5 35.5v3.2H57v-3.2Z"/>
+         <path fill="#92C64B" d="M22 23V17.5A6.5 6.5 0 0 1 28.5 11h7A6.5 6.5 0 0 1 42 17.5V23h-5.2v-5a1.8 1.8 0 0 0-1.8-1.8h-6a1.8 1.8 0 0 0-1.8 1.8v5Z"/>
        </svg>
      </div>
      <div class="card-title">My Toolbox</div>
      <div class="card-desc">Job-site tools for surveys, safety, measurements, and closeouts &mdash; all in one place.</div>
 
-     <div class="tool-grid">
+     <div class="tool-grid tool-grid--row">
        <\!-- 1. Upload Invoice — invoice document with green upload arrow.
             Beta (active) — opens an in-portal popup, not an external URL. -->
        <button style="--tc:#fbbf24;" class="tool-btn beta" onclick="openTool(event,'upload_invoice')">
@@ -5909,64 +5884,8 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-beta-label is-beta">Beta</span>
        </button>
 
-       <\!-- 4. FLHA — hazard warning triangle -->
-       <button class="tool-btn soon" onclick="openTool(event,'flha')" disabled>
-         <span class="tool-btn-icon">
-           <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <defs><linearGradient id="gt6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a6b"/><stop offset="1" stop-color="#ea4a1f"/></linearGradient></defs>
-             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt6)"/>
-             <g transform="translate(24 24) scale(0.98) translate(-24 -23)">
-             <path d="M24 11.5 L37 34.5 H11 Z" fill="#fff" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>
-             <rect x="22.5" y="19" width="3" height="8.6" rx="1.5" fill="#ea4a1f"/>
-             <circle cx="24" cy="31" r="1.8" fill="#ea4a1f"/>
-             </g>
-           </svg>
-         </span>
-         <span class="tool-btn-label">FLHA</span>
-         <span class="tool-btn-soon-label">Coming Soon</span>
-       </button>
 
-       <\!-- 5. Material Calculator — calculator with LCD -->
-       <button class="tool-btn soon" onclick="openTool(event,'material_calc')" disabled>
-         <span class="tool-btn-icon">
-           <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <defs><linearGradient id="gt7" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7f9"/><stop offset="1" stop-color="#0891b2"/></linearGradient></defs>
-             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt7)"/>
-             <g transform="translate(24 24) scale(1.0) translate(-24 -24)">
-             <rect x="14" y="10" width="20" height="28" rx="3" fill="#fff"/>
-             <rect x="17.4" y="13.4" width="13.2" height="6" rx="1.4" fill="#0891b2"/>
-             <circle cx="19.4" cy="24.4" r="1.7" fill="#0891b2"/>
-             <circle cx="24" cy="24.4" r="1.7" fill="#0891b2"/>
-             <circle cx="28.6" cy="24.4" r="1.7" fill="#0891b2"/>
-             <circle cx="19.4" cy="29" r="1.7" fill="#0891b2"/>
-             <circle cx="24" cy="29" r="1.7" fill="#0891b2"/>
-             <circle cx="28.6" cy="29" r="1.7" fill="#0891b2"/>
-             <circle cx="19.4" cy="33.6" r="1.7" fill="#0891b2"/>
-             <circle cx="24" cy="33.6" r="1.7" fill="#0891b2"/>
-             <circle cx="28.6" cy="33.6" r="1.7" fill="#0891b2"/>
-             </g>
-           </svg>
-         </span>
-         <span class="tool-btn-label">Material Calc</span>
-         <span class="tool-btn-soon-label">Coming Soon</span>
-       </button>
 
-       <\!-- 6. AR Sign Preview — phone projecting a sign -->
-       <button class="tool-btn soon" onclick="openTool(event,'ar_preview')" disabled>
-         <span class="tool-btn-icon">
-           <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <defs><linearGradient id="gt8" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3a8ff"/><stop offset="1" stop-color="#c026d3"/></linearGradient></defs>
-             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt8)"/>
-             <g transform="translate(24 24) scale(1.11) translate(-24 -24)">
-             <path d="M13 18.5 V13 H18.5 M29.5 13 H35 V18.5 M35 29.5 V35 H29.5 M18.5 35 H13 V29.5" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-             <rect x="18" y="18.6" width="12" height="7.6" rx="1.6" fill="#fff"/>
-             <rect x="23.1" y="26" width="1.8" height="5.2" fill="#fff"/>
-             </g>
-           </svg>
-         </span>
-         <span class="tool-btn-label">AR Sign Preview</span>
-         <span class="tool-btn-soon-label">Coming Soon</span>
-       </button>
 
      </div>
      </div><\!-- /.card-face--back (My Toolbox) -->
@@ -6000,27 +5919,11 @@ window.AGC_LOOK_FIELD = {
      </div>
      <div class="card-icon">
        <svg class="card-icon-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-         <\!-- Shoulders / uniform (AGC green work shirt) -->
-         <path d="M10,60 Q10,42 32,42 Q54,42 54,60 L54,64 L10,64 Z" fill="#2d3e1f"/>
-         <path d="M10,60 Q10,44 32,44 Q54,44 54,60 L54,64 L10,64 Z" fill="#92C64B"/>
-         <\!-- Uniform collar V -->
-         <path d="M27,42 L32,50 L37,42 Z" fill="#2d3e1f"/>
-         <\!-- Face -->
-         <ellipse cx="32" cy="28" rx="10" ry="11" fill="#f4c8a0"/>
-         <\!-- Face shadow side -->
-         <path d="M32,17 Q42,17 42,28 Q42,39 32,39 Z" fill="rgba(0,0,0,0.08)"/>
-         <\!-- Hard hat brim -->
-         <ellipse cx="32" cy="19" rx="15" ry="3" fill="#d89010"/>
-         <\!-- Hard hat dome -->
-         <path d="M18,19 Q18,6 32,6 Q46,6 46,19 Z" fill="#ffb81f"/>
-         <\!-- Hard hat dome highlight -->
-         <path d="M21,18 Q21,10 28,8 Q22,12 22,18 Z" fill="rgba(255,255,255,0.35)"/>
-         <\!-- Hard hat top ridge (AGC green) -->
-         <path d="M30,8 Q30,6 32,6 Q34,6 34,8 L34,19 L30,19 Z" fill="#92C64B"/>
-         <\!-- Ridge highlight -->
-         <rect x="31.2" y="7" width="0.9" height="11" fill="rgba(255,255,255,0.4)"/>
-         <\!-- Chinstrap hint -->
-         <path d="M20,19 Q22,22 24,22" stroke="rgba(0,0,0,0.3)" stroke-width="1" fill="none"/>
+         <\!-- solid AGC green, one flat shape (details are cut-outs) -->
+         <path fill="#92C64B" d="M18.5 23.5a13.5 13.5 0 0 1 27 0Z"/>
+         <rect x="14.5" y="22.5" width="35" height="4.6" rx="2.3" fill="#92C64B"/>
+         <path fill="#92C64B" d="M22.6 29.4H41.4V31a9.4 9.4 0 0 1-18.8 0Z"/>
+         <path fill="#92C64B" d="M9 61Q9 44.5 32 44.5Q55 44.5 55 61V63.5H9Z"/>
        </svg>
      </div>
      <\!-- Title row: on desktop the company name sits beside "My Profile", on the same baseline
@@ -29334,7 +29237,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6075;
+  var AGC_BUILD = 6077;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
