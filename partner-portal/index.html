@@ -5496,7 +5496,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.53</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.54</span>
  </div>
 
  <div class="hero">
@@ -29087,7 +29087,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6053;
+  var AGC_BUILD = 6054;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
@@ -29114,7 +29114,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
       accent: '#92C64B',
       specs: [
         { sel: '.agc-lock-card', caster: true, lift: 2.6, pad: 12, lit: 1.7 },                          /* the light falls on the card too (a little stronger than on the black) */
-        { sel: '.agc-lock-go, .agc-lock-input input, .agc-lock:not(.is-armed) .agc-lock-input', caster: true, lift: 1.5, dark: 1.9, soft: 0.5, pad: 0, on: '.agc-lock-card' }   /* and these throw a shadow across it */
+        { sel: '.agc-lock-go, .agc-lock-input input, .agc-lock:not(.is-armed) .agc-lock-input', caster: true, lift: 1.1, dark: 1.05, soft: 0.9, pad: 0, on: '.agc-lock-card' }   /* and these throw a soft shadow across it */
       ],
       off: function(){ var b = document.getElementById('agc-lock'); return !b || b.hidden || b.classList.contains('is-leaving'); }
     };
