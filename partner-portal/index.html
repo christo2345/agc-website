@@ -5436,14 +5436,14 @@ window.AGC_LOOK_FIELD = {
    The mini cards that used to carry the green "Active" banner along the bottom (View Projects,
    View Calendar, Upload Invoice, Service Area, Update My Profile): the banner is gone and the
    card stays the same dark glass as the rest (the icon is handled in the block below).
-   No green fill, at rest or on hover: hover is a lighter glass. "Beta" (orange banner) and
-   "Coming Soon" cards are untouched. */
+   No green fill, at rest or on hover: hover is a lighter glass. Site Monkey's orange "Beta" banner
+   is gone the same way, so it looks like the other active cards. "Coming Soon" cards keep theirs. */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
-  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) > .tool-btn-beta-label{display:none;}
-  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)){
+  .cards .card .tool-btn:has(> .tool-btn-beta-label) > .tool-btn-beta-label{display:none;}
+  .cards .card .tool-btn:has(> .tool-btn-beta-label){
     padding-bottom:10px;                     /* the room that was kept for the banner goes back to the card */
   }
-  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)):hover{
+  .cards .card .tool-btn:has(> .tool-btn-beta-label):hover{
     background:
       linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.06) 28%, transparent 55%),
       radial-gradient(ellipse 100% 70% at 25% -10%, rgba(255,255,255,0.16) 0%, transparent 60%),
@@ -5451,6 +5451,8 @@ window.AGC_LOOK_FIELD = {
   }
 }
 /* ── DESKTOP: MINI-CARD ICONS ───────────────────────────────────────────────
+   The symbols are drawn to one size (each is scaled so its longest side is 28 of the icon's 48 units and
+   centred), so no icon looks bigger than another.
    Every mini card that has an icon: the icon is large, tilted, and set in the card's
    top-left corner so that it runs off the edge. The card crops it (overflow:hidden), so part of
    the icon is missing off the card. The label sits along the bottom (above the banner on Beta and
@@ -5474,7 +5476,15 @@ window.AGC_LOOK_FIELD = {
   /* THE TITLE CARRIES THE COLOUR. Active cards and completed profile steps: bold, in the card's own
      colour (--tc on the tool cards, the step colour --pc on the profile steps). Coming Soon cards
      and steps not yet done keep their muted grey title. */
-  .cards .card .tool-btn .tool-btn-label{font-weight:900;}
+  /* Larger and heavier. The face's heaviest weight is already in use, so a hairline stroke in the text's own
+     colour thickens it further. A title too long for its card runs onto a second line instead of being cut off. */
+  .cards .card .tool-btn .tool-btn-label{
+    font-weight:900;-webkit-text-stroke:0.5px currentColor;
+    font-size:clamp(14px,0.88vw,17px);line-height:1.12;letter-spacing:0.2px;
+    white-space:normal;text-align:center;text-overflow:clip;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+  }
+  .cards .card .tool-btn.no-icon .tool-btn-label{font-size:clamp(17px,1.08vw,21px);-webkit-line-clamp:3;}
   .cards .card .tool-btn:not(.soon):not(.step) .tool-btn-label,
   .cards .card .tool-btn:not(.soon):not(.step):hover .tool-btn-label,
   .cards .card .tool-btn.step.done .tool-btn-label,
@@ -5651,7 +5661,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.72</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.75</span>
  </div>
 
  <div class="hero">
@@ -5769,6 +5779,7 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e06a"/><stop offset="1" stop-color="#6aa22e"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt1)"/>
+             <g transform="translate(24 24) scale(0.95) translate(-24 -23.3)">
              <rect x="14" y="12" width="20" height="26" rx="2.8" fill="#fff"/>
              <rect x="19" y="8.6" width="10" height="6.4" rx="2" fill="#fff" stroke="#6aa22e" stroke-width="1.6"/>
              <path d="M17.6 21.2 l1.7 1.8 l3 -3.4" stroke="#6aa22e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -5776,6 +5787,7 @@ window.AGC_LOOK_FIELD = {
              <path d="M17.6 27.2 l1.7 1.8 l3 -3.4" stroke="#6aa22e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
              <rect x="24.4" y="26" width="6.6" height="2.3" rx="1.15" fill="#6aa22e"/>
              <rect x="17.4" y="32" width="13.6" height="2.3" rx="1.15" fill="#6aa22e" opacity="0.45"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">View Projects</span>
@@ -5786,6 +5798,7 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fe0d0"/><stop offset="1" stop-color="#0f9488"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt2)"/>
+             <g transform="translate(24 24) scale(1.04) translate(-24 -23.05)">
              <rect x="12" y="13.5" width="24" height="23" rx="3.2" fill="#fff"/>
              <rect x="17" y="9.6" width="3.2" height="7.4" rx="1.6" fill="#fff" stroke="#0f9488" stroke-width="1.2"/>
              <rect x="27.8" y="9.6" width="3.2" height="7.4" rx="1.6" fill="#fff" stroke="#0f9488" stroke-width="1.2"/>
@@ -5795,6 +5808,7 @@ window.AGC_LOOK_FIELD = {
              <rect x="28" y="24.6" width="4" height="3.6" rx="1" fill="#0f9488"/>
              <rect x="16" y="30" width="4" height="3.6" rx="1" fill="#0f9488"/>
              <rect x="22" y="30" width="4" height="3.6" rx="1" fill="#0f9488" opacity="0.45"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">View Calendar</span>
@@ -5852,9 +5866,11 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd655"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt3)"/>
+             <g transform="translate(24 24) scale(1.0) translate(-24 -24)">
              <rect x="14" y="10" width="20" height="28" rx="2.8" fill="#fff"/>
              <path d="M24 29.5 V17.6 M18.8 22.6 L24 17.4 L29.2 22.6" stroke="#f59e0b" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
              <rect x="18" y="32.6" width="12" height="2.4" rx="1.2" fill="#f59e0b"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Upload Invoice</span>
@@ -5867,8 +5883,10 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff86c0"/><stop offset="1" stop-color="#db2777"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt4)"/>
+             <g transform="translate(24 24) scale(0.97) translate(-24 -24)">
              <path d="M24 9.5 C17.6 9.5 13 14.2 13 20.2 C13 27.8 24 38.5 24 38.5 C24 38.5 35 27.8 35 20.2 C35 14.2 30.4 9.5 24 9.5 Z" fill="#fff"/>
              <circle cx="24" cy="20.2" r="4.4" fill="#db2777"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Service Area</span>
@@ -5881,8 +5899,10 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93a4ff"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt5)"/>
+             <g transform="translate(24 24) scale(0.9) translate(-24 -25.05)">
              <circle cx="24" cy="19.6" r="8.2" fill="none" stroke="#fff" stroke-width="3.8"/>
              <path d="M24 28.6 L24 38.4" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Site Monkey</span>
@@ -5895,9 +5915,11 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a6b"/><stop offset="1" stop-color="#ea4a1f"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt6)"/>
+             <g transform="translate(24 24) scale(0.98) translate(-24 -23)">
              <path d="M24 11.5 L37 34.5 H11 Z" fill="#fff" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>
              <rect x="22.5" y="19" width="3" height="8.6" rx="1.5" fill="#ea4a1f"/>
              <circle cx="24" cy="31" r="1.8" fill="#ea4a1f"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">FLHA</span>
@@ -5910,6 +5932,7 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt7" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7f9"/><stop offset="1" stop-color="#0891b2"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt7)"/>
+             <g transform="translate(24 24) scale(1.0) translate(-24 -24)">
              <rect x="14" y="10" width="20" height="28" rx="3" fill="#fff"/>
              <rect x="17.4" y="13.4" width="13.2" height="6" rx="1.4" fill="#0891b2"/>
              <circle cx="19.4" cy="24.4" r="1.7" fill="#0891b2"/>
@@ -5921,6 +5944,7 @@ window.AGC_LOOK_FIELD = {
              <circle cx="19.4" cy="33.6" r="1.7" fill="#0891b2"/>
              <circle cx="24" cy="33.6" r="1.7" fill="#0891b2"/>
              <circle cx="28.6" cy="33.6" r="1.7" fill="#0891b2"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Material Calc</span>
@@ -5933,9 +5957,11 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt8" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3a8ff"/><stop offset="1" stop-color="#c026d3"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt8)"/>
+             <g transform="translate(24 24) scale(1.11) translate(-24 -24)">
              <path d="M13 18.5 V13 H18.5 M29.5 13 H35 V18.5 M35 29.5 V35 H29.5 M18.5 35 H13 V29.5" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
              <rect x="18" y="18.6" width="12" height="7.6" rx="1.6" fill="#fff"/>
              <rect x="23.1" y="26" width="1.8" height="5.2" fill="#fff"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">AR Sign Preview</span>
@@ -6032,12 +6058,14 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#e11d48"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#g1)"/>
+             <g transform="translate(24 24) scale(1.37) translate(-23.8 -24)">
              <circle cx="16" cy="17" r="2.4" fill="#fff"/>
              <rect x="21" y="15.3" width="13" height="3.2" rx="1.6" fill="#fff"/>
              <circle cx="16" cy="24" r="2.4" fill="#fff"/>
              <rect x="21" y="22.4" width="13" height="3.2" rx="1.6" fill="#fff"/>
              <circle cx="16" cy="31" r="2.4" fill="#fff"/>
              <rect x="21" y="29.4" width="10" height="3.2" rx="1.6" fill="#fff"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Basic Info</span>
@@ -6052,10 +6080,12 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb259"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#g2)"/>
+             <g transform="translate(24 24) scale(1.08) translate(-24 -24)">
              <rect x="14" y="11" width="20" height="26" rx="2.6" fill="#fff"/>
              <rect x="18" y="16" width="12" height="2.3" rx="1.15" fill="#f97316"/>
              <rect x="18" y="20" width="12" height="2.3" rx="1.15" fill="#f97316"/>
              <path d="M18 27.5 l3 3 l7 -7.5" stroke="#f97316" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Contract</span>
@@ -6070,8 +6100,10 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd84d"/><stop offset="1" stop-color="#eab308"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#g3)"/>
+             <g transform="translate(24 24) scale(1.27) translate(-24 -24)">
              <circle cx="24" cy="24" r="11" fill="#fff"/>
              <text x="24" y="29.8" font-family="Arial,sans-serif" font-size="17" font-weight="900" text-anchor="middle" fill="#ca8a04">$</text>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Banking</span>
@@ -6086,8 +6118,10 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e06a"/><stop offset="1" stop-color="#7ab33a"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#g4)"/>
+             <g transform="translate(24 24) scale(1.14) translate(-24 -23.25)">
              <path d="M24 11 L34 14.5 V22 C34 29 29.5 33 24 35.5 C18.5 33 14 29 14 22 V14.5 Z" fill="#fff"/>
              <path d="M19.6 23.8 L22.8 27.2 L29.2 19.6" stroke="#7ab33a" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Insurance</span>
@@ -6102,6 +6136,7 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#g5)"/>
+             <g transform="translate(24 24) scale(1.04) translate(-24 -24.5)">
              <path d="M11 19 L24 11 L37 19 Z" fill="#fff"/>
              <rect x="12" y="20.2" width="24" height="2.6" rx="0.6" fill="#fff"/>
              <rect x="13.5" y="23.6" width="3" height="10.5" fill="#fff"/>
@@ -6109,6 +6144,7 @@ window.AGC_LOOK_FIELD = {
              <rect x="25.5" y="23.6" width="3" height="10.5" fill="#fff"/>
              <rect x="31.5" y="23.6" width="3" height="10.5" fill="#fff"/>
              <rect x="11" y="35" width="26" height="3" rx="1" fill="#fff"/>
+             </g>
            </svg>
          </span>
          <span class="tool-btn-label">Tax Forms</span>
@@ -29298,7 +29334,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6072;
+  var AGC_BUILD = 6075;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
