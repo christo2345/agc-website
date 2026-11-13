@@ -112,15 +112,17 @@ async function main() {
   const content = JSON.stringify(Object.assign({}, P, {d: '', x: ''}));
   const sig = sha256(content).slice(0, 10);
   const prev = str(F.check), prevSig = (prev.match(/sig ([0-9a-f]{10})/) || [])[1], prevRev = Number((prev.match(/rev (\d+)/) || [])[1]) || 0;
-  if (!force && prevSig === sig && str(F.link)) return '⏭️ no change since rev ' + prevRev;
-  const rev = prevSig === sig ? Math.max(prevRev, 1) : prevRev + 1; P.r = rev;
+  const stNow = /READY FOR ESTIMATE/i.test(status) ? 'R' : /AWAITING APPROVAL/i.test(status) ? 'A' : 'O', prevSt = (prev.match(/ · st ([RAO])\s*$/) || [])[1] || '';
+  const reset = stNow === 'R' && prevSt !== 'R' && !!str(F.link); // moved back to READY FOR ESTIMATE (Chris, Nov 13): make a new estimate
+  if (!force && !reset && prevSig === sig && str(F.link)) { if (prevSt !== stNow) await T.updateRecordAsync(rec.id, {[F.check]: prev.replace(/ · st [RAO]\s*$/, '') + ' · st ' + stNow}); return '⏭️ no change since rev ' + prevRev; }
+  const rev = prevSig === sig && !reset ? Math.max(prevRev, 1) : prevRev + 1; P.r = rev;
   const code = sha256(JSON.stringify(P) + '|' + str(F.mapKey)).slice(0, 8).toUpperCase(); P.h = code.slice(0, 4) + '-' + code.slice(4);
   const link = PAGE + '#d=' + b64url(utf8(JSON.stringify(P)));
   if (link.length > 60000) warn.push('the estimate is very long (' + link.length + ' characters): check the link opens');
   const head = warn.length ? '⚠️ CHECK FIRST · ' + warn.length + ' thing' + (warn.length > 1 ? 's' : '') + ' to fix or confirm' : '✅ READY TO SEND · open the link, then tick Estimate Sent To Client';
   const when = new Date().toLocaleString('en-US', {timeZone: 'America/Edmonton', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});
   const out = [head, ...warn.map(x => '⚠️ ' + x), ...ok.map(x => '✅ ' + x), ...info.map(x => 'ℹ️ ' + x),
-    '🧾 rev ' + rev + ' · ' + when + ' MT · check code ' + P.h + ' · ' + (force ? 'built on request' : 'built by itself (' + status + ')') + ' · sig ' + sig].join('\n');
+    '🧾 rev ' + rev + ' · ' + when + ' MT · check code ' + P.h + ' · ' + (force ? 'built on request' : reset ? 'new estimate: status back to READY FOR ESTIMATE' : 'built by itself (' + status + ')') + ' · sig ' + sig + ' · st ' + stNow].join('\n');
   await T.updateRecordAsync(rec.id, {[F.link]: link, [F.check]: out, [F.build]: false});
   return (warn.length ? '⚠️ ' : '✅ ') + 'AGC ' + agc + ' estimate rev ' + rev + ' built (' + lines.length + ' lines, ' + money(sum) + ' ' + cur + ', ' + warn.length + ' to check)';
 }
