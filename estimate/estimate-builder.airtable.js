@@ -56,6 +56,9 @@ async function main() {
   const agc = S(v(F.agc)), status = str(F.status), force = !!v(F.build);
   const untick = async () => { if (force) await T.updateRecordAsync(rec.id, {[F.build]: false}); };
   if (HANDS_OFF.includes(agc)) { await untick(); return '⏭️ AGC ' + agc + ' is hands-off'; }
+  if (/NEW PROJECT/i.test(status) && !force) { const lastRev = Number((str(F.check).match(/rev (\d+)/) || [])[1]) || 0;
+    if (str(F.link) || (str(F.check) && !/^🧹/.test(str(F.check)))) { await T.updateRecordAsync(rec.id, {[F.link]: null, [F.check]: lastRev ? '🧹 Estimate cleared: the project went back to NEW PROJECT · last rev ' + lastRev : null}); return '🧹 status back to NEW PROJECT: estimate link and check cleared'; }
+    return '⏭️ new project, no estimate yet'; }
   if (v(F.test) && !force) return '⏭️ test project (tick 🧾 BUILD ESTIMATE to build it anyway)'; // a test project builds only on purpose
   if (!force && !/READY FOR ESTIMATE|AWAITING APPROVAL/i.test(status)) return '⏭️ status ' + (status || 'empty') + ' (tick 🧾 BUILD ESTIMATE to build anyway)';
 
