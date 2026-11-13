@@ -808,7 +808,15 @@ body{background:transparent!important}
 window.AGC_LOOK_FIELD = {
   accent: '#92C64B',
   specs: [
-    { sel: '.card', caster: true, lift: 2.0, pad: 12 },
+    /* The three main cards: the flashlight falls on the card's own face as well as on the black round it
+       (lit), the same as the sign-in card. */
+    { sel: '.card', caster: true, lift: 2.0, pad: 12, lit: 1.25 },
+    /* The mini cards are not touched by the light: nothing is drawn over them. Sitting on the lit card,
+       they throw a soft shadow across it, away from the pointer (as the sign-in button does). */
+    { sel: '.cards .card .tool-btn:not(.no-icon)', caster: true, lift: 1.1, dark: 1.05, soft: 0.9, pad: 0, on: '.card' },
+    /* The two pressed-in panels (earnings box, Update My Profile) are left alone too. Being sunk into the
+       card they throw no shadow (dark: next to nothing). */
+    { sel: '.cards .card .card-budget, .cards .card .tool-btn.no-icon', caster: true, lift: 1, dark: 0.001, pad: 0, on: '.card' },
     { sel: '.beta-pill', caster: true, lift: 1.3, pad: 8 },
     { sel: '.pfp, .weather-alerts, #foot-notice', pad: 10 }
   ],
@@ -5807,7 +5815,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.93</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.94</span>
  </div>
 
  <div class="hero">
@@ -29397,7 +29405,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6093;
+  var AGC_BUILD = 6094;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
