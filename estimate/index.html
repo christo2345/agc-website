@@ -15,8 +15,8 @@
    The estimate's data travels in the link itself (after the #), so nothing about a client or a price is stored on GitHub.
    The page only draws what the link carries. Prints on one Letter page (A4 fits too). */
 :root{
-  --green:#92C64B; --green-dark:#6fa332; --soft:#f4f4f4;
-  --ink:#141414; --ink-2:#3c3c3c; --ink-3:#6b6b6b; --line:#e2e2e2;
+  --green:#92C64B; --green-dark:#4f7f1d; --soft:#f4f4f4;
+  --ink:#141414; --ink-2:#262626; --ink-3:#474747; --line:#e2e2e2;
   --dark-1:#0d0d0d; --dark-2:#161616; --dark-3:#1f1f1f; --dark-4:#2a2a2a;
   --font:'Wix Madefor Display',Arial,Helvetica,sans-serif;
 }
@@ -34,7 +34,7 @@ body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-heigh
 /* the sheet */
 .pages{display:flex;flex-direction:column;align-items:center;gap:28px;padding-bottom:40px}
 .page{width:8.5in;height:11in;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;border-radius:6px;flex:none}
-.top{background:var(--dark-1);color:#fff;padding:.3in .43in .3in;margin:.12in .12in 0;border-radius:10px;position:relative;overflow:hidden}
+.top{background:var(--dark-1);color:#fff;padding:20px .43in 20px;margin:.12in .12in 0;border-radius:10px;position:relative;overflow:hidden}
 .top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--green)}
 .top-row{display:flex;justify-content:space-between;align-items:center;gap:24px;position:relative}
 .brand{display:flex;gap:14px;align-items:center}
@@ -42,61 +42,61 @@ body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-heigh
 .word{line-height:1.2}
 .word{display:inline-block}
 .word .co{font-weight:800;font-size:17px;letter-spacing:.04em;color:#fff;white-space:nowrap;width:max-content}
-.word .addr{font-size:10.5px;color:#a9a9a9;margin-top:5px;letter-spacing:.02em;white-space:nowrap;width:max-content}
+.word .addr{font-size:12.5px;color:#dcdcdc;margin-top:5px;letter-spacing:.02em;white-space:nowrap;width:max-content}
 .doc{text-align:right}
 .doc .kind{font-size:30px;font-weight:800;letter-spacing:.12em;color:#fff}
-.doc dl{margin-top:8px;display:grid;grid-template-columns:auto auto;gap:3px 14px;font-size:11.5px;justify-content:end}
-.doc dt{color:#8d8d8d;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;padding-top:2px}
+.doc dl{margin-top:8px;display:grid;grid-template-columns:auto auto;gap:3px 14px;font-size:14px;justify-content:end}
+.doc dt{color:#c8c8c8;text-transform:uppercase;letter-spacing:.05em;font-size:11px;font-weight:700;padding-top:3px}
 .doc dd{font-weight:700;color:#fff}
-.body{padding:.3in .55in .2in;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:.2in}
+.body{padding:18px .55in 16px;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:14px}
 .cards{display:flex;gap:14px;align-items:stretch}
 .cards .card{flex:1 1 auto;min-width:25%}
 .card{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-.lbl{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--green-dark);margin-bottom:6px}
-.card .big{font-size:15px;font-weight:800;line-height:1.25}
-.card .sub{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.4}
+.lbl{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--green-dark);margin-bottom:6px}
+.card .big{font-size:17px;font-weight:800;line-height:21.5px}
+.card .sub{font-size:14px;color:var(--ink-2);margin-top:3px;line-height:19.5px}
 .locs{font-size:11px;color:var(--ink-2);line-height:1.45;margin-top:6px}
 .locs{padding:0}
 .locs li{list-style:none;padding-left:0}
 table{width:100%;border-collapse:collapse}
-thead th{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#fff;background:var(--dark-2);font-weight:800;text-align:left;padding:9px 12px;border:0}
+thead th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--dark-2);font-weight:800;text-align:left;padding:9px 12px;border:0}
 thead th:last-child{text-align:right}
 thead{display:table-header-group}
-tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:11.5px;line-height:1.45}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px;line-height:19.5px}
 tbody tr{break-inside:avoid;page-break-inside:avoid}
-td.svc{width:28%;font-weight:800;font-size:12px}
+td.svc{width:32%;font-weight:800;font-size:14px}
 td.svc .w{display:flex;gap:8px;align-items:flex-start}
 td.svc .n{flex:0 0 20px;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--green);color:#0d0d0d;font-size:10px;font-weight:800}
 td.desc ul{padding-left:15px}
 td.desc li{margin:1px 0}
-td.amt{width:17%;text-align:right;font-weight:800;font-size:13px;white-space:nowrap}
+td.amt{width:16%;text-align:right;font-weight:800;font-size:15px;white-space:nowrap}
 tr.info td{background:var(--soft)}
-tr.info td.svc{color:var(--ink-3);font-weight:700}
+tr.info td.svc{color:var(--ink-2);font-weight:700}
 .sum{display:flex;justify-content:space-between;gap:20px;align-items:stretch}
-.terms{flex:1;font-size:10.5px;color:var(--ink-2);line-height:1.5}
+.terms{flex:1;font-size:13px;color:var(--ink-2);line-height:17.6px}
 .terms ul{padding-left:15px;margin-top:2px}
-.totals{width:2.9in;background:var(--dark-1);color:#fff;border-radius:14px;padding:14px 16px;position:relative;overflow:hidden}
-.totals .row{display:flex;justify-content:space-between;font-size:11.5px;color:#bdbdbd;padding:3px 0;position:relative}
+.totals{width:3.25in;flex:none;background:var(--dark-1);color:#fff;border-radius:14px;padding:14px 16px;position:relative;overflow:hidden}
+.totals .row{display:flex;justify-content:space-between;font-size:13.5px;color:#e6e6e6;padding:3px 0;position:relative}
 .totals .row b{color:#fff}
-.totals .grand{border-top:1px solid #2f2f2f;margin-top:7px;padding-top:9px;align-items:baseline}
-.totals .grand span{color:#fff;font-weight:800;letter-spacing:.12em;font-size:11px}
+.totals .grand{border-top:1px solid #3a3a3a;margin-top:7px;padding-top:9px;align-items:baseline}
+.totals .grand span{color:#fff;font-weight:800;letter-spacing:.1em;font-size:12.5px}
 .totals .grand b{font-size:24px;color:#fff}
 .totals .grand b small{font-size:13px;color:var(--green);margin-left:6px;letter-spacing:.06em}
-.cc{font-size:9px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-left:4px}
+.cc{font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--ink-3);margin-left:4px}
 .totals .cc{color:var(--green)}
 .curbadge{display:inline-block;background:var(--green);color:#0d0d0d;font-weight:800;border-radius:999px;padding:1px 9px;font-size:11px;letter-spacing:.06em}
-.curnote{display:flex;align-items:center;gap:10px;border:2px solid var(--green);border-radius:12px;padding:9px 14px;font-size:12px;font-weight:700;color:var(--ink)}
+.curnote{display:flex;align-items:center;gap:10px;border:2px solid var(--green);border-radius:12px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--ink)}
 .curnote .curbadge{font-size:12px;padding:2px 11px}
-.totals .cur{font-size:9.5px;color:#8d8d8d;text-align:right;position:relative;margin-top:2px}
-.pm{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--line);background:var(--soft);border-radius:12px;padding:11px 14px;font-size:11px}
-.pm .nm{font-weight:800;font-size:12.5px}
+.totals .cur{font-size:11.5px;color:#cfcfcf;text-align:right;position:relative;margin-top:2px}
+.pm{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--line);background:var(--soft);border-radius:12px;padding:11px 14px;font-size:13.5px}
+.pm .nm{font-weight:800;font-size:15px}
 .pm .ct{color:var(--ink-2);margin-top:2px}
-.pm .ok{text-align:right;font-weight:700;color:var(--ink);max-width:3.2in;line-height:1.35}
+.pm .ok{text-align:right;font-weight:700;color:var(--ink);max-width:330px;line-height:18.5px}
 .next{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.step{background:var(--dark-2);color:#d6d6d6;border-radius:12px;padding:12px 14px;font-size:10.5px;line-height:1.45}
-.step b{display:block;color:#fff;font-size:12px;margin-bottom:3px}
-.step i{font-style:normal;display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--green);color:#0d0d0d;font-weight:800;font-size:10.5px;align-items:center;justify-content:center;margin-bottom:7px}
-.foot{background:var(--dark-1);color:#bcbcbc;padding:.16in .55in;display:flex;justify-content:center;align-items:center;font-size:10px;letter-spacing:.03em;white-space:nowrap}
+.step{background:var(--dark-2);color:#ededed;border-radius:12px;padding:12px 14px;font-size:13px;line-height:18px}
+.step b{display:flex;align-items:center;gap:8px;color:#fff;font-size:14.5px;margin-bottom:5px}
+.step i{font-style:normal;display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--green);color:#0d0d0d;font-weight:800;font-size:10.5px;align-items:center;justify-content:center;flex:none}
+.foot{background:var(--dark-1);color:#e6e6e6;padding:12px .55in;display:flex;justify-content:center;align-items:center;font-size:12px;letter-spacing:.03em;white-space:nowrap}
 .foot b{color:var(--green)}
 .foot .code{color:#6e6e6e;font-size:8.5px;letter-spacing:.06em}
 /* states */
@@ -199,12 +199,12 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
           '<div class="cur">All amounts in ' + curName + '. No tax charged.</div>' +
         '</div>' +
       '</div>');
-  if (pm.nm) blocks.push('<div class="pm"><div><div class="lbl" style="margin-bottom:3px">Your project manager</div><div class="nm">' + esc(pm.nm) + '</div><div class="ct">' + [pm.em, pm.ph].filter(Boolean).map(esc).join(' · ') + '</div></div>' +
+  if (pm.nm) blocks.push('<div class="pm"><div><div class="lbl" style="margin-bottom:3px">Your project manager</div><div class="nm">' + esc(pm.nm) + '</div><div class="ct">' + [pm.em, pm.ph].filter(Boolean).map(esc).join('<br>') + '</div></div>' +
         '<div class="ok">Ready to go ahead? Reply to our email with your PO name or number and we will lock in your install.</div></div>');
   blocks.push('<div class="next">' +
-        '<div class="step"><i>1</i><b>Approve + PO</b>Reply with your PO name or number and we book your date.</div>' +
-        '<div class="step"><i>2</i><b>Install</b>A vetted local installation partner completes the work on site.</div>' +
-        '<div class="step"><i>3</i><b>Photo closeout</b>You get completion photos for every location.</div>' +
+        '<div class="step"><b><i>1</i>Approve + PO</b>Reply with your PO name or number and we book your date.</div>' +
+        '<div class="step"><b><i>2</i>Install</b>A vetted local installation partner completes the work on site.</div>' +
+        '<div class="step"><b><i>3</i>Photo closeout</b>You get completion photos for every location.</div>' +
       '</div>');
   // the company name is sized to exactly the width of the address under it (every page)
   var fit = function(root){ (root || document).querySelectorAll('.word').forEach(function(w){ var co = w.querySelector('.co'), ad = w.querySelector('.addr'); if (!co || !ad) return;
@@ -230,7 +230,7 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
         return;
       }
       table = null; body.insertAdjacentHTML('beforeend', b);
-      if (over() && body.children.length > 1) { var el = body.lastElementChild; el.remove(); newPage(); body.appendChild(el); }
+      if (over() && body.children.length > 1) { var el = body.lastElementChild; el.remove(); if (el.classList.contains('next')) return; newPage(); body.appendChild(el); } // the 3 steps never start a page of their own
     });
     pages.forEach(function(pg, i){ pg.querySelector('.foot').outerHTML = footer(i + 1, pages.length); });
     fit(wrap);
