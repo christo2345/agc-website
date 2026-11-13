@@ -15,8 +15,8 @@
    The estimate's data travels in the link itself (after the #), so nothing about a client or a price is stored on GitHub.
    The page only draws what the link carries. Prints on one Letter page (A4 fits too). */
 :root{
-  --green:#92C64B; --green-dark:#6fa332; --green-soft:#eef6e3;
-  --ink:#141414; --ink-2:#3c3c3c; --ink-3:#6b6b6b; --line:#e4e4df;
+  --green:#92C64B; --green-dark:#6fa332; --soft:#f4f4f4;
+  --ink:#141414; --ink-2:#3c3c3c; --ink-3:#6b6b6b; --line:#e2e2e2;
   --dark-1:#0d0d0d; --dark-2:#161616; --dark-3:#1f1f1f; --dark-4:#2a2a2a;
   --font:'Wix Madefor Display',Arial,Helvetica,sans-serif;
 }
@@ -35,16 +35,13 @@ body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-heigh
 /* the sheet */
 .sheet{width:8.5in;min-height:11in;margin:0 auto 40px;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;border-radius:6px}
 .top{background:var(--dark-1);color:#fff;padding:.42in .55in .36in;position:relative;overflow:hidden}
-.top:before{content:"";position:absolute;right:-1.2in;top:-1.4in;width:3.6in;height:3.6in;border-radius:50%;background:radial-gradient(circle,rgba(146,198,75,.28),transparent 68%)}
-.top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,var(--green),var(--green-dark) 60%,transparent)}
+.top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--green)}
 .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;position:relative}
 .brand{display:flex;gap:14px;align-items:center}
 .brand img{width:58px;height:58px}
-.word{line-height:1.02}
-.word .l1{font-weight:800;font-size:19px;letter-spacing:.06em}
-.word .l1 .pill{display:inline-block;background:var(--green);color:#0d0d0d;border-radius:999px;padding:1px 10px 2px;margin-left:6px}
-.word .l2{font-weight:800;font-size:27px;letter-spacing:.03em;margin-top:3px}
-.word .addr{font-size:10.5px;color:#a9a9a9;margin-top:7px;letter-spacing:.02em}
+.word{line-height:1.2}
+.word .co{font-weight:800;font-size:17px;letter-spacing:.06em;color:#fff}
+.word .addr{font-size:10.5px;color:#a9a9a9;margin-top:5px;letter-spacing:.02em}
 .doc{text-align:right}
 .doc .kind{font-size:30px;font-weight:800;letter-spacing:.12em;color:var(--green)}
 .doc dl{margin-top:8px;display:grid;grid-template-columns:auto auto;gap:3px 14px;font-size:11.5px;justify-content:end}
@@ -67,11 +64,11 @@ tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:to
 tbody tr{break-inside:avoid;page-break-inside:avoid}
 td.svc{width:28%;font-weight:800;font-size:12px}
 td.svc .w{display:flex;gap:8px;align-items:flex-start}
-td.svc .n{flex:0 0 20px;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--green-soft);color:var(--green-dark);font-size:10px}
+td.svc .n{flex:0 0 20px;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--green);color:#0d0d0d;font-size:10px;font-weight:800}
 td.desc ul{padding-left:15px}
 td.desc li{margin:1px 0}
 td.amt{width:17%;text-align:right;font-weight:800;font-size:13px;white-space:nowrap}
-tr.info td{background:#fafaf7}
+tr.info td{background:var(--soft)}
 tr.info td.svc{color:var(--ink-3);font-weight:700}
 .sum{display:flex;justify-content:space-between;gap:20px;align-items:stretch}
 .terms{flex:1;font-size:10.5px;color:var(--ink-2);line-height:1.5}
@@ -84,10 +81,10 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
 .totals .grand span{color:#fff;font-weight:800;letter-spacing:.12em;font-size:11px}
 .totals .grand b{font-size:24px;color:var(--green)}
 .totals .cur{font-size:9.5px;color:#8d8d8d;text-align:right;position:relative;margin-top:2px}
-.pm{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px dashed #cfd9bf;background:var(--green-soft);border-radius:12px;padding:11px 14px;font-size:11px}
+.pm{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--line);background:var(--soft);border-radius:12px;padding:11px 14px;font-size:11px}
 .pm .nm{font-weight:800;font-size:12.5px}
 .pm .ct{color:var(--ink-2);margin-top:2px}
-.pm .ok{text-align:right;font-weight:700;color:var(--green-dark);max-width:3.2in;line-height:1.35}
+.pm .ok{text-align:right;font-weight:700;color:var(--ink);max-width:3.2in;line-height:1.35}
 .next{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .step{background:var(--dark-2);color:#d6d6d6;border-radius:12px;padding:12px 14px;font-size:10.5px;line-height:1.45}
 .step b{display:block;color:#fff;font-size:12px;margin-bottom:3px}
@@ -122,7 +119,7 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
 <div class="bar" id="bar" hidden>
   <div class="who"><img src="agc-mark.webp" alt="">AMERICAN GRAPHIC CONTRACTORS · ESTIMATE</div>
   <div class="btns">
-    <a class="btn" id="approve" href="#" hidden>✅ Approve by email</a>
+    <a class="btn" id="approve" href="#" hidden>Approve by email</a>
     <button class="btn primary" type="button" onclick="window.print()">⬇ Print / Save as PDF</button>
   </div>
 </div>
@@ -162,7 +159,8 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
   var tax = D.tax ? esc(D.tax) : (cur === 'CAD' ? 'Exempt' : 'Not charged');
   var locs = (Array.isArray(D.loc) ? D.loc : []).filter(Boolean);
   var terms = (Array.isArray(D.terms) && D.terms.length ? D.terms : [
-    'This estimate is valid for 30 days and may change as new information becomes available.',
+    'This estimate is based on the information we have today. Prices may change if the scope, sizes, quantities, site conditions or other details change.',
+    'This estimate is valid for 30 days.',
     'A purchase order name or number is required to lock in the work.',
     'Invoices are due on receipt, except for clients with accounts already set up with AGC.'
   ]);
@@ -172,7 +170,7 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
   app.innerHTML =
   '<div class="sheet">' +
     '<div class="top"><div class="top-row">' +
-      '<div class="brand"><img src="agc-mark.webp" alt="AGC"><div class="word"><div class="l1">AMERICAN<span class="pill">GRAPHIC</span></div><div class="l2">CONTRACTORS</div>' +
+      '<div class="brand"><img src="agc-mark.webp" alt="AGC"><div class="word"><div class="co">AMERICAN GRAPHIC CONTRACTORS LLC</div>' +
       '<div class="addr">' + esc(D.ad || '#30 N Gould St Ste R, Sheridan, WY 82801, USA') + '</div></div></div>' +
       '<div class="doc"><div class="kind">ESTIMATE</div><dl>' +
         '<dt>Estimate</dt><dd>AGC ' + esc(D.n) + (D.r > 1 ? ' · rev ' + esc(D.r) : '') + '</dd>' +
