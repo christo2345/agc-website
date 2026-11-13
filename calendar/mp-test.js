@@ -241,14 +241,24 @@ async function readXlsx(buf, notes, fname) {
         const same = (rs, ci) => rs.every(r => S(r[ci]) === S(rs[0][ci]));
         const globalCols = keep.filter(ci => ci !== storeCol && same(data, ci));
         const otherCols = keep.filter(ci => ci !== storeCol && !globalCols.includes(ci));
-        const lines = order.map(k => { const rs = by.get(k);
-          const perStore = otherCols.filter(ci => same(rs, ci) && S(rs[0][ci])), items = otherCols.filter(ci => !perStore.includes(ci));
+        // a very long sheet: the longest per-row columns (names, codes) are left out until it fits; sizes, quantities, materials, dates and priority stay
+        const KEEP_RE = /size|qty|quant|material|date|time|axis|priority|width|height/i;
+        let itemCols = otherCols.slice(); const dropped = [];
+        const build = () => order.map(k => { const rs = by.get(k);
+          const perStore = otherCols.filter(ci => same(rs, ci) && S(rs[0][ci])), items = itemCols.filter(ci => !perStore.includes(ci));
           let l = 'STORE: ' + k + (perStore.length ? ' | ' + perStore.map(ci => hdrN(ci) + ': ' + S(rs[0][ci])).join(' | ') : '');
-          if (rs.length > 1 && items.length) l += ' | ' + rs.length + ' rows (' + items.map(hdrN).join(' · ') + '): ' + rs.map((r, i) => '[' + (i + 1) + '] ' + items.map(ci => S(r[ci])).filter(Boolean).join(' · ')).join(' ');
+          if (rs.length > 1 && items.length) l += ' | ' + rs.length + ' rows (' + items.map(hdrN).join(' · ') + '): ' + rs.map((r, i) => '[' + (i + 1) + '] ' + items.map(ci => S(r[ci]) || '-').join(' · ')).join(' ');
+          else if (rs.length > 1) l += ' | ' + rs.length + ' rows';
           return l; });
+        let lines = build();
+        while (lines.join('\n').length > 36000 && itemCols.length) {
+          const cand = itemCols.filter(ci => !KEEP_RE.test(hdrN(ci))); const pool = cand.length ? cand : itemCols;
+          const big = pool.map(ci => ({ci, n: data.reduce((a, r) => a + S(r[ci]).length, 0)})).sort((a, b) => b.n - a.n)[0];
+          itemCols = itemCols.filter(ci => ci !== big.ci); dropped.push(hdrN(big.ci)); lines = build();
+        }
         head += '; GROUPED ONE LINE PER STORE: ' + order.length + ' stores (column \'' + hdrN(storeCol) + '\')' +
           (globalCols.length ? '; SAME ON EVERY ROW: ' + globalCols.map(ci => hdrN(ci) + ' = ' + S(data[0][ci])).join('; ') : '') +
-          '';
+          (dropped.length ? '; left out to keep it short (per-row): ' + dropped.join(', ') : '');
         rows = lines;
         notes.push(fname + ' / ' + sh.name + ': ' + data.length + ' rows grouped into ' + order.length + ' stores');
       }
@@ -259,4 +269,4 @@ async function readXlsx(buf, notes, fname) {
   return out.join('\n');
 }
 
-window.__test = async (url) => { const r = await fetch(url); const buf = new Uint8Array(await r.arrayBuffer()); const notes = []; SHEET_STORES.length = 0; const txt = await readXlsx(buf, notes, 'order.xlsx'); return {len: txt.length, notes, stores: SHEET_STORES.length, txt}; };
+window.__test = async (url) => { const r = await fetch(url); const buf = new Uint8Array(await r.arrayBuffer()); const notes = []; SHEET_STORES.length = 0; const txt = await readXlsx(buf, notes, 'order.xlsx'); return {len: txt.length, notes, stores: SHEET_STORES.length, txt, ss: SHEET_STORES}; };
