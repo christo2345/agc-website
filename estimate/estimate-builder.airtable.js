@@ -56,7 +56,7 @@ async function main() {
   const agc = S(v(F.agc)), status = str(F.status), force = !!v(F.build);
   const untick = async () => { if (force) await T.updateRecordAsync(rec.id, {[F.build]: false}); };
   if (HANDS_OFF.includes(agc)) { await untick(); return '⏭️ AGC ' + agc + ' is hands-off'; }
-  if (v(F.test)) { await untick(); return '⏭️ test project'; }
+  if (v(F.test) && !force) return '⏭️ test project (tick 🧾 BUILD ESTIMATE to build it anyway)'; // a test project builds only on purpose
   if (!force && !/READY FOR ESTIMATE|AWAITING APPROVAL/i.test(status)) return '⏭️ status ' + (status || 'empty') + ' (tick 🧾 BUILD ESTIMATE to build anyway)';
 
   const warn = [], ok = [], info = [];
