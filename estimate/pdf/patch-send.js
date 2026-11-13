@@ -40,7 +40,7 @@ function patchSend(src, pdf) {
   // 🧵 Nov 13 (Chris): the estimate draft goes in the client's own email thread. Thread match 1 = subject has the AGC # (as before);
   // match 2 (estimate drafts only) = the client's most recent thread (last 45 days) whose subject has a word of the project name.
   rep("const hit = ((await jr.json()).conversations || []).filter(", "const convs = ((await jr.json()).conversations || []); let hit = convs.filter(");
-  rep("\nif (!hit) continue;", "\nif (!hit && est) { const words = S(c.project).toLowerCase().replace(/^\\s*\\d+\\s*\\/\\s*/, '').split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !/^(install|installs|installation|project|test|delete|with|from|the)$/.test(w));\n" +
+  rep("if (!hit) continue;", "if (!hit && est) { const words = S(c.project).toLowerCase().replace(/^\\s*\\d+\\s*\\/\\s*/, '').split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !/^(install|installs|installation|project|test|delete|with|from|the)$/.test(w));\n" +
     "const since = Date.now() / 1000 - 45 * 86400; if (words.length) hit = convs.filter(cv => cv.messages_count !== 0 && (Number(cv.last_activity_at) || 0) > since && words.some(w => (S(cv.subject) + ' ' + S(cv.latest_message_subject)).toLowerCase().includes(w)))\n" +
     ".sort((a, b) => (Number(b.last_activity_at) || 0) - (Number(a.last_activity_at) || 0))[0]; }\nif (!hit) continue;");
   return src;
