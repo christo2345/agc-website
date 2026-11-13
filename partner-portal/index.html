@@ -5512,29 +5512,31 @@ window.AGC_LOOK_FIELD = {
     filter:url(#agc-deboss-flat);
   }
 }
-/* ── DESKTOP: "UPDATE MY PROFILE" IS NOT A MINI CARD ────────────────────────
-   It is only pressed into the My Profile card: no raised glass tile, no bevel, no ring. A shallow
-   recess in the card's own surface (shadow inside its top edge, lit lip under its bottom edge) with
-   the words in black. It still opens the profile when clicked; hover deepens the recess a little. */
+/* ── DESKTOP: "UPDATE MY PROFILE" MATCHES THE EARNINGS BOX ───────────────────
+   It is not a mini card. It is drawn exactly like the "Total AGC earnings" box on the My Projects card:
+   the same near-black panel, the same hairline border and corner radius, the same shadow inside its top
+   edge and lit lip under it, with the words in white like the earnings figure. It still opens the
+   profile when clicked; hover lifts the panel a shade. */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
   .cards .card .tool-grid .tool-btn.no-icon,
   .cards .card .tool-grid .tool-btn.no-icon:hover{
-    background:linear-gradient(180deg, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.08) 100%) !important;
-    border-color:transparent !important;
-    box-shadow:inset 0 3px 7px rgba(0,0,0,0.55), inset 0 1px 0 rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.20) !important;
+    background:#17181b !important;
+    border:1px solid rgba(0,0,0,0.65) !important;
+    border-radius:12px !important;
+    box-shadow:inset 0 2px 5px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.14) !important;
     animation:none !important;
     transform:none !important;
     filter:none !important;
   }
   .cards .card .tool-grid .tool-btn.no-icon:hover{
-    background:linear-gradient(180deg, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.14) 100%) !important;
+    background:#1f2025 !important;
   }
   .cards .card .tool-grid .tool-btn.no-icon::before,
   .cards .card .tool-grid .tool-btn.no-icon::after{content:none !important;}
   .cards .card .tool-grid .tool-btn.no-icon:not(.soon):not(.step) .tool-btn-label,
   .cards .card .tool-grid .tool-btn.no-icon:not(.soon):not(.step):hover .tool-btn-label{
-    color:#000;
-    text-shadow:0 1px 0 rgba(255,255,255,0.22);        /* engraved: a faint light edge under each letter */
+    color:#fff;
+    text-shadow:none;
   }
 }
 /* ── DESKTOP: MINI-CARD ICONS ───────────────────────────────────────────────
@@ -5782,7 +5784,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.86</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.87</span>
  </div>
 
  <div class="hero">
@@ -29370,7 +29372,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6086;
+  var AGC_BUILD = 6087;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
