@@ -5466,10 +5466,11 @@ window.AGC_LOOK_FIELD = {
   .cards .card .tool-btn:not(.no-icon):hover .tool-btn-icon{transform:translate(-21%,-25%) rotate(-8deg) scale(1.06);}
   .cards .card .tool-btn:not(.no-icon) .tool-btn-label{position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.85);}
   .cards .card .tool-btn:not(.no-icon) .tool-btn-stepnum{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
-  /* strong full colour: active cards (View Projects, View Calendar, Upload Invoice, Service Area), the Beta card … */
+  /* strong full colour: active cards (View Projects, View Calendar, Upload Invoice, Service Area), the Beta card …
+     (their icons are drawn in the same style as the profile steps: a coloured tile with a white glyph) */
   .cards .card .tool-btn:not(.step):not(.soon):not(.no-icon) .tool-btn-icon svg,
   .cards .card .tool-btn:not(.step):not(.soon):not(.no-icon):hover .tool-btn-icon svg{
-    filter:saturate(1.9) contrast(1.08) brightness(1.12) drop-shadow(0 4px 8px rgba(0,0,0,0.55));
+    filter:saturate(1.6) contrast(1.05) brightness(1.08) drop-shadow(0 4px 8px rgba(0,0,0,0.55));
   }
   /* … and completed profile steps (they used to turn into a blank white square) */
   .cards .card .tool-btn.step.done .tool-btn-icon,
@@ -5608,7 +5609,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.66</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.67</span>
  </div>
 
  <div class="hero">
@@ -5724,26 +5725,15 @@ window.AGC_LOOK_FIELD = {
        <button class="tool-btn beta" onclick="goToProjects(event)" aria-label="View Projects">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <\!-- Clipboard back -->
-             <rect x="9" y="10" width="30" height="34" rx="2.5" fill="#3a3a3e"/>
-             <rect x="9" y="10" width="30" height="34" rx="2.5" fill="url(#vpGrad)" opacity="0.25"/>
-             <defs><linearGradient id="vpGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient></defs>
-             <\!-- Paper -->
-             <rect x="11" y="13" width="26" height="29" rx="1" fill="#f4f4f0"/>
-             <\!-- Clip -->
-             <rect x="18" y="6" width="12" height="9" rx="1.5" fill="#92C64B"/>
-             <rect x="19.5" y="7.5" width="9" height="5" rx="0.5" fill="#6fa43a"/>
-             <\!-- Project list rows: 2 done + 2 open -->
-             <circle cx="15" cy="20" r="1.6" fill="#92C64B"/>
-             <path d="M14 20 L14.7 20.9 L16.1 19.2" stroke="#fff" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-             <rect x="18" y="19.3" width="14" height="1.6" rx="0.6" fill="#7a7a7a"/>
-             <circle cx="15" cy="26" r="1.6" fill="#92C64B"/>
-             <path d="M14 26 L14.7 26.9 L16.1 25.2" stroke="#fff" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-             <rect x="18" y="25.3" width="16" height="1.6" rx="0.6" fill="#7a7a7a"/>
-             <circle cx="15" cy="32" r="1.5" fill="none" stroke="#c0c0c0" stroke-width="1"/>
-             <rect x="18" y="31.3" width="13" height="1.6" rx="0.6" fill="#bababa"/>
-             <circle cx="15" cy="38" r="1.5" fill="none" stroke="#c0c0c0" stroke-width="1"/>
-             <rect x="18" y="37.3" width="11" height="1.6" rx="0.6" fill="#bababa"/>
+             <defs><linearGradient id="gt1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e06a"/><stop offset="1" stop-color="#6aa22e"/></linearGradient></defs>
+             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt1)"/>
+             <rect x="14" y="12" width="20" height="26" rx="2.8" fill="#fff"/>
+             <rect x="19" y="8.6" width="10" height="6.4" rx="2" fill="#fff" stroke="#6aa22e" stroke-width="1.6"/>
+             <path d="M17.6 21.2 l1.7 1.8 l3 -3.4" stroke="#6aa22e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+             <rect x="24.4" y="20" width="6.6" height="2.3" rx="1.15" fill="#6aa22e"/>
+             <path d="M17.6 27.2 l1.7 1.8 l3 -3.4" stroke="#6aa22e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+             <rect x="24.4" y="26" width="6.6" height="2.3" rx="1.15" fill="#6aa22e"/>
+             <rect x="17.4" y="32" width="13.6" height="2.3" rx="1.15" fill="#6aa22e" opacity="0.45"/>
            </svg>
          </span>
          <span class="tool-btn-label">View Projects</span>
@@ -5752,43 +5742,17 @@ window.AGC_LOOK_FIELD = {
        <button class="tool-btn beta" onclick="event.stopPropagation();event.preventDefault();agcMorphOpen(this,openCalendarFullscreen,'#cal-fs',null);" aria-label="View Calendar">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <\!-- Calendar shadow -->
-             <rect x="6" y="11" width="36" height="32" rx="3" fill="rgba(0,0,0,0.35)"/>
-             <\!-- Calendar body -->
-             <rect x="5" y="10" width="36" height="32" rx="3" fill="#f8f6ef"/>
-             <\!-- Header strip (AGC green) -->
-             <rect x="5" y="10" width="36" height="9" rx="3" fill="#92C64B"/>
-             <rect x="5" y="14" width="36" height="5" fill="#92C64B"/>
-             <\!-- Header sheen -->
-             <rect x="5" y="10" width="36" height="2.5" rx="3" fill="rgba(255,255,255,0.35)"/>
-             <\!-- Hanger rings -->
-             <rect x="11" y="6" width="2.5" height="8" rx="1.2" fill="#5a5a5a"/>
-             <rect x="32.5" y="6" width="2.5" height="8" rx="1.2" fill="#5a5a5a"/>
-             <\!-- Date grid -->
-             <rect x="9" y="22" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="14" y="22" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="19" y="22" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="24" y="22" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="29" y="22" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="34" y="22" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="9" y="27" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="14" y="27" width="3" height="3" rx="0.5" fill="#92C64B"/>
-             <rect x="19" y="27" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="24" y="27" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="29" y="27" width="3" height="3" rx="0.5" fill="#92C64B"/>
-             <rect x="34" y="27" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="9" y="32" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="14" y="32" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="19" y="32" width="3" height="3" rx="0.5" fill="#92C64B"/>
-             <rect x="24" y="32" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="29" y="32" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="34" y="32" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="9" y="37" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="14" y="37" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="19" y="37" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="24" y="37" width="3" height="3" rx="0.5" fill="#92C64B"/>
-             <rect x="29" y="37" width="3" height="3" rx="0.5" fill="#bababa"/>
-             <rect x="34" y="37" width="3" height="3" rx="0.5" fill="#bababa"/>
+             <defs><linearGradient id="gt2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fe0d0"/><stop offset="1" stop-color="#0f9488"/></linearGradient></defs>
+             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt2)"/>
+             <rect x="12" y="13.5" width="24" height="23" rx="3.2" fill="#fff"/>
+             <rect x="17" y="9.6" width="3.2" height="7.4" rx="1.6" fill="#fff" stroke="#0f9488" stroke-width="1.2"/>
+             <rect x="27.8" y="9.6" width="3.2" height="7.4" rx="1.6" fill="#fff" stroke="#0f9488" stroke-width="1.2"/>
+             <rect x="12" y="19.6" width="24" height="2.2" fill="#0f9488"/>
+             <rect x="16" y="24.6" width="4" height="3.6" rx="1" fill="#0f9488"/>
+             <rect x="22" y="24.6" width="4" height="3.6" rx="1" fill="#0f9488"/>
+             <rect x="28" y="24.6" width="4" height="3.6" rx="1" fill="#0f9488"/>
+             <rect x="16" y="30" width="4" height="3.6" rx="1" fill="#0f9488"/>
+             <rect x="22" y="30" width="4" height="3.6" rx="1" fill="#0f9488" opacity="0.45"/>
            </svg>
          </span>
          <span class="tool-btn-label">View Calendar</span>
@@ -5844,36 +5808,11 @@ window.AGC_LOOK_FIELD = {
        <button class="tool-btn beta" onclick="openTool(event,'upload_invoice')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <defs>
-               <linearGradient id="billGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9d96a"/><stop offset="1" stop-color="#6f9e35"/></linearGradient>
-               <radialGradient id="coinGrad"><stop offset="0" stop-color="#fff7d8"/><stop offset="1" stop-color="#e0b23c"/></radialGradient>
-               <radialGradient id="upBadge"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#92C64B"/></radialGradient>
-             </defs>
-             <\!-- Back bill (peeking) -->
-             <rect x="11" y="13" width="31" height="19" rx="2.5" fill="#5a8328"/>
-             <\!-- Front bill drop shadow -->
-             <rect x="6" y="10" width="31" height="19" rx="2.5" fill="rgba(0,0,0,0.30)"/>
-             <\!-- Front bill -->
-             <rect x="5" y="9" width="31" height="19" rx="2.5" fill="url(#billGrad)" stroke="#3f5e1c" stroke-width="1"/>
-             <\!-- Bill top sheen -->
-             <rect x="5" y="9" width="31" height="6" rx="2.5" fill="rgba(255,255,255,0.18)"/>
-             <\!-- Inner frame line -->
-             <rect x="8" y="12" width="25" height="13" rx="1.5" fill="none" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
-             <\!-- Center medallion -->
-             <circle cx="20.5" cy="18.5" r="6.2" fill="url(#coinGrad)" stroke="#b5862a" stroke-width="1"/>
-             <text x="20.5" y="22.2" font-family="Arial,sans-serif" font-size="9.5" font-weight="900" text-anchor="middle" fill="#3f5e1c">$</text>
-             <\!-- Corner denominations -->
-             <text x="9.5" y="15.4" font-family="Arial,sans-serif" font-size="4.4" font-weight="900" fill="rgba(255,255,255,0.85)">$</text>
-             <text x="32.5" y="25.6" font-family="Arial,sans-serif" font-size="4.4" font-weight="900" text-anchor="end" fill="rgba(255,255,255,0.85)">$</text>
-             <\!-- Coin stack (bottom-left) -->
-             <ellipse cx="14" cy="41" rx="7" ry="2.5" fill="#b5862a"/>
-             <ellipse cx="14" cy="39.4" rx="7" ry="2.5" fill="url(#coinGrad)" stroke="#b5862a" stroke-width="0.7"/>
-             <ellipse cx="14" cy="37.8" rx="7" ry="2.5" fill="url(#coinGrad)" stroke="#b5862a" stroke-width="0.7"/>
-             <text x="14" y="39.6" font-family="Arial,sans-serif" font-size="4.4" font-weight="900" text-anchor="middle" fill="#3f5e1c">$</text>
-             <\!-- Upload arrow badge (preserves the upload action) -->
-             <circle cx="37" cy="37" r="7.5" fill="#92C64B" stroke="#fff" stroke-width="1.5"/>
-             <circle cx="37" cy="37" r="7.5" fill="url(#upBadge)" opacity="0.4"/>
-             <path d="M37,33.2 L37,41 M33.6,36.6 L37,33.2 L40.4,36.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+             <defs><linearGradient id="gt3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd655"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
+             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt3)"/>
+             <rect x="14" y="10" width="20" height="28" rx="2.8" fill="#fff"/>
+             <path d="M24 29.5 V17.6 M18.8 22.6 L24 17.4 L29.2 22.6" stroke="#f59e0b" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+             <rect x="18" y="32.6" width="12" height="2.4" rx="1.2" fill="#f59e0b"/>
            </svg>
          </span>
          <span class="tool-btn-label">Upload Invoice</span>
@@ -5884,24 +5823,10 @@ window.AGC_LOOK_FIELD = {
        <button class="tool-btn beta" onclick="openTool(event,'service_area')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <\!-- Outer dashed radius ring -->
-             <circle cx="24" cy="26" r="20" fill="none" stroke="#92C64B" stroke-width="1.4" stroke-dasharray="3,2.2" opacity="0.55"/>
-             <\!-- Inner filled radius (coverage) -->
-             <circle cx="24" cy="26" r="14" fill="rgba(146,198,75,0.18)" stroke="#92C64B" stroke-width="1.2" opacity="0.85"/>
-             <\!-- Crosshair tick marks on the inner ring -->
-             <line x1="24" y1="10" x2="24" y2="13" stroke="#92C64B" stroke-width="1.2" opacity="0.7"/>
-             <line x1="24" y1="39" x2="24" y2="42" stroke="#92C64B" stroke-width="1.2" opacity="0.7"/>
-             <line x1="8" y1="26" x2="11" y2="26" stroke="#92C64B" stroke-width="1.2" opacity="0.7"/>
-             <line x1="37" y1="26" x2="40" y2="26" stroke="#92C64B" stroke-width="1.2" opacity="0.7"/>
-             <\!-- Pin shadow -->
-             <ellipse cx="24" cy="35" rx="3.5" ry="1.2" fill="rgba(0,0,0,0.4)"/>
-             <\!-- Pin body -->
-             <path d="M24,14 C19.6,14 16,17.6 16,22 C16,28 24,34 24,34 C24,34 32,28 32,22 C32,17.6 28.4,14 24,14 Z" fill="#92C64B" stroke="#1a1a1a" stroke-width="1.1"/>
-             <\!-- Pin glossy highlight -->
-             <path d="M24,14 C19.6,14 16,17.6 16,22 C16,23.5 16.4,24.9 17,26.2 C17.5,21.5 20.6,18 25.2,17.4 C24.5,15 24,14 24,14 Z" fill="rgba(255,255,255,0.28)"/>
-             <\!-- Center dot -->
-             <circle cx="24" cy="22" r="3.4" fill="#fff"/>
-             <circle cx="24" cy="22" r="1.8" fill="#1a1a1a"/>
+             <defs><linearGradient id="gt4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff86c0"/><stop offset="1" stop-color="#db2777"/></linearGradient></defs>
+             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt4)"/>
+             <path d="M24 9.5 C17.6 9.5 13 14.2 13 20.2 C13 27.8 24 38.5 24 38.5 C24 38.5 35 27.8 35 20.2 C35 14.2 30.4 9.5 24 9.5 Z" fill="#fff"/>
+             <circle cx="24" cy="20.2" r="4.4" fill="#db2777"/>
            </svg>
          </span>
          <span class="tool-btn-label">Service Area</span>
@@ -5912,28 +5837,10 @@ window.AGC_LOOK_FIELD = {
        <button class="tool-btn beta" onclick="openTool(event,'site_survey')">
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <defs>
-               <linearGradient id="mgRing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4dd72"/><stop offset="1" stop-color="#5f8a2c"/></linearGradient>
-               <linearGradient id="mgGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3f1ff"/><stop offset="1" stop-color="#9fc3df"/></linearGradient>
-               <linearGradient id="mgHandle" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7aa53a"/><stop offset="1" stop-color="#3a571a"/></linearGradient>
-             </defs>
-             <\!-- Handle drop shadow -->
-             <line x1="30" y1="31" x2="43" y2="44" stroke="rgba(0,0,0,0.35)" stroke-width="8" stroke-linecap="round"/>
-             <\!-- Handle (beveled) -->
-             <line x1="29" y1="29" x2="42" y2="42" stroke="url(#mgHandle)" stroke-width="7.2" stroke-linecap="round"/>
-             <\!-- Handle highlight -->
-             <line x1="29" y1="29" x2="39.5" y2="39.5" stroke="rgba(255,255,255,0.45)" stroke-width="1.7" stroke-linecap="round"/>
-             <\!-- Lens outer shadow -->
-             <circle cx="20" cy="20" r="15.4" fill="rgba(0,0,0,0.30)"/>
-             <\!-- Lens ring (AGC green bevel) -->
-             <circle cx="19" cy="19" r="15" fill="url(#mgRing)" stroke="#2c4214" stroke-width="1.3"/>
-             <\!-- Ring inner bevel highlight -->
-             <circle cx="19" cy="19" r="12.6" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.9"/>
-             <\!-- Glass -->
-             <circle cx="19" cy="19" r="10.4" fill="url(#mgGlass)" stroke="#5a7d2e" stroke-width="1"/>
-             <\!-- Glass glossy highlight -->
-             <path d="M12,12.5 Q16,9 23,10 Q15.5,11.2 12.5,18.5 Z" fill="rgba(255,255,255,0.55)"/>
-             <circle cx="14.5" cy="14.5" r="2.1" fill="rgba(255,255,255,0.7)"/>
+             <defs><linearGradient id="gt5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93a4ff"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs>
+             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt5)"/>
+             <circle cx="21.5" cy="21.5" r="8.2" fill="none" stroke="#fff" stroke-width="3.8"/>
+             <path d="M27.8 27.8 L35.4 35.4" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/>
            </svg>
          </span>
          <span class="tool-btn-label">Site Monkey</span>
@@ -5944,15 +5851,11 @@ window.AGC_LOOK_FIELD = {
        <button class="tool-btn soon" onclick="openTool(event,'flha')" disabled>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <\!-- Triangle shadow -->
-             <path d="M25,8 L45,42 L5,42 Z" fill="rgba(0,0,0,0.35)"/>
-             <\!-- Yellow hazard triangle -->
-             <path d="M24,6 L44,40 L4,40 Z" fill="#ffd21f" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round"/>
-             <\!-- Inner highlight -->
-             <path d="M24,12 L40,38 L8,38 Z" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.7" stroke-linejoin="round"/>
-             <\!-- Exclamation mark -->
-             <rect x="22" y="17" width="4" height="13" rx="1" fill="#1a1a1a"/>
-             <circle cx="24" cy="34" r="2.3" fill="#1a1a1a"/>
+             <defs><linearGradient id="gt6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a6b"/><stop offset="1" stop-color="#ea4a1f"/></linearGradient></defs>
+             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt6)"/>
+             <path d="M24 11.5 L37 34.5 H11 Z" fill="#fff" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>
+             <rect x="22.5" y="19" width="3" height="8.6" rx="1.5" fill="#ea4a1f"/>
+             <circle cx="24" cy="31" r="1.8" fill="#ea4a1f"/>
            </svg>
          </span>
          <span class="tool-btn-label">FLHA</span>
@@ -5963,32 +5866,19 @@ window.AGC_LOOK_FIELD = {
        <button class="tool-btn soon" onclick="openTool(event,'material_calc')" disabled>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <\!-- Body shadow -->
-             <rect x="9" y="7" width="30" height="36" rx="4" fill="rgba(0,0,0,0.4)"/>
-             <\!-- Body -->
-             <rect x="8" y="6" width="30" height="36" rx="4" fill="#2d2d32"/>
-             <\!-- Top highlight -->
-             <rect x="8" y="6" width="30" height="5" rx="4" fill="rgba(255,255,255,0.15)"/>
-             <\!-- LCD screen -->
-             <rect x="11" y="10" width="24" height="8" rx="1" fill="#8fc14f"/>
-             <rect x="11" y="10" width="24" height="2" fill="rgba(255,255,255,0.22)"/>
-             <\!-- Digits on screen -->
-             <rect x="22" y="13" width="3" height="3" fill="#2a3d14"/>
-             <rect x="26" y="13" width="3" height="3" fill="#2a3d14"/>
-             <rect x="30" y="13" width="3" height="3" fill="#2a3d14"/>
-             <\!-- Buttons — 3x4 grid, last column orange+green -->
-             <circle cx="14" cy="23" r="2" fill="#e0e0e0"/>
-             <circle cx="21" cy="23" r="2" fill="#e0e0e0"/>
-             <circle cx="28" cy="23" r="2" fill="#e0e0e0"/>
-             <circle cx="34" cy="23" r="2" fill="#ff8c42"/>
-             <circle cx="14" cy="30" r="2" fill="#e0e0e0"/>
-             <circle cx="21" cy="30" r="2" fill="#e0e0e0"/>
-             <circle cx="28" cy="30" r="2" fill="#e0e0e0"/>
-             <circle cx="34" cy="30" r="2" fill="#ff8c42"/>
-             <circle cx="14" cy="37" r="2" fill="#e0e0e0"/>
-             <circle cx="21" cy="37" r="2" fill="#e0e0e0"/>
-             <circle cx="28" cy="37" r="2" fill="#e0e0e0"/>
-             <circle cx="34" cy="37" r="2" fill="#92C64B"/>
+             <defs><linearGradient id="gt7" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7f9"/><stop offset="1" stop-color="#0891b2"/></linearGradient></defs>
+             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt7)"/>
+             <rect x="14" y="10" width="20" height="28" rx="3" fill="#fff"/>
+             <rect x="17.4" y="13.4" width="13.2" height="6" rx="1.4" fill="#0891b2"/>
+             <circle cx="19.4" cy="24.4" r="1.7" fill="#0891b2"/>
+             <circle cx="24" cy="24.4" r="1.7" fill="#0891b2"/>
+             <circle cx="28.6" cy="24.4" r="1.7" fill="#0891b2"/>
+             <circle cx="19.4" cy="29" r="1.7" fill="#0891b2"/>
+             <circle cx="24" cy="29" r="1.7" fill="#0891b2"/>
+             <circle cx="28.6" cy="29" r="1.7" fill="#0891b2"/>
+             <circle cx="19.4" cy="33.6" r="1.7" fill="#0891b2"/>
+             <circle cx="24" cy="33.6" r="1.7" fill="#0891b2"/>
+             <circle cx="28.6" cy="33.6" r="1.7" fill="#0891b2"/>
            </svg>
          </span>
          <span class="tool-btn-label">Material Calc</span>
@@ -5999,27 +5889,11 @@ window.AGC_LOOK_FIELD = {
        <button class="tool-btn soon" onclick="openTool(event,'ar_preview')" disabled>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-             <\!-- Phone shadow -->
-             <rect x="15" y="17" width="20" height="30" rx="3.5" fill="rgba(0,0,0,0.4)"/>
-             <\!-- Phone body -->
-             <rect x="14" y="16" width="20" height="30" rx="3.5" fill="#1a1a1e"/>
-             <\!-- Phone screen -->
-             <rect x="16" y="20" width="16" height="22" rx="1" fill="#0a1a2e"/>
-             <\!-- AR brackets in screen corners -->
-             <path d="M17.5,22 v2 h2" fill="none" stroke="#3db8ff" stroke-width="1" stroke-linecap="round"/>
-             <path d="M30.5,22 v2 h-2" fill="none" stroke="#3db8ff" stroke-width="1" stroke-linecap="round"/>
-             <path d="M17.5,40 v-2 h2" fill="none" stroke="#3db8ff" stroke-width="1" stroke-linecap="round"/>
-             <path d="M30.5,40 v-2 h-2" fill="none" stroke="#3db8ff" stroke-width="1" stroke-linecap="round"/>
-             <\!-- Sign floating above phone -->
-             <rect x="22" y="3" width="22" height="12" rx="1.5" fill="#92C64B"/>
-             <rect x="22" y="3" width="22" height="3" rx="1.5" fill="rgba(255,255,255,0.3)"/>
-             <rect x="24" y="7" width="18" height="2" rx="0.5" fill="#fff"/>
-             <rect x="24" y="11" width="14" height="1.5" rx="0.5" fill="rgba(255,255,255,0.8)"/>
-             <\!-- Projection beams -->
-             <path d="M18,20 L24,15" stroke="#3db8ff" stroke-width="0.7" opacity="0.55" stroke-dasharray="1.2,1"/>
-             <path d="M30,20 L40,15" stroke="#3db8ff" stroke-width="0.7" opacity="0.55" stroke-dasharray="1.2,1"/>
-             <\!-- Home indicator -->
-             <rect x="21" y="43.5" width="6" height="1" rx="0.5" fill="#555"/>
+             <defs><linearGradient id="gt8" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3a8ff"/><stop offset="1" stop-color="#c026d3"/></linearGradient></defs>
+             <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt8)"/>
+             <path d="M13 18.5 V13 H18.5 M29.5 13 H35 V18.5 M35 29.5 V35 H29.5 M18.5 35 H13 V29.5" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+             <rect x="18" y="18.6" width="12" height="7.6" rx="1.6" fill="#fff"/>
+             <rect x="23.1" y="26" width="1.8" height="5.2" fill="#fff"/>
            </svg>
          </span>
          <span class="tool-btn-label">AR Sign Preview</span>
@@ -29363,7 +29237,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6066;
+  var AGC_BUILD = 6067;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
