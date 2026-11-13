@@ -59,15 +59,17 @@
   body.agc-instant .agc-view{transition:none!important}
   /* ═══════════ SIGN-IN (the password pop-up over all three views) ═══════════ */
   .agc-lock{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vh,32px) 16px;overflow:auto;
-    background:#000;   /* true black: nothing of the portal shows through until sign-in */
+    background:#000;   /* solid black, so nothing of the portal shows through until sign-in; the stars are drawn on top of it */
     font-family:'Wix Madefor Display',Arial,sans-serif;color:#fff;transition:opacity .45s cubic-bezier(.16,1,.3,1)}
   /* black covers the whole box, but the card is centred in the part of it that is on screen */
   .agc-lock{padding-bottom:calc(100vh - var(--agc-h) + clamp(12px,3vh,32px))}
+  /* the same star field as the three views (see #agc-look-space), in the black around the card */
+  .agc-lock > .agc-space{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
   .agc-lock[hidden]{display:none!important}
   .agc-lock.is-leaving{opacity:0;pointer-events:none}
   .agc-lock *{box-sizing:border-box}
   .agc-lock [hidden]{display:none!important}
-  .agc-lock-card{position:relative;width:min(560px,100%);margin:auto;display:flex;flex-direction:column;border-radius:28px;overflow:hidden;
+  .agc-lock-card{position:relative;z-index:1;width:min(560px,100%);margin:auto;display:flex;flex-direction:column;border-radius:28px;overflow:hidden;
     background:var(--sheen),var(--brushed);border:1px solid rgba(255,255,255,.28);
     box-shadow:var(--deep),inset 0 3px 0 rgba(255,255,255,.30),inset 0 -3px 0 rgba(0,0,0,.55);
     animation:agcLockIn .7s cubic-bezier(.16,1,.3,1) both}
@@ -1083,6 +1085,8 @@ window.AGC_LOOK_FIELD = {
     var m = e && e.data; if (!m || typeof m !== 'object' || m.type !== 'agc_view') return;
     active = !!m.active; if (active) kick();
   });
+  /* a page that covers the sky (the sign-in pop-up's own copy) can rest it and wake it */
+  window.__agcSpaceOn = function(on){ active = !!on; if (active) kick(); };
   kick();
 })();
 
@@ -5469,7 +5473,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.46</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.47</span>
  </div>
 
  <div class="hero">
@@ -28610,7 +28614,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     gateErr(''); gateBusy(false);
     clearTimeout(gate.hideT);
     var box = document.getElementById('agc-lock');
-    box.hidden = false; box.classList.remove('is-leaving');
+    box.hidden = false; box.classList.remove('is-leaving'); gateSky(true);
     NAMES.forEach(function(n){ try { frames[n].inert = true; frames[n].setAttribute('aria-hidden', 'true'); } catch (e) {} });
     if (form && gate.armed) setTimeout(function(){ try { (mode === 'email' ? gel('email') : gel('pw')).focus(); } catch (e) {} }, 80);
   }
@@ -28631,12 +28635,13 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     if (!gate.open && !gel('pw-row').hidden && !gel('body').hidden) setTimeout(function(){ try { (gate.mode === 'email' ? m : a).focus(); } catch (e) {} }, 80);
   }
   function gateSession(name){ if (gate.token) post(name, { type: 'agc_session', token: gate.token }); }
+  function gateSky(on){ try { if (window.__agcSpaceOn) window.__agcSpaceOn(on); } catch (e) {} }     /* the stars behind the pop-up */
   function gateUnlock(r){
     gate.open = true; gate.rid = r || null; gateActive();
     var box = document.getElementById('agc-lock');
     box.classList.add('is-leaving');
     clearTimeout(gate.hideT);
-    gate.hideT = setTimeout(function(){ box.hidden = true; }, 460);
+    gate.hideT = setTimeout(function(){ box.hidden = true; gateSky(false); }, 460);
     NAMES.forEach(function(n){ try { frames[n].inert = false; frames[n].removeAttribute('aria-hidden'); } catch (e) {} });
     if (r) {
       NAMES.forEach(gateSession);                    /* the session first, so the pages' first calls carry it */
@@ -29036,7 +29041,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6046;
+  var AGC_BUILD = 6047;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
@@ -29065,6 +29070,14 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
       off: function(){ var b = document.getElementById('agc-lock'); return !b || b.hidden || b.classList.contains('is-leaving'); }
     };
     (new Function(unescapeBlock(text('agc-look-field'))))();
+  } catch (e) {}
+  /* Sign-in screen sky: the same star field the three views have (the very same code, #agc-look-space),
+     drawn in the black around the sign-in card. It rests once the pop-up has gone (gateSky). */
+  try {
+    (new Function(unescapeBlock(text('agc-look-space'))))();
+    var sky = document.querySelector('canvas.agc-space'), lockBox = document.getElementById('agc-lock');
+    if (sky && lockBox) lockBox.insertBefore(sky, lockBox.firstChild);
+    if (lockBox && lockBox.hidden) gateSky(false);
   } catch (e) {}
   if (first === 'projects' || first === 'profile') show(first);
   setTimeout(function(){ start('projects'); start('profile'); }, 1200);
