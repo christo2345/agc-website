@@ -86,7 +86,7 @@ async function main() {
   // locations (store · address)
   const names = flat(v(F.storeName)), addrs = flat(v(F.storeAddr));
   const loc = (names.length ? names : addrs).map((n, i) => names.length && addrs[i] && !n.includes(addrs[i]) ? n + ' · ' + addrs[i] : n).slice(0, 40);
-  if (!loc.length) info.push('no location on the project (estimate shows none)');
+  if (!loc.length) warn.push('no store address on the project: the currency comes from the store address (Canada = CAD, USA = USD), so add the store before sending');
   // currency
   let cur = str(F.cur).toUpperCase(); if (!/^(USD|CAD)$/.test(cur)) { warn.push('PROJECT CURRENCY unknown (' + (cur || 'empty') + '): shown as USD'); cur = 'USD'; } else ok.push('currency ' + cur);
   // totals vs TOTAL COST, margin, suggested retail
