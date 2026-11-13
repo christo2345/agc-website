@@ -5466,7 +5466,7 @@ window.AGC_LOOK_FIELD = {
    All mini cards with an icon (My Projects, My Toolbox and the five My Profile steps): the card is dark
    with its embossed icon, and the title is solid black on a light strip that runs the full width of the
    card along its foot, edge to edge (the card's rounded corners crop it). The card's own colour (--tc on
-   the tools, the step colour --pc on the profile steps) is a thin line along the top of the strip.
+   the tools, the step colour --pc on the profile steps) is a two-tone line along the top of the strip.
    No coloured dots, no coloured titles. A profile step that is not done yet has a dimmer strip.
    "Update My Profile" is not a mini card (it is the pressed-in area) and stays as it is. */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
@@ -5476,21 +5476,26 @@ window.AGC_LOOK_FIELD = {
     width:auto;max-width:none;margin:0;box-sizing:border-box;
     display:flex;align-items:center;justify-content:center;
     -webkit-line-clamp:unset;overflow:hidden;
-    padding:6px 10px 8px;
-    border-top:3px solid var(--tc, var(--pc, #92C64B));
-    background:linear-gradient(180deg,#f3f4f6 0%,#d3d6dc 55%,#bfc3cb 100%);
+    padding:15px 10px 8px;                     /* 9px line + 6px above the title */
+    border-top:0;
+    /* THE LINE IS TWO-TONE: a band of the card's colour over a narrower band of a deeper shade of it */
+    --c:var(--tc, var(--pc, #92C64B));
+    --c2:color-mix(in srgb, var(--c) 52%, #000);
+    background:
+      linear-gradient(180deg, var(--c) 0, var(--c) 5.5px, var(--c2) 5.5px, var(--c2) 9px, transparent 9px),
+      var(--strip, linear-gradient(180deg,#f3f4f6 0%,#d3d6dc 55%,#bfc3cb 100%));
     box-shadow:0 -2px 7px rgba(0,0,0,0.55);
     color:#000;-webkit-text-stroke:0.4px #000;text-shadow:none;filter:none;opacity:1;
     font-size:clamp(17px,1.12vw,21px);line-height:1.08;
   }
   /* Toolbox cards are narrow, so their titles run to two lines: every strip in the row is two lines tall */
   .cards .card:nth-child(2) .tool-grid .tool-btn:not(.no-icon):not(.soon) .tool-btn-label{
-    min-height:calc(2.16em + 17px);
+    min-height:calc(2.16em + 23px);
   }
   /* a profile step still to do: same strip, dimmer, so the finished ones stand out */
   .cards .card .tool-grid .tool-btn.step:not(.done) .tool-btn-label,
   .cards .card .tool-grid .tool-btn.step:not(.done):hover .tool-btn-label{
-    background:linear-gradient(180deg,#a9acb3 0%,#8e9199 100%);
+    --strip:linear-gradient(180deg,#a9acb3 0%,#8e9199 100%);
     color:#16161a;-webkit-text-stroke:0.3px #16161a;
   }
 }
@@ -5777,7 +5782,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.85</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.86</span>
  </div>
 
  <div class="hero">
@@ -29365,7 +29370,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6085;
+  var AGC_BUILD = 6086;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
