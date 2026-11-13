@@ -128,6 +128,7 @@ async function main() {
 }
 let status = '';
 try { status = await main(); } catch (e) { status = '❌ ' + S(e && e.message || e); console.log(e && e.stack || e); }
+if (status.startsWith('❌')) { try { const rid = S(input.config().recordId); if (rid) await base.getTable('tblziZ2NmNH2m3HfJ').updateRecordAsync(rid, {fldFvsBcoCQpC7Om0: false}); } catch (e2) { console.log('untick: ' + e2); } } // 🧾 BUILD ESTIMATE never stays ticked
 console.log(status);
 output.set('status', status);
 if (status.startsWith('❌')) throw new Error(status);
