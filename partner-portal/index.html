@@ -5463,16 +5463,18 @@ window.AGC_LOOK_FIELD = {
   }
 }
 /* ── MY PROJECTS + MY TOOLBOX: EMBOSSED TITLES, COLOURED DOT ─────────────────
-   On the first two main cards the mini-card title is no longer coloured: it is pressed into the card
-   like the icon (#agc-deboss-text is the same emboss, drawn finer for small lettering). The card's own
+   On the first two main cards the mini-card title is no longer coloured and no longer embossed (too hard
+   to read): it is solid black and larger. The card's own
    colour (--tc) is kept as a small dot in its bottom-left corner. My Profile's steps keep their colours. */
 .tool-btn-cdot{display:none;}
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
-  .cards .card .tool-btn:not(.no-icon):not(.step) .tool-btn-label,
-  .cards .card .tool-btn:not(.no-icon):not(.step):hover .tool-btn-label{
-    color:#fff;-webkit-text-stroke:0.7px #fff;text-shadow:none;
-    filter:url(#agc-deboss-text);
-    padding:2px 3px 4px;                       /* room for the lit lip under and to the right of the letters */
+  .cards .card .tool-grid .tool-btn:not(.no-icon):not(.step):not(.soon) .tool-btn-label,
+  .cards .card .tool-grid .tool-btn:not(.no-icon):not(.step):not(.soon):hover .tool-btn-label{
+    color:#000;-webkit-text-stroke:0.6px #000;filter:none;
+    font-size:clamp(17px,1.12vw,21px);line-height:1.08;
+    /* solid black lettering; a thin light edge under it and a soft light halo keep it readable on the dark foot of the card */
+    text-shadow:0 1px 0 rgba(255,255,255,0.50), 0 0 3px rgba(255,255,255,0.34), 0 0 10px rgba(255,255,255,0.30);
+    padding:2px 3px 3px;
   }
   .cards .card .tool-btn:not(.no-icon):not(.step) > .tool-btn-cdot{
     display:block;position:absolute;left:6px;bottom:7px;z-index:2;pointer-events:none;
@@ -5764,7 +5766,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.81</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.82</span>
  </div>
 
  <div class="hero">
@@ -29357,7 +29359,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6081;
+  var AGC_BUILD = 6082;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
