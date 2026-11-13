@@ -79,7 +79,9 @@ h1{font-size:24px;line-height:1.25;margin-top:8px}
   var st = hm(D.s), en = hm(D.e);
   if (st && !en) en = {h: Math.min(st.h + 2, 23), m: st.h + 2 > 23 ? 59 : st.m}; // no end time given: a 2 hour block (Chris, Nov 13)
   var clock = function(t){ var h = t.h % 12 || 12; return h + ':' + pad(t.m) + ' ' + (t.h < 12 ? 'AM' : 'PM'); };
-  var whenTxt = st ? clock(st) + ' to ' + clock(en) : 'All day' + (S(D.w) ? ' (time: ' + S(D.w).toLowerCase() + ')' : '');
+  // no exact time: show only the time text from the project, e.g. 'Before store opening' (Chris, Nov 13: 'All day' was misleading)
+  var cap = function (t) { t = S(t).toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };
+  var whenTxt = st ? clock(st) + ' to ' + clock(en) : (S(D.w) ? cap(D.w) : 'Time to be confirmed');
   if (st && S(D.w) && !/^\d/.test(S(D.w))) whenTxt += ' (' + S(D.w).toLowerCase() + ')';
   var stamp = function(t){ return ymd[0] + pad(ymd[1]) + pad(ymd[2]) + 'T' + pad(t.h) + pad(t.m) + '00'; };
   var dateOnly = function(dd){ return dd.getUTCFullYear() + pad(dd.getUTCMonth() + 1) + pad(dd.getUTCDate()); };
