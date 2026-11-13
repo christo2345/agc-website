@@ -5481,8 +5481,11 @@ window.AGC_LOOK_FIELD = {
     /* THE LINE IS TWO COLOURS: a dark partner colour (--c2, set on each card) on the left half, fading
        into the card's own colour on the right */
     --c:var(--tc, var(--pc, #92C64B));
+    /* the partner is toned down: the card's own colour pulled 42% of the way towards its dark partner,
+       so the left end is a deeper relative of the same colour, not a different colour */
+    --cp:color-mix(in oklab, var(--c2, #000) 42%, var(--c));
     background:
-      linear-gradient(90deg, var(--c2, #222) 0%, var(--c2, #222) 28%, var(--c) 82%, var(--c) 100%) 0 0/100% 9px no-repeat,
+      linear-gradient(90deg, var(--cp) 0%, var(--c) 70%, var(--c) 100%) 0 0/100% 9px no-repeat,
       var(--strip, linear-gradient(180deg,#f3f4f6 0%,#d3d6dc 55%,#bfc3cb 100%));
     box-shadow:0 -2px 7px rgba(0,0,0,0.55);
     color:#000;-webkit-text-stroke:0.4px #000;text-shadow:none;filter:none;opacity:1;
@@ -5804,7 +5807,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.92</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.93</span>
  </div>
 
  <div class="hero">
@@ -29394,7 +29397,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6092;
+  var AGC_BUILD = 6093;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
