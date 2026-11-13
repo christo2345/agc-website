@@ -5428,7 +5428,7 @@ window.AGC_LOOK_FIELD = {
 /* ── DESKTOP: ACTIVE MINI CARDS ─────────────────────────────────────────────
    The mini cards that used to carry the green "Active" banner along the bottom (View Projects,
    View Calendar, Upload Invoice, Service Area, Update My Profile): the banner is gone and the
-   card stays the same dark glass as the rest, with a larger icon shown in full colour (not grey).
+   card stays the same dark glass as the rest (the icon is handled in the block below).
    No green fill, at rest or on hover: hover is a lighter glass. "Beta" (orange banner) and
    "Coming Soon" cards are untouched. */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
@@ -5443,10 +5443,41 @@ window.AGC_LOOK_FIELD = {
       linear-gradient(165deg, rgba(66,66,74,0.97) 0%, rgba(32,32,38,0.94) 50%, rgba(12,12,14,0.92) 100%);
   }
   .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)):hover .tool-btn-label{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
-  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) .tool-btn-icon,
-  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) .tool-btn-icon svg{width:60px;height:60px;}
-  .cards .card .tool-btn:has(> .tool-btn-beta-label:not(.is-beta)) .tool-btn-icon svg{
-    filter:saturate(1.35) brightness(1.12) drop-shadow(0 3px 6px rgba(0,0,0,0.5));   /* full colour, at rest and on hover */
+}
+/* ── DESKTOP: MINI-CARD ICONS ───────────────────────────────────────────────
+   Every mini card that has an icon: the icon is large, tilted a little, and set in the card's
+   top-left corner so that it runs off the edge. The card crops it (overflow:hidden), so part of
+   the icon is missing off the card. The label sits along the bottom (above the banner on Beta and
+   Coming Soon cards). Sizes are relative to the card (% of its height), so it holds at any window size.
+   Colour: active cards and completed profile steps are in strong full colour; Coming Soon cards and
+   profile steps not yet done stay grey, as before. */
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  .cards .card .tool-btn:not(.no-icon){overflow:hidden;justify-content:flex-end;}
+  .cards .card .tool-btn:not(.no-icon) .tool-btn-icon{
+    position:absolute;top:0;left:0;z-index:1;pointer-events:none;
+    height:104%;width:auto;aspect-ratio:1/1;
+    transform:translate(-23%,-27%) rotate(-14deg);
+    transition:transform 0.35s cubic-bezier(0.2,0.8,0.2,1), filter 0.3s;
+  }
+  /* cards with a banner along the bottom have less room above it */
+  .cards .card .tool-btn.soon:not(.no-icon) .tool-btn-icon,
+  .cards .card .tool-btn:has(> .tool-btn-beta-label.is-beta) .tool-btn-icon{height:88%;}
+  .cards .card .tool-btn:not(.no-icon) .tool-btn-icon svg{width:100%;height:100%;}
+  .cards .card .tool-btn:not(.no-icon):hover .tool-btn-icon{transform:translate(-21%,-25%) rotate(-8deg) scale(1.06);}
+  .cards .card .tool-btn:not(.no-icon) .tool-btn-label{position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.85);}
+  .cards .card .tool-btn:not(.no-icon) .tool-btn-stepnum{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
+  /* strong full colour: active cards (View Projects, View Calendar, Upload Invoice, Service Area), the Beta card … */
+  .cards .card .tool-btn:not(.step):not(.soon):not(.no-icon) .tool-btn-icon svg,
+  .cards .card .tool-btn:not(.step):not(.soon):not(.no-icon):hover .tool-btn-icon svg{
+    filter:saturate(1.9) contrast(1.08) brightness(1.12) drop-shadow(0 4px 8px rgba(0,0,0,0.55));
+  }
+  /* … and completed profile steps (they used to turn into a blank white square) */
+  .cards .card .tool-btn.step.done .tool-btn-icon,
+  .cards .card .tool-btn.step.done:hover .tool-btn-icon{filter:none;}
+  .cards .card .tool-btn.step.done .tool-btn-icon svg,
+  .cards .card .tool-btn.step.done:not(:hover) .tool-btn-icon svg,
+  .cards .card .tool-btn.step.done:hover .tool-btn-icon svg{
+    filter:saturate(1.6) contrast(1.05) brightness(1.08) drop-shadow(0 4px 8px rgba(0,0,0,0.55));
   }
 }
   /* === MOBILE FIX: guarantee the three main cards are always visible ===
@@ -5577,7 +5608,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.65</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.66</span>
  </div>
 
  <div class="hero">
@@ -29332,7 +29363,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6065;
+  var AGC_BUILD = 6066;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
