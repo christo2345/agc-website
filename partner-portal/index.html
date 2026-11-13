@@ -5553,6 +5553,29 @@ window.AGC_LOOK_FIELD = {
   }
   .cards .card .profile-status-row .card-pct{color:#fff !important;font-size:20px;min-width:2.6em;text-align:right;}
 }
+/* ── COMPANY NAME LIVES IN THE EARNINGS BOX (DESKTOP) ────────────────────────
+   On desktop the green company name is no longer beside "My Profile": it sits in the "Total AGC earnings"
+   box on the My Projects card, top-left, on the same line as the box's label. A name too long for the
+   space is cut off with "…" (hover shows it in full). Phones and tablets keep it under "My Profile". */
+.cb-head{display:contents;}
+.cb-company{display:none;}
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  .cards .card .card-title-row > #profile-company{display:none;}
+  .cards .card .card-budget > .cb-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;min-width:0;align-self:stretch;}
+  .cards .card .card-budget > .cb-head > .card-budget-label{flex:none;}
+  .cards .card .card-budget > .cb-head > .cb-company{
+    display:block;flex:1 1 auto;min-width:0;margin:0;text-align:left;line-height:1.15;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transform:none;
+  }
+  .cards .card .card-budget > .cb-head > .cb-company:empty{display:block;}
+  /* When the weather-alerts box shares the row the earnings box is half as wide, and the label's line has
+     no room for a name: there the name drops to the bottom-left corner, on the "N projects" line, a size smaller. */
+  .cards .card .projects-summary-row:has(> .weather-alerts:not([style*="none"])) > .card-budget > .cb-head{display:contents;}
+  .cards .card .projects-summary-row:has(> .weather-alerts:not([style*="none"])) > .card-budget > .cb-head > .cb-company{
+    position:absolute;left:14px;bottom:13px;max-width:calc(100% - 28px - 64px);
+    font-size:10px;letter-spacing:0;
+  }
+}
 /* ── "BETA" ON SITE MONKEY ───────────────────────────────────────────────────
    The word is small and sits at the right of the card, directly above the coloured line, in solid
    white so it can be read. */
@@ -5843,7 +5866,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.98</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.99</span>
  </div>
 
  <div class="hero">
@@ -5927,7 +5950,11 @@ window.AGC_LOOK_FIELD = {
        <\!-- Big bottom-of-card budget total — kept above the action grid so
             the headline financial number stays prominent. -->
        <div class="card-budget" id="projects-budget">
-         <div class="card-budget-label">Total AGC Earnings</div>
+         <\!-- Desktop: the company name (green) sits in this box, top-left, on the label's line. -->
+         <div class="cb-head">
+           <div class="card-company cb-company" id="projects-company"></div>
+           <div class="card-budget-label">Total AGC Earnings</div>
+         </div>
          <div class="card-budget-main">
            <div class="card-budget-loading" id="projects-budget-loading">Calculating...</div>
            <div class="card-budget-amount loading" id="projects-budget-amount"><span class="cb-sym">$</span>0</div>
@@ -7833,10 +7860,13 @@ function setName(name){
 // clears the element (so the :empty CSS rule collapses the gap). Idempotent
 // — safe to call from cache hydration and from the network fetch.
 function setCompany(company){
-  const el=document.getElementById('profile-company');
-  if(!el)return;
-  el.textContent=String(company||'').trim();
-  if(el.textContent)el.title=el.textContent;else el.removeAttribute('title');   // full name on hover when it is cut short
+  // two homes: beside "My Profile" (phones and tablets) and in the earnings box on My Projects (desktop)
+  ['profile-company','projects-company'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.textContent=String(company||'').trim();
+    if(el.textContent)el.title=el.textContent;else el.removeAttribute('title');   // full name on hover when it is cut short
+  });
 }
 
 // ─── STEP COMPLETION DETECTION ─────────────────────────────────────────────
@@ -29433,7 +29463,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6098;
+  var AGC_BUILD = 6099;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
