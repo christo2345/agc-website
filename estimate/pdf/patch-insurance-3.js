@@ -31,7 +31,6 @@ const DRAFT = [
 "            const expD = S(f[IF.exp] || r.getCellValue(IF.exp)).slice(0, 10);",
 "            const paras = ok ? ['Hi ' + first + ',', 'Thank you for sending your certificate of insurance. We reviewed it and it is approved: American Graphic Contractors LLC is named as additional insured' + (expD ? ' and the policy is valid until ' + longD(expD) : '') + '. It is now on file' + (nums.length ? ' for AGC ' + nums.join(', ') : '') + '.']",
 "              : ['Hi ' + first + ',', 'Thank you for sending your certificate of insurance. We reviewed it and need one change before we can approve it. ' + msg, 'Just reply to this email with the updated PDF and we will update our records.'];",
-"            if (ok && ((!isDate(S(c.workers_comp_expiry).slice(0, 10)) && !isDate(S(r.getCellValue(IF.wcb)).slice(0, 10))) || /workers comp(ensation)?\\b[^.]{0,80}\\b(not shown|not listed|not included|missing|none)|no workers comp|without workers comp/i.test(S(c.notes)))) paras.push('When you get a chance, could you also send us your workers compensation certificate (or your exemption)?');",
 "            const esc = t => NODASH(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');",
 "            const fj = await g('/messages/' + encodeURIComponent(last.id)); const full = Array.isArray(fj.messages) ? fj.messages[0] : fj.messages;",
 "            const refs = full ? [...new Set([...(Array.isArray(full.references) ? full.references : []), S(full.email_message_id)].map(S).filter(Boolean))].slice(-20) : [];",
