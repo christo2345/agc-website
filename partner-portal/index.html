@@ -5405,6 +5405,23 @@ window.AGC_LOOK_FIELD = {
   .card:has(.tool-grid) .card-desc{ display:none !important; }
 }
 /* DESKTOP DESC HIDE END */
+/* ── DESKTOP: THE MINI CARDS LINE UP ACROSS THE THREE CARDS ─────────────────
+   Every card has the same two rows under its title, same tops, same heights:
+     My Toolbox / My Profile : two rows of three mini cards
+     My Projects             : row 1 = the earnings box (weather alerts beside it when there are any),
+                               row 2 = View Projects + View Calendar
+   Two things used to break that: the company name under "My Profile" pushed that card's grid
+   down (its mini cards came out shorter), and My Projects sized its earnings box by its content
+   and gave the rest to its two buttons (taller than everyone else's). */
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  /* the company name sits in the gap under the title and takes no height of its own */
+  .cards .card .card-company{height:0;margin:0;position:relative;top:-5px;line-height:1.15;white-space:nowrap;overflow:visible;}
+  /* My Projects: two equal rows, the same as the other cards' grid (margin 14px, gap 10px) */
+  .cards .card .projects-summary-row{flex:1 1 0;min-height:0;margin-top:14px;align-items:stretch;}
+  .cards .card .projects-summary-row > .card-budget{justify-content:center;min-height:0;}
+  .cards .card .projects-summary-row > .weather-alerts{min-height:0;overflow:hidden;}
+  .cards .card .tool-grid.tool-grid--two{flex:1 1 0;margin-top:10px;}
+}
   /* === MOBILE FIX: guarantee the three main cards are always visible ===
      The shell was a strict 100vh box with overflow:hidden, so in a short
      mobile iframe the stacked cards were clipped and the auto-height
@@ -5533,7 +5550,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.61</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.62</span>
  </div>
 
  <div class="hero">
@@ -29283,7 +29300,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6061;
+  var AGC_BUILD = 6062;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
