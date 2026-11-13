@@ -47,7 +47,7 @@ export async function mapKeyOk(projectId, key) {
   if (hit && Date.now() - hit.at < 60000) stored = hit.key;
   else {
     try {
-      const rec = await airtable(`${BASE}/${PROJECTS}/${projectId}?returnFieldsByFieldId=true&fields%5B%5D=${MAP_KEY_FIELD}`);
+      const rec = await airtable(`${BASE}/${PROJECTS}/${projectId}?returnFieldsByFieldId=true`);   // (a single-record read takes no fields[] filter)
       stored = String((rec.fields || {})[MAP_KEY_FIELD] || '').trim();
       cache.set(projectId, { key: stored, at: Date.now() });
     } catch (e) { return false; }

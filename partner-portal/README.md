@@ -40,4 +40,8 @@ The backend files are in [`wix/`](wix/) too, for reference:
   from it, and checks the project / closeout belongs to them. In Wix the virtual office endpoints
   (LiveKit token, office page) follow at the end of the same file, unchanged.
 
+- `mapKeys.js` + `jobs.config`: the 🔑 MAP KEY on each AGC project. The PROJECT MAP and FIND A PARTNER
+  links carry it (`&k=…`), and the map pages (/project-map, /interactive-installer-map) only load or save
+  with the right key. A job gives new projects a key every hour.
+
 Changing these files here does not change Wix; paste them into the Wix editor, Save, then Publish.
