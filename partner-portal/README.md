@@ -42,6 +42,11 @@ The backend files are in [`wix/`](wix/) too, for reference:
 
 - `mapKeys.js` + `jobs.config`: the 🔑 MAP KEY on each AGC project. The PROJECT MAP and FIND A PARTNER
   links carry it (`&k=…`), and the map pages (/project-map, /interactive-installer-map) only load or save
-  with the right key. A job gives new projects a key every hour.
+  with the right key. The Airtable automation "🔑 MAP KEY · new project → key right away" gives a new
+  project its key the moment it is created; the hourly job is a backstop.
+- `http-functions.atlas-part.js` + `atlas-bridge.js`: ATLAS AI (/atlas-ai and its copy). The 4 HTML
+  embeds hold no Airtable token; the bridge script at the top of each one sends their calls to
+  `atlasProject` (read one project, allowed fields only), `atlasCreate` (new project) and `atlasUpload`
+  (files onto a project created in the last 3 hours, 8 MB cap). The token lives in Wix Secrets Manager.
 
 Changing these files here does not change Wix; paste them into the Wix editor, Save, then Publish.
