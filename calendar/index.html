@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0d0d0d">
+<title>Add To My Calendar · AGC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* AGC · ADD TO MY CALENDAR · v1 · Nov 13 2026
+   The installer opens this from the Installation Request email. The job travels in the link itself (after the #):
+   nothing is stored on GitHub, no prices are in it. The page asks "Add this project to your calendar?" and hands the
+   event to Google Calendar, Outlook or the phone's own calendar (an .ics file), then confirms. */
+:root{--green:#92C64B;--green-dark:#4f7f1d;--ink:#141414;--ink-2:#262626;--line:#2a2a2a;--d1:#0d0d0d;--d2:#161616;--d3:#1f1f1f;--font:'Wix Madefor Display',Arial,Helvetica,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--d1);color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 40px}
+.wrap{width:100%;max-width:560px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.brand img{width:40px;height:40px}
+.brand .co{font-weight:800;font-size:14px;letter-spacing:.05em}
+.card{background:var(--d2);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.card .top{padding:22px 22px 18px;border-bottom:4px solid var(--green)}
+.ask{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--green)}
+h1{font-size:24px;line-height:1.25;margin-top:8px}
+.agc{display:inline-block;background:var(--green);color:var(--d1);font-weight:800;font-size:13px;border-radius:999px;padding:3px 11px;margin-top:12px;letter-spacing:.04em}
+.rows{padding:16px 22px 6px}
+.row{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .k{flex:0 0 96px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#bdbdbd;padding-top:2px}
+.row .v{font-size:16px;line-height:1.45;color:#f2f2f2;min-width:0;overflow-wrap:anywhere}
+.row .v b{color:#fff}
+.row .v small{display:block;color:#cfcfcf;font-size:14px}
+.btns{padding:14px 22px 22px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{font-family:inherit;font-size:15px;font-weight:800;border-radius:12px;padding:14px 12px;cursor:pointer;border:1px solid #333;background:var(--d3);color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px);border-color:var(--green)}
+.btn.main{grid-column:1 / -1;background:var(--green);border-color:var(--green);color:var(--d1);font-size:17px;padding:16px}
+.btn svg{width:20px;height:20px;flex:none}
+.note{padding:0 22px 20px;font-size:13px;color:#cfcfcf;line-height:1.5;text-align:center}
+.done{display:none;padding:26px 22px 24px;text-align:center}
+.done .tick{width:58px;height:58px;border-radius:50%;background:var(--green);color:var(--d1);font-size:32px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.done h2{font-size:22px}
+.done p{font-size:15px;color:#e6e6e6;line-height:1.5;margin-top:8px}
+.done .again{margin-top:16px;background:none;border:0;color:var(--green);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;text-decoration:underline}
+.card.added .ask-part{display:none}
+.card.added .done{display:block}
+.foot{margin-top:22px;text-align:center;font-size:13px;color:#bdbdbd;line-height:1.6}
+.foot b{color:var(--green)}
+.msg{text-align:center;padding:40px 10px;font-size:16px;line-height:1.6;color:#e6e6e6}
+.msg h1{margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><img src="../estimate/agc-mark.webp" alt="AGC"><div class="co">AMERICAN GRAPHIC CONTRACTORS</div></div>
+  <div id="app"></div>
+  <div class="foot"><b>americangraphiccontractors.com</b> · projects@americangraphiccontractors.com · 1 (877) 395-7435</div>
+</div>
+<script>
+(function(){
+  var app = document.getElementById('app');
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var S = function(v){ return String(v == null ? '' : v).trim(); };
+  // the job, from the link: #d=<base64url of UTF-8 JSON>
+  var D = null;
+  try { var m = location.hash.match(/[#&]d=([A-Za-z0-9_-]+)/); if (m) { var b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+    var bin = atob(b), bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); D = JSON.parse(new TextDecoder().decode(bytes)); } } catch (e) { D = null; }
+  if (!D || !D.n || !D.d) { app.innerHTML = '<div class="msg"><h1>This calendar link is incomplete</h1><p>Please reply to the AGC email and we will send you the date again.</p></div>'; return; }
+
+  // ---- times: s / e = "HH:MM" (24 h, the store's local time); none = all day ----
+  var pad = function(n){ return (n < 10 ? '0' : '') + n; };
+  var ymd = S(D.d).split('-').map(Number);
+  var day = new Date(Date.UTC(ymd[0], ymd[1] - 1, ymd[2], 12));
+  var dayTxt = day.toLocaleDateString('en-US', {timeZone: 'UTC', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
+  var hm = function(t){ var p = S(t).split(':'); return p.length === 2 ? {h: +p[0], m: +p[1]} : null; };
+  var st = hm(D.s), en = hm(D.e);
+  if (st && !en) en = {h: Math.min(st.h + 2, 23), m: st.h + 2 > 23 ? 59 : st.m}; // no end time given: a 2 hour block (Chris, Nov 13)
+  var clock = function(t){ var h = t.h % 12 || 12; return h + ':' + pad(t.m) + ' ' + (t.h < 12 ? 'AM' : 'PM'); };
+  var whenTxt = st ? clock(st) + ' to ' + clock(en) : 'All day' + (S(D.w) ? ' (time: ' + S(D.w).toLowerCase() + ')' : '');
+  if (st && S(D.w) && !/^\d/.test(S(D.w))) whenTxt += ' (' + S(D.w).toLowerCase() + ')';
+  var stamp = function(t){ return ymd[0] + pad(ymd[1]) + pad(ymd[2]) + 'T' + pad(t.h) + pad(t.m) + '00'; };
+  var dateOnly = function(dd){ return dd.getUTCFullYear() + pad(dd.getUTCMonth() + 1) + pad(dd.getUTCDate()); };
+  var nextDay = new Date(day.getTime() + 86400000);
+  var iso = function(t){ return ymd[0] + '-' + pad(ymd[1]) + '-' + pad(ymd[2]) + 'T' + pad(t.h) + ':' + pad(t.m) + ':00'; };
+
+  // ---- the event text ----
+  var locs = Array.isArray(D.loc) ? D.loc.filter(function(x){ return x && (x.n || x.a); }) : [];
+  var title = 'AGC ' + D.n + ' · ' + S(D.t).replace(/^\s*\d{5}\s*(\(\d+\))?\s*[\/·-]?\s*/, '');
+  var where = locs.length ? S(locs[0].a) || S(locs[0].n) : '';
+  var lines = [];
+  lines.push(/^\s*(AGC\s*)?\d{5}/i.test(S(D.t)) ? S(D.t) : 'AGC ' + D.n + ' / ' + S(D.t));
+  lines.push('When: ' + dayTxt + ', ' + whenTxt);
+  locs.forEach(function(l){ lines.push(''); lines.push(S(l.n)); if (S(l.a)) lines.push(S(l.a)); if (S(l.p)) lines.push('Store phone: ' + S(l.p)); });
+  if (S(D.oc)) { lines.push(''); lines.push('Onsite contact: ' + S(D.oc)); }
+  var pm = D.pm || {};
+  lines.push(''); lines.push('Questions or changes: ' + [S(pm.nm) ? S(pm.nm) + ' at AGC' : 'AGC', S(pm.em) || 'projects@americangraphiccontractors.com', S(pm.ph) || '1 (877) 395-7435'].join(', '));
+  lines.push('Reply to the AGC email with CONFIRMED if you have not yet, and take great photos once complete.');
+  var details = lines.join('\n');
+
+  // ---- the four ways to add it ----
+  var enc = encodeURIComponent;
+  var gDates = st ? stamp(st) + '/' + stamp(en) : dateOnly(day) + '/' + dateOnly(nextDay);
+  var google = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + enc(title) + '&dates=' + gDates + '&details=' + enc(details) + (where ? '&location=' + enc(where) : '');
+  var ol = function(host){ return 'https://' + host + '/calendar/0/action/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=' + enc(title) +
+    (st ? '&startdt=' + enc(iso(st)) + '&enddt=' + enc(iso(en)) : '&startdt=' + enc(S(D.d)) + '&enddt=' + enc(nextDay.toISOString().slice(0, 10)) + '&allday=true') +
+    '&body=' + enc(details) + (where ? '&location=' + enc(where) : ''); };
+  var icsEsc = function(t){ return S(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); };
+  var fold = function(l){ var out = []; while (l.length > 74) { out.push(l.slice(0, 74)); l = ' ' + l.slice(74); } out.push(l); return out.join('\r\n'); };
+  var now = new Date(); var dtstamp = now.getUTCFullYear() + pad(now.getUTCMonth() + 1) + pad(now.getUTCDate()) + 'T' + pad(now.getUTCHours()) + pad(now.getUTCMinutes()) + '00Z';
+  var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//American Graphic Contractors//Add To My Calendar//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+    'UID:agc-' + D.n + '-' + S(D.d) + '@americangraphiccontractors.com', 'DTSTAMP:' + dtstamp,
+    st ? 'DTSTART:' + stamp(st) : 'DTSTART;VALUE=DATE:' + dateOnly(day), st ? 'DTEND:' + stamp(en) : 'DTEND;VALUE=DATE:' + dateOnly(nextDay),
+    'SUMMARY:' + icsEsc(title), 'DESCRIPTION:' + icsEsc(details)].concat(where ? ['LOCATION:' + icsEsc(where)] : [])
+    .concat(['BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(title), 'TRIGGER:-PT12H', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR']).map(fold).join('\r\n');
+  var icsHref = 'data:text/calendar;charset=utf-8,' + enc(ics);
+
+  // ---- the page ----
+  var ICON = {
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    g: '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.5l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 13.9a6 6 0 0 1 0-3.8V7.5H3.1a10 10 0 0 0 0 9z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.5l3.3 2.6C7.2 7.8 9.4 6 12 6z"/></svg>',
+    o: '<svg viewBox="0 0 24 24"><rect x="2" y="4" width="13" height="16" rx="2" fill="#0A64C9"/><circle cx="8.5" cy="12" r="3.4" fill="none" stroke="#fff" stroke-width="2"/><path d="M15 7h6.5c.3 0 .5.2.5.5v9c0 .3-.2.5-.5.5H15z" fill="#28A8EA"/></svg>',
+    a: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7a4.5 4.5 0 0 0-3.5-1.9c-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8a4.8 4.8 0 0 0-4 2.4c-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>'
+  };
+  var locHtml = locs.map(function(l){ return '<b>' + esc(l.n) + '</b>' + (S(l.a) ? '<small>' + esc(l.a) + '</small>' : '') + (S(l.p) ? '<small>' + esc(l.p) + '</small>' : ''); }).join('<div style="height:8px"></div>');
+  app.innerHTML = '<div class="card" id="card">' +
+    '<div class="ask-part">' +
+      '<div class="top"><div class="ask">Add To My Calendar?</div><h1>' + esc(S(D.t)) + '</h1><span class="agc">AGC ' + esc(D.n) + '</span></div>' +
+      '<div class="rows">' +
+        '<div class="row"><div class="k">Date</div><div class="v"><b>' + esc(dayTxt) + '</b></div></div>' +
+        '<div class="row"><div class="k">Time</div><div class="v">' + esc(whenTxt) + (st && /^\s*\d/.test(S(D.w)) ? '<small>2 hour block, change it in your calendar if needed</small>' : '') + '</div></div>' +
+        (locs.length ? '<div class="row"><div class="k">Location' + (locs.length > 1 ? 's' : '') + '</div><div class="v">' + locHtml + '</div></div>' : '') +
+        (S(D.oc) ? '<div class="row"><div class="k">Onsite</div><div class="v">' + esc(D.oc) + '</div></div>' : '') +
+      '</div>' +
+      '<div class="btns">' +
+        '<a class="btn main" id="b-g" href="' + esc(google) + '" target="_blank" rel="noopener">' + ICON.g + 'Yes, add to Google Calendar</a>' +
+        '<a class="btn" id="b-a" href="' + esc(icsHref) + '" download="AGC ' + esc(D.n) + '.ics">' + ICON.a + 'iPhone / Apple</a>' +
+        '<a class="btn" id="b-o" href="' + esc(ol('outlook.live.com')) + '" target="_blank" rel="noopener">' + ICON.o + 'Outlook</a>' +
+        '<a class="btn" id="b-w" href="' + esc(ol('outlook.office.com')) + '" target="_blank" rel="noopener" style="grid-column:1 / -1">' + ICON.o + 'Outlook for work (Microsoft 365)</a>' +
+        '<a class="btn" id="b-f" href="' + esc(icsHref) + '" download="AGC ' + esc(D.n) + '.ics" style="grid-column:1 / -1">' + ICON.cal + 'Other calendar (download the event)</a>' +
+      '</div>' +
+      '<div class="note">Pick the calendar you use. It opens with the job filled in, just tap Save.</div>' +
+    '</div>' +
+    '<div class="done"><div class="tick">&#10003;</div><h2 id="done-h">AGC ' + esc(D.n) + ' is going into your calendar</h2><p id="done-p"></p>' +
+      '<button class="again" id="again">Use a different calendar</button></div>' +
+  '</div>';
+  var card = document.getElementById('card');
+  var confirm = function(how){
+    var p = {g: 'Google Calendar opened in a new tab with the job filled in. Tap <b>Save</b> there and it is in your calendar.',
+      o: 'Outlook opened in a new tab with the job filled in. Click <b>Save</b> there and it is in your calendar.',
+      w: 'Outlook opened in a new tab with the job filled in. Click <b>Save</b> there and it is in your calendar.',
+      a: 'Your phone asks to add the event: tap <b>Add to Calendar</b> (on a computer, open the downloaded file).',
+      f: 'The event file was downloaded. Open it and your calendar adds the job.'}[how];
+    document.getElementById('done-p').innerHTML = p + '<br><br><b>' + esc(dayTxt) + '</b>, ' + esc(whenTxt) + (where ? '<br>' + esc(where) : '');
+    card.classList.add('added'); window.scrollTo(0, 0);
+  };
+  ['g', 'a', 'o', 'w', 'f'].forEach(function(k){ document.getElementById('b-' + k).addEventListener('click', function(){ setTimeout(function(){ confirm(k); }, 150); }); });
+  document.getElementById('again').addEventListener('click', function(){ card.classList.remove('added'); });
+  document.title = 'Add AGC ' + D.n + ' To My Calendar';
+})();
+</script>
+</body>
+</html>
