@@ -5410,12 +5410,15 @@ window.AGC_LOOK_FIELD = {
      My Toolbox / My Profile : two rows of three mini cards
      My Projects             : row 1 = the earnings box (weather alerts beside it when there are any),
                                row 2 = View Projects + View Calendar
-   Two things used to break that: the company name under "My Profile" pushed that card's grid
+   Two things used to break that: the company name, when it sat under "My Profile", pushed that card's grid
    down (its mini cards came out shorter), and My Projects sized its earnings box by its content
    and gave the rest to its two buttons (taller than everyone else's). */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
-  /* the company name sits in the gap under the title and takes no height of its own */
-  .cards .card .card-company{height:0;margin:0;position:relative;top:-5px;line-height:1.15;white-space:nowrap;overflow:visible;}
+  /* the company name sits beside "My Profile" (same size as before, on the title's baseline), so it
+     takes no height of its own; a name too long for the card is cut off with "…" */
+  .cards .card .card-title-row{display:flex;align-items:baseline;gap:12px;min-width:0;margin-bottom:8px;transform-style:preserve-3d;}
+  .cards .card .card-title-row > .card-title{margin-bottom:0;flex:none;}
+  .cards .card .card-title-row > .card-company{margin:0;flex:1 1 auto;min-width:0;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   /* My Projects: two equal rows, the same as the other cards' grid (margin 14px, gap 10px) */
   .cards .card .projects-summary-row{flex:1 1 0;min-height:0;margin-top:14px;align-items:stretch;}
   .cards .card .projects-summary-row > .card-budget{justify-content:center;min-height:0;}
@@ -5550,7 +5553,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.62</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.63</span>
  </div>
 
  <div class="hero">
@@ -6023,8 +6026,12 @@ window.AGC_LOOK_FIELD = {
          <path d="M20,19 Q22,22 24,22" stroke="rgba(0,0,0,0.3)" stroke-width="1" fill="none"/>
        </svg>
      </div>
+     <\!-- Title row: on desktop the company name sits beside "My Profile", on the same baseline
+          (see .card-title-row). Elsewhere the row is a plain block and the two stack as before. -->
+     <div class="card-title-row">
      <div class="card-title">My Profile</div>
      <div class="card-company" id="profile-company"></div>
+     </div>
      <div class="card-desc" id="profile-desc">Complete your onboarding to unlock projects. 5 quick steps — takes about 10-20 minutes.</div>
 
      <\!-- Step mini-cards — toolbox-style 3D grid. 3 cols × 2 rows = 6 slots:
@@ -7748,6 +7755,7 @@ function setCompany(company){
   const el=document.getElementById('profile-company');
   if(!el)return;
   el.textContent=String(company||'').trim();
+  if(el.textContent)el.title=el.textContent;else el.removeAttribute('title');   // full name on hover when it is cut short
 }
 
 // ─── STEP COMPLETION DETECTION ─────────────────────────────────────────────
@@ -29300,7 +29308,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6062;
+  var AGC_BUILD = 6063;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
