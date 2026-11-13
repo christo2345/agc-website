@@ -136,7 +136,7 @@
   .agc-nav-brand{display:flex;align-items:center;flex:none;padding:0;border:0;background:none;cursor:pointer}
   /* the AGC job name of the project open in My Projects, next to the mark (empty everywhere else; it also pushes the buttons to the right) */
   .agc-nav-job{flex:1 1 0;min-width:0;margin:0 8px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    font-size:18px;font-weight:800;letter-spacing:-.2px;line-height:1.2;color:#fff;opacity:0;transition:opacity .3s}
+    font-size:25px;font-weight:800;letter-spacing:-.5px;line-height:1.2;color:#fff;opacity:0;transition:opacity .3s}
   .agc-nav-job.on{opacity:1;padding-left:16px;border-left:1px solid rgba(255,255,255,.18)}
   /* the budget of that project (what the installer is paid for the job), on the right before the buttons */
   .agc-nav-budget{flex:none;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:3px;margin-right:8px;padding-right:14px;border-right:1px solid rgba(255,255,255,.18);white-space:nowrap;line-height:1}
@@ -145,6 +145,7 @@
   .agc-nav-budget-bill:not(:empty)::before{content:"\00B7";margin:0 6px}
   .agc-nav-budget-amt{font-size:24px;font-weight:900;letter-spacing:-.5px;color:#92C64B}
   .agc-nav-budget-amt i{font-style:normal;font-size:50%;font-weight:700;color:#fff;vertical-align:top;display:inline-block;margin:2px 2px 0 0}
+  .agc-nav-budget-amt.words{font-size:17px;letter-spacing:.6px;text-transform:uppercase}   /* same green, words in place of the total */
   .agc-nav-budget-amt.wait{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#f59e0b;padding:6px 10px;border-radius:8px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.55)}
   .agc-nav-brand img{display:block;height:32px;width:auto;transform-origin:50% 50%;animation:agcCoin 7s linear infinite;will-change:transform;-webkit-user-drag:none}
   @keyframes agcCoin{0%{transform:perspective(600px) rotateY(0deg)}100%{transform:perspective(600px) rotateY(360deg)}}
@@ -192,7 +193,8 @@
   .agc-ap-ic svg{display:block;width:62%;height:62%}
   .agc-ap:hover .agc-ap-ic,.agc-ap:focus-visible .agc-ap-ic{transform:translateY(-2px) scale(1.06);box-shadow:0 8px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14),0 0 16px rgba(146,198,75,.25)}
   .agc-ap-t{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  @media (max-width:560px){:root{--agc-nav:72px}.agc-nav{padding:8px}.agc-nav-inner{height:56px;border-radius:16px;padding:0 8px 0 14px}.agc-nav-btn{width:42px;height:42px}.agc-nav-brand img{height:28px}.agc-nav-job{font-size:14px;margin:0 4px}.agc-nav-job.on{padding-left:10px}.agc-nav-budget{margin-right:4px;padding-right:8px}.agc-nav-budget-top{display:none}.agc-nav-budget-amt{font-size:16px}.agc-nav-budget-amt.wait{font-size:9px;padding:4px 6px;letter-spacing:.3px}.agc-nav-wide{display:none}.agc-menu{top:71px;right:8px;width:calc(100vw - 16px)}}
+  @media (max-width:900px){.agc-nav-job{font-size:20px}}
+  @media (max-width:560px){:root{--agc-nav:72px}.agc-nav{padding:8px}.agc-nav-inner{height:56px;border-radius:16px;padding:0 8px 0 14px}.agc-nav-btn{width:42px;height:42px}.agc-nav-brand img{height:28px}.agc-nav-job{font-size:16px;margin:0 4px}.agc-nav-budget-amt.words{font-size:10px;letter-spacing:.3px}.agc-nav-job.on{padding-left:10px}.agc-nav-budget{margin-right:4px;padding-right:8px}.agc-nav-budget-top{display:none}.agc-nav-budget-amt{font-size:16px}.agc-nav-budget-amt.wait{font-size:9px;padding:4px 6px;letter-spacing:.3px}.agc-nav-wide{display:none}.agc-menu{top:71px;right:8px;width:calc(100vw - 16px)}}
   @media (prefers-reduced-motion:reduce){.agc-nav-brand img{animation:none}.agc-menu,.agc-menu.open,.agc-menu-scrim{transition:none}}
   /* signed out (the sign-in pop-up is up): there is nothing to sign out of */
   .agc-locked .agc-ap[data-nav="signout"]{display:none}
@@ -5513,7 +5515,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.56</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.57</span>
  </div>
 
  <div class="hero">
@@ -10924,6 +10926,7 @@ function showInvoiceSuccess(){
  .p-date{font-size:15px;font-weight:700;color:#d0d0d0;letter-spacing:-0.1px;}
  .p-right{flex-shrink:0;padding:14px 16px 12px 4px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;min-width:90px;}
  .p-amount{font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.3px;}
+ .p-amount.p-amount-shared{font-size:10px;letter-spacing:0.3px;text-transform:uppercase;color:#92C64B;white-space:nowrap;}  /* several installers on the job: "HOURLY PLUS COSTS" */
  .p-billing{font-size:9px;font-weight:700;color:#7a7a7a;text-transform:uppercase;letter-spacing:0.5px;}
  .p-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.3px;padding:3px 7px;border-radius:10px;white-space:nowrap;}
 
@@ -12686,6 +12689,11 @@ function parseProject(rec){
  const lookupNames=lookupArr.map(v=>fStr(v)).filter(v=>v&&!isRecId(v));
  const allStoreNames=lookupNames.length?lookupNames:linkedNames;
  const storeName=allStoreNames.join(', ');
+ // More than one installer on the job (INSTALLER(S) + ADDITIONAL INSTALLER(S)): the project shows
+ // in each of their portals, so the project total is not this installer's figure. Those projects
+ // show "HOURLY PLUS COSTS" in place of the total, and no billing-type line.
+ const _instIds=new Set([].concat(f['INSTALLER(S)']||[],f['ADDITIONAL INSTALLER(S)']||[]).map(x=>typeof x==='string'?x:((x&&x.id)||'')).filter(Boolean));
+ const shared=_instIds.size>1;
  return {
  id:rec.id,
  title:fStr(f['PROJECT NAME:']||f['PROJECT NAME']||f['ID']||f['Name']||'Unnamed Project'),
@@ -12700,8 +12708,9 @@ function parseProject(rec){
  })(),
  date:fStr(f['DATE & TIME SCHEDULED']||f['DATE & TIME SCHEDULED:']||f['DATE SCHEDULED:']||f['DATE SCHEDULED']||''),
  dueDate:fStr(f['DUE DATE:']||f['DUE DATE.']||f['DUE DATE']||''),
- amount:fNum(f['TOTAL BUDGET']||f['TOTAL PROFIT']||f['TOTAL COST']||''),
- billing,
+ amount:shared?'HOURLY PLUS COSTS':fNum(f['TOTAL BUDGET']||f['TOTAL PROFIT']||f['TOTAL COST']||''),
+ billing:shared?'':billing,
+ shared,
  installerName,
  thumb,thumbUrl:thumb,
  address,
@@ -13045,7 +13054,7 @@ function renderItem(p){
        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+
        'Awaiting Approval'+
      '</div>'
-   : `${p.amount?`<div class="p-amount">${esc(p.amount)}</div>`:''}${p.billing?`<div class="p-billing">${esc(p.billing)}</div>`:''}`;
+   : `${p.amount?`<div class="p-amount${p.shared?' p-amount-shared':''}">${esc(p.amount)}</div>`:''}${p.billing?`<div class="p-billing">${esc(p.billing)}</div>`:''}`;
  // Installer status pill — sits in its own row below the main card content
  // so it has the full card width and never crowds the title/date/amount.
  // Color matched to the raw status string via statusStyleFor() to mirror
@@ -28861,6 +28870,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     navBudEl.hidden = !b;
     if (!b) return;
     navBudAmt.textContent = ''; navBudAmt.classList.toggle('wait', !!b.awaiting);
+    navBudAmt.classList.toggle('words', !b.awaiting && !/\d/.test(b.amount));        /* "HOURLY PLUS COSTS" rather than a figure */
     document.getElementById('agc-nav-budget-label').textContent = b.awaiting ? 'Status' : 'Project Budget';
     document.getElementById('agc-nav-budget-bill').textContent = b.awaiting ? '' : b.billing;
     if (b.awaiting) {                                   /* on a phone there is only room for "Awaiting" */
@@ -29171,7 +29181,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6056;
+  var AGC_BUILD = 6057;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
