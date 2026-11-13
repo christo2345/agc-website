@@ -5462,6 +5462,38 @@ window.AGC_LOOK_FIELD = {
       linear-gradient(165deg, rgba(66,66,74,0.97) 0%, rgba(32,32,38,0.94) 50%, rgba(12,12,14,0.92) 100%);
   }
 }
+/* ── MY PROJECTS + MY TOOLBOX: EMBOSSED TITLES, COLOURED DOT ─────────────────
+   On the first two main cards the mini-card title is no longer coloured: it is pressed into the card
+   like the icon (#agc-deboss-text is the same emboss, drawn finer for small lettering). The card's own
+   colour (--tc) is kept as a small dot in its bottom-left corner. My Profile's steps keep their colours. */
+.tool-btn-cdot{display:none;}
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  .cards .card .tool-btn:not(.no-icon):not(.step) .tool-btn-label,
+  .cards .card .tool-btn:not(.no-icon):not(.step):hover .tool-btn-label{
+    color:#fff;-webkit-text-stroke:0.7px #fff;text-shadow:none;
+    filter:url(#agc-deboss-text);
+    padding:2px 3px 4px;                       /* room for the lit lip under and to the right of the letters */
+  }
+  .cards .card .tool-btn:not(.no-icon):not(.step) > .tool-btn-cdot{
+    display:block;position:absolute;left:6px;bottom:7px;z-index:2;pointer-events:none;
+    width:7px;height:7px;border-radius:50%;
+    background:var(--tc,#92C64B);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(0,0,0,0.6);
+  }
+}
+/* ── "BETA" ON SITE MONKEY ───────────────────────────────────────────────────
+   The word sits along the top of the card, to the right of the icon, and is pressed into the card exactly
+   like the icon: no colour, same hollow, same inner shadow, same lit lip (#agc-deboss-flat is the icon's
+   filter with its light turned to match the icon's tilt, so both read as lit from the same side). */
+.tool-btn-embeta{display:none;}
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  .cards .card .tool-btn > .tool-btn-embeta{
+    display:block;position:absolute;top:9%;right:8%;z-index:1;pointer-events:none;
+    font-family:inherit;font-weight:900;font-size:clamp(20px,1.75vw,34px);line-height:1;
+    letter-spacing:1.5px;text-transform:uppercase;color:#fff;-webkit-text-stroke:1.2px #fff;
+    filter:url(#agc-deboss-flat);
+  }
+}
 /* ── DESKTOP: "UPDATE MY PROFILE" IS NOT A MINI CARD ────────────────────────
    It is only pressed into the My Profile card: no raised glass tile, no bevel, no ring. A shallow
    recess in the card's own surface (shadow inside its top edge, lit lip under its bottom edge) with
@@ -5691,6 +5723,40 @@ window.AGC_LOOK_FIELD = {
     <feComposite in="light" in2="lipBand" operator="in" result="lip"/>
     <feMerge><feMergeNode in="fill"/><feMergeNode in="innerShadow"/><feMergeNode in="lip"/></feMerge>
   </filter>
+  <filter id="agc-deboss-flat" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum"/>
+    <feComponentTransfer in="lum" result="white"><feFuncA type="linear" slope="7" intercept="-5.5"/></feComponentTransfer>
+    <feComposite in="white" in2="SourceAlpha" operator="in" result="shape"/>
+    <feFlood flood-color="#000" flood-opacity="0.12" result="dark"/>
+    <feComposite in="dark" in2="shape" operator="in" result="fill"/>
+    <feOffset in="shape" dx="2.12" dy="1.57" result="shifted"/>
+    <feGaussianBlur in="shifted" stdDeviation="1.3" result="shiftedSoft"/>
+    <feComposite in="shape" in2="shiftedSoft" operator="out" result="innerBand"/>
+    <feFlood flood-color="#000" flood-opacity="0.30" result="black"/>
+    <feComposite in="black" in2="innerBand" operator="in" result="innerShadow"/>
+    <feOffset in="shape" dx="1.43" dy="1.0" result="lipShift"/>
+    <feComposite in="lipShift" in2="shape" operator="out" result="lipBand"/>
+    <feFlood flood-color="#fff" flood-opacity="0.30" result="light"/>
+    <feComposite in="light" in2="lipBand" operator="in" result="lip"/>
+    <feMerge><feMergeNode in="fill"/><feMergeNode in="innerShadow"/><feMergeNode in="lip"/></feMerge>
+  </filter>
+  <filter id="agc-deboss-text" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum"/>
+    <feComponentTransfer in="lum" result="white"><feFuncA type="linear" slope="7" intercept="-5.5"/></feComponentTransfer>
+    <feComposite in="white" in2="SourceAlpha" operator="in" result="shape"/>
+    <feFlood flood-color="#000" flood-opacity="0.55" result="dark"/>
+    <feComposite in="dark" in2="shape" operator="in" result="fill"/>
+    <feOffset in="shape" dx="0.95" dy="0.75" result="shifted"/>
+    <feGaussianBlur in="shifted" stdDeviation="0.55" result="shiftedSoft"/>
+    <feComposite in="shape" in2="shiftedSoft" operator="out" result="innerBand"/>
+    <feFlood flood-color="#000" flood-opacity="0.75" result="black"/>
+    <feComposite in="black" in2="innerBand" operator="in" result="innerShadow"/>
+    <feOffset in="shape" dx="0.85" dy="0.75" result="lipShift"/>
+    <feComposite in="lipShift" in2="shape" operator="out" result="lipBand"/>
+    <feFlood flood-color="#fff" flood-opacity="0.62" result="light"/>
+    <feComposite in="light" in2="lipBand" operator="in" result="lip"/>
+    <feMerge><feMergeNode in="fill"/><feMergeNode in="innerShadow"/><feMergeNode in="lip"/></feMerge>
+  </filter>
 </defs></svg>
 
 <div class="shell">
@@ -5698,7 +5764,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.79</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.81</span>
  </div>
 
  <div class="hero">
@@ -5795,6 +5861,7 @@ window.AGC_LOOK_FIELD = {
      <\!-- Action mini-cards — toolbox-style 3D buttons in a 2-col grid. -->
      <div class="tool-grid tool-grid--two">
        <button style="--tc:#a3d65a;" class="tool-btn beta" onclick="goToProjects(event)" aria-label="View Projects">
+         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e06a"/><stop offset="1" stop-color="#6aa22e"/></linearGradient></defs>
@@ -5814,6 +5881,7 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-beta-label">Active</span>
        </button>
        <button style="--tc:#2dd4bf;" class="tool-btn beta" onclick="event.stopPropagation();event.preventDefault();agcMorphOpen(this,openCalendarFullscreen,'#cal-fs',null);" aria-label="View Calendar">
+         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fe0d0"/><stop offset="1" stop-color="#0f9488"/></linearGradient></defs>
@@ -5862,6 +5930,7 @@ window.AGC_LOOK_FIELD = {
        <\!-- 1. Upload Invoice — invoice document with green upload arrow.
             Beta (active) — opens an in-portal popup, not an external URL. -->
        <button style="--tc:#fbbf24;" class="tool-btn beta" onclick="openTool(event,'upload_invoice')">
+         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd655"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
@@ -5879,6 +5948,7 @@ window.AGC_LOOK_FIELD = {
 
        <\!-- 2. Service Area — map pin centered in a coverage radius. Active. -->
        <button style="--tc:#ff6fb0;" class="tool-btn beta" onclick="openTool(event,'service_area')">
+         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff86c0"/><stop offset="1" stop-color="#db2777"/></linearGradient></defs>
@@ -5895,6 +5965,7 @@ window.AGC_LOOK_FIELD = {
 
        <\!-- 3. Site Monkey (formerly Site Survey) — READY -->
        <button style="--tc:#8ea0ff;" class="tool-btn beta" onclick="openTool(event,'site_survey')">
+         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93a4ff"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs>
@@ -5905,6 +5976,7 @@ window.AGC_LOOK_FIELD = {
              </g>
            </svg>
          </span>
+         <span class="tool-btn-embeta" aria-hidden="true">Beta</span>
          <span class="tool-btn-label">Site Monkey</span>
          <span class="tool-btn-beta-label is-beta">Beta</span>
        </button>
@@ -25712,6 +25784,20 @@ function mdToHtml(s){
   }
 
   let _lastAirtableFields={};
+  // What the installer has really used in this session (real clicks and key presses only, not the page
+  // ticking boxes itself). See the DATA-SAFETY RULE where the save is built.
+  window._agcTouched={skills:false,union:false};
+  (function(){
+    const mark=function(e){
+      if(!e.isTrusted)return;
+      const t=e.target; if(!t||!t.closest)return;
+      if(t.closest('.agree-row.union')||t.closest('#union-toggle')||t.id==='union-check') window._agcTouched.union=true;
+      else if(t.closest('#ms-dropdown')&&t.closest('input,label,.ms-option,.sg-select-all')) window._agcTouched.skills=true;
+    };
+    document.addEventListener('click',mark,true);
+    document.addEventListener('change',mark,true);
+    document.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='Enter') mark(e); },true);
+  })();
   let _skipNextSave=false;
   let _debounceTimer=null;
   let _pollTimer=null;
@@ -25826,7 +25912,8 @@ function mdToHtml(s){
       // column type — otherwise the first PATCH would send a boolean to a
       // singleSelect (or vice versa), Airtable would reject the value, and
       // the self-heal would mark the column as bad.
-      if (FM.unionized && _unionFieldType !== null) {
+      // Same data-safety rule: the union answer is only written after the installer has used the toggle.
+      if (FM.unionized && _unionFieldType !== null && window._agcTouched && window._agcTouched.union) {
         const _u = !!_s1.unionized;
         if (_unionFieldType === 'checkbox') {
           raw[FM.unionized] = _u;
@@ -25856,14 +25943,22 @@ function mdToHtml(s){
       // clears the column. Previously this fell back to _s1.skillValues
       // (which had stale data) when no boxes were checked, causing Airtable
       // to never empty out.
+      // DATA-SAFETY RULE (Nov 13 2026): SKILLS is only ever written after the installer has actually used
+      // the services list in this session. Loading the page, or saving some other field, must never
+      // change what is saved. Before this rule the page re-saved SKILLS on load from whatever boxes
+      // happened to be ticked, which silently erased every saved skill it had no box for (AGC's own tags
+      // such as client names) and, when the boxes had not been ticked yet, all of them.
+      // When the installer does change their services, saved values this page has no box for are kept.
       const _msDropdown=document.getElementById('ms-dropdown');
-      if(_msDropdown){
-        const _checkedSkills=[..._msDropdown.querySelectorAll('input[type="checkbox"]:checked:not(#union-check)')].map(cb=>cb.value).filter(Boolean);
-        raw[FM.skillValues]=_checkedSkills;
-      } else if(_s1.skillValues){
-        // Skill DOM not built yet (saving from a different step); preserve what we have.
-        const _sv=Array.isArray(_s1.skillValues)?_s1.skillValues:String(_s1.skillValues).split(/,\s*/).filter(Boolean);
-        raw[FM.skillValues]=_sv;
+      if(_msDropdown && window._agcTouched && window._agcTouched.skills && _lastAirtableFields && Object.keys(_lastAirtableFields).length){
+        const _boxes=[..._msDropdown.querySelectorAll('input[type="checkbox"]:not(#union-check)')];
+        if(_boxes.length){
+          const _known=new Set(_boxes.map(cb=>cb.value));
+          const _saved=(_lastAirtableFields&&Array.isArray(_lastAirtableFields[FM.skillValues]))?_lastAirtableFields[FM.skillValues]:[];
+          const _kept=_saved.filter(v=>typeof v==='string'&&!_known.has(v));
+          const _checkedSkills=_boxes.filter(cb=>cb.checked).map(cb=>cb.value).filter(Boolean);
+          raw[FM.skillValues]=[...new Set([..._kept,..._checkedSkills])];
+        }
       }
     }
     if(typeof _s2!=='undefined'){
@@ -29262,7 +29357,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6079;
+  var AGC_BUILD = 6081;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
