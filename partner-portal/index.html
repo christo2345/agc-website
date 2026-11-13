@@ -5499,6 +5499,22 @@ window.AGC_LOOK_FIELD = {
     color:#16161a;-webkit-text-stroke:0.3px #16161a;
   }
 }
+/* ── MY PROFILE STEPS: NO NUMBERS, A PLAIN GREEN TICK, A LARGER RED DOT ──────
+   The step numbers (01–05) are gone. A finished step shows one green tick with no circle round it,
+   larger than the old badge. The red "!" dot on a step still to do is larger to match. */
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  .cards .card .tool-grid .tool-btn.step .tool-btn-stepnum{display:none !important;}
+  .cards .card .tool-grid .tool-btn.step .step-badge-warn,
+  .cards .card .tool-grid .tool-btn.step .step-badge-check{
+    top:6px;right:7px;width:clamp(26px,1.75vw,34px);height:clamp(26px,1.75vw,34px);
+  }
+  .cards .card .tool-grid .tool-btn.step .step-badge-check{
+    background:none;border:0;box-shadow:none;border-radius:0;color:#92C64B;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,0.85));
+  }
+  .cards .card .tool-grid .tool-btn.step .step-badge-check svg{width:100%;height:100%;stroke-width:3.6;}
+  .cards .card .tool-grid .tool-btn.step .step-badge-warn::after{font-size:clamp(16px,1.1vw,21px);}
+}
 /* ── "BETA" ON SITE MONKEY ───────────────────────────────────────────────────
    The word is small and sits at the right of the card, directly above the coloured line. It is pressed
    into the card like the icon: no colour, hollow, inner shadow, lit lip (#agc-deboss-text is the icon's
@@ -5787,7 +5803,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.88</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.89</span>
  </div>
 
  <div class="hero">
@@ -29375,7 +29391,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6088;
+  var AGC_BUILD = 6089;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
