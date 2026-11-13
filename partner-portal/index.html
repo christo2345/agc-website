@@ -143,9 +143,11 @@
   .agc-nav-budget[hidden]{display:none}
   .agc-nav-budget-top{font-size:9.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#9b9ca2}
   .agc-nav-budget-bill:not(:empty)::before{content:"\00B7";margin:0 6px}
-  .agc-nav-budget-amt{font-size:24px;font-weight:900;letter-spacing:-.5px;color:#92C64B}
-  .agc-nav-budget-amt i{font-style:normal;font-size:50%;font-weight:700;color:#fff;vertical-align:top;display:inline-block;margin:2px 2px 0 0}
-  .agc-nav-budget-amt.words{font-size:17px;letter-spacing:.6px;text-transform:uppercase}   /* same green, words in place of the total */
+  /* the figure is white; only the "$" is green, half size, set against the top of the figure; then a small currency code */
+  .agc-nav-budget-amt{font-size:24px;font-weight:900;letter-spacing:-.5px;color:#fff}
+  .agc-nav-budget-amt i{font-style:normal;font-size:50%;font-weight:800;color:#92C64B;vertical-align:top;display:inline-block;margin:1px 2px 0 0}
+  .agc-nav-budget-amt b{font-size:40%;font-weight:800;letter-spacing:1px;color:#cfd0d4;vertical-align:top;display:inline-block;margin:3px 0 0 5px}
+  .agc-nav-budget-amt.words{font-size:17px;letter-spacing:.6px;text-transform:uppercase;color:#92C64B}   /* same green, words in place of the total */
   .agc-nav-budget-amt.wait{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#f59e0b;padding:6px 10px;border-radius:8px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.55)}
   .agc-nav-brand img{display:block;height:32px;width:auto;transform-origin:50% 50%;animation:agcCoin 7s linear infinite;will-change:transform;-webkit-user-drag:none}
   @keyframes agcCoin{0%{transform:perspective(600px) rotateY(0deg)}100%{transform:perspective(600px) rotateY(360deg)}}
@@ -4014,9 +4016,13 @@ window.AGC_LOOK_FIELD = {
    display:flex;align-items:baseline;flex-wrap:wrap;gap:18px;
    justify-content:flex-end;
  }
+ /* The figure is white; only the "$" is green, half size and set against the top of the figure.
+    A small currency code (CAD / USD / MXN, from the installer's country) follows it. */
+ .card-budget-amount .cb-sym{color:var(--green);font-size:50%;letter-spacing:0;display:inline-block;vertical-align:top;margin:0.06em 0.08em 0 0;}
+ .card-budget-amount .cb-cur{color:#cfd0d4;font-size:30%;font-weight:800;letter-spacing:1px;display:inline-block;vertical-align:top;margin:0.3em 0 0 0.45em;}
  .card-budget-amount{
    font-size:48px;font-weight:900;letter-spacing:-1.5px;
-   color:var(--green);line-height:1;
+   color:#fff;line-height:1;
    font-variant-numeric:tabular-nums;
    transform:translateZ(0);
    transition:transform 0.35s cubic-bezier(0.2,0.8,0.2,1);
@@ -5515,7 +5521,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.57</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.58</span>
  </div>
 
  <div class="hero">
@@ -5619,7 +5625,7 @@ window.AGC_LOOK_FIELD = {
          <div class="card-budget-label">Total AGC Earnings</div>
          <div class="card-budget-main">
            <div class="card-budget-loading" id="projects-budget-loading">Calculating...</div>
-           <div class="card-budget-amount loading" id="projects-budget-amount">$0</div>
+           <div class="card-budget-amount loading" id="projects-budget-amount"><span class="cb-sym">$</span>0</div>
          </div>
          <div class="card-budget-count" id="projects-budget-count"></div>
        </div>
@@ -6617,12 +6623,37 @@ function renderBudget(total,count){
   const cntEl=document.getElementById('projects-budget-count');
   const loadEl=document.getElementById('projects-budget-loading');
   if(amtEl){
-    amtEl.textContent=formatBudget(total);
+    _budgetShown=formatBudget(total);
+    paintBudgetAmount();
     amtEl.classList.remove('loading');
   }
   if(loadEl)loadEl.style.display='none';
   if(cntEl)cntEl.textContent=count+' project'+(count===1?'':'s');
 }
+// Paints the total as: a small green "$", the figure in white, then the installer's currency code.
+// Called again when the installer's country arrives after the total (or the other way round).
+var _budgetShown=null, _agcCurrency='';   // var: these can be read before this line has run
+function paintBudgetAmount(){
+  const amtEl=document.getElementById('projects-budget-amount');
+  if(!amtEl||_budgetShown===null)return;
+  const m=/^(\$)(.*)$/.exec(_budgetShown);
+  amtEl.textContent='';
+  if(m){const s=document.createElement('span');s.className='cb-sym';s.textContent=m[1];amtEl.appendChild(s);}
+  amtEl.appendChild(document.createTextNode(m?m[2]:_budgetShown));
+  if(m&&_agcCurrency){const c=document.createElement('span');c.className='cb-cur';c.textContent=_agcCurrency;amtEl.appendChild(c);}
+}
+// The currency an installer is paid in, from the country on their own record
+// (Airtable Installers → Country): Canada → CAD, USA → USD, Mexico → MXN. '' when unknown.
+function agcCurrencyFor(f){
+  let c=f&&(f['Country']||f['COUNTRY']||f['Country:']||'');
+  if(c&&typeof c==='object')c=c.name||'';
+  c=String(c||'').toUpperCase();
+  if(/CANAD/.test(c))return 'CAD';
+  if(/MEX/.test(c))return 'MXN';
+  if(/\bUSA?\b|U\.S|UNITED STATES|AMERICA/.test(c))return 'USD';
+  return '';
+}
+
 
 // Hard-failure fallback. Used when every retry strategy is exhausted —
 // network is down, Airtable is rejecting requests, etc. Critical to call
@@ -6633,6 +6664,7 @@ function renderBudgetError(){
   const cntEl=document.getElementById('projects-budget-count');
   const loadEl=document.getElementById('projects-budget-loading');
   if(amtEl){
+    _budgetShown=null;
     amtEl.textContent='—';
     amtEl.classList.remove('loading');
   }
@@ -7211,6 +7243,8 @@ async function fetchInstallerName(){
     const raw=d.fields||{};
     const f={};
     for(const k of ALLOWED){if(k in raw)f[k]=raw[k];}
+    // Currency for the earnings total: only the code is kept (CAD / USD / MXN), not the country.
+    try{ _agcCurrency=agcCurrencyFor(raw); paintBudgetAmount(); }catch(_e){}
     // Greeting — FIRST NAME for the friendliest "Hello, John"
     const greetingName=String(f['FIRST NAME']||'').trim();
     let firstName='';
@@ -10926,6 +10960,7 @@ function showInvoiceSuccess(){
  .p-date{font-size:15px;font-weight:700;color:#d0d0d0;letter-spacing:-0.1px;}
  .p-right{flex-shrink:0;padding:14px 16px 12px 4px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;min-width:90px;}
  .p-amount{font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.3px;}
+ .p-amount .p-cur{font-size:9px;font-weight:800;letter-spacing:0.6px;color:#cfd0d4;margin-left:4px;vertical-align:top;display:inline-block;margin-top:2px;}  /* CAD / USD / MXN */
  .p-amount.p-amount-shared{font-size:10px;letter-spacing:0.3px;text-transform:uppercase;color:#92C64B;white-space:nowrap;}  /* several installers on the job: "HOURLY PLUS COSTS" */
  .p-billing{font-size:9px;font-weight:700;color:#7a7a7a;text-transform:uppercase;letter-spacing:0.5px;}
  .p-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.3px;padding:3px 7px;border-radius:10px;white-space:nowrap;}
@@ -12882,7 +12917,7 @@ window.addEventListener('resize',()=>{requestAnimationFrame(fitHeaderTitle);});
 // spinning AGC mark and the project's budget on the right (this page's own header, which
 // used to show both, is switched off inside the portal). Sent whenever the header's title
 // or budget block changes; an empty name means no project is open.
-//   budget: null (nothing to show) | { amount:'$1,200.00', billing:'BY THE JOB' } | { awaiting:true }
+//   budget: null (nothing to show) | { amount:'$1,200.00', billing:'BY THE JOB', currency:'CAD' } | { awaiting:true }
 (function(){
  const el=document.getElementById('header-project-title'), bud=document.getElementById('header-budget');
  if(!el||!window.MutationObserver||window.parent===window)return;
@@ -12893,7 +12928,7 @@ window.addEventListener('resize',()=>{requestAnimationFrame(fitHeaderTitle);});
      if(_selected){
        name=(el.textContent||'').trim();
        if(_isAwaitingApprovalStatus(_selected.statusRaw)) budget={awaiting:true};
-       else if(_selected.amount) budget={amount:String(_selected.amount),billing:String(_selected.billing||'')};
+       else if(_selected.amount) budget={amount:String(_selected.amount),billing:String(_selected.billing||''),currency:_selected.shared?'':_installerCurrency};
      }
    }catch(e){}
    const key=JSON.stringify([name,budget]);
@@ -12903,6 +12938,7 @@ window.addEventListener('resize',()=>{requestAnimationFrame(fitHeaderTitle);});
  const mo=new MutationObserver(tell);
  mo.observe(el,{childList:true,characterData:true,subtree:true});
  if(bud) mo.observe(bud,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['style']});
+ window.addEventListener('agc-currency',tell);   // the installer's currency arrived after the project was opened
  tell();
 })();
 
@@ -13054,7 +13090,7 @@ function renderItem(p){
        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+
        'Awaiting Approval'+
      '</div>'
-   : `${p.amount?`<div class="p-amount${p.shared?' p-amount-shared':''}">${esc(p.amount)}</div>`:''}${p.billing?`<div class="p-billing">${esc(p.billing)}</div>`:''}`;
+   : `${p.amount?`<div class="p-amount${p.shared?' p-amount-shared':''}">${esc(p.amount)}${!p.shared&&_installerCurrency?`<span class="p-cur">${esc(_installerCurrency)}</span>`:''}</div>`:''}${p.billing?`<div class="p-billing">${esc(p.billing)}</div>`:''}`;
  // Installer status pill — sits in its own row below the main card content
  // so it has the full card width and never crowds the title/date/amount.
  // Color matched to the raw status string via statusStyleFor() to mirror
@@ -15408,6 +15444,18 @@ let _mbReady=false;
 
 const toLngLat=c=>c?[c[1],c[0]]:null;
 
+var _installerCurrency='';   // var: the sidebar can render before this line has run
+// The currency an installer is paid in, from the country on their own record
+// (Airtable Installers → Country): Canada → CAD, USA → USD, Mexico → MXN. '' when unknown.
+function agcCurrencyFor(f){
+  let c=f&&(f['Country']||f['COUNTRY']||f['Country:']||'');
+  if(c&&typeof c==='object')c=c.name||'';
+  c=String(c||'').toUpperCase();
+  if(/CANAD/.test(c))return 'CAD';
+  if(/MEX/.test(c))return 'MXN';
+  if(/\bUSA?\b|U\.S|UNITED STATES|AMERICA/.test(c))return 'USD';
+  return '';
+}
 async function fetchInstallerInfo(){
  if(TEST_MODE_FORCED){_installerAddr=TEST_INSTALLER_ADDR;_installerName='Tyler Murdock Studios';return;}
  if(TEST_MODE)return;
@@ -15437,6 +15485,8 @@ async function fetchInstallerInfo(){
        if(_badge)_badge.classList.toggle('visible',_done.size<5);
        console.log('AGC home badge:',_done.size,'/ 5 steps complete →',_done.size<5?'SHOW':'HIDE');
      }catch(_e){console.warn('Could not compute home badge state:',_e);}
+     // Currency the installer is paid in (from their country): shown beside every dollar figure.
+     try{ _installerCurrency=agcCurrencyFor(f); if(_installerCurrency){ try{renderSidebar();}catch(_e){} window.dispatchEvent(new Event('agc-currency')); } }catch(_e){}
      _installerAddr=fStr(f['ADDRESS (from INSTALLER(S))']||f['ADDRESS']||f['Address']||'');
      _installerName=fStr(
        f['COMPANY NAME']||f['Company Name']||
@@ -28879,17 +28929,18 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
       navBudAmt.title = 'Awaiting client approval'; return;
     }
     navBudAmt.removeAttribute('title');
-    /* "$1,200.00" → a small "$" and the figure */
+    /* "$1,200.00" → a small green "$", the figure in white, then the currency code */
     var m = /^(\D*)([\d,]+(?:\.\d+)?)(.*)$/.exec(b.amount);
     if (m && m[1].trim()) { var i = document.createElement('i'); i.textContent = m[1].trim(); navBudAmt.appendChild(i); }
     navBudAmt.appendChild(document.createTextNode(m ? m[2] + (m[3].trim() ? ' ' + m[3].trim() : '') : b.amount));
+    if (m && b.currency) { var cur = document.createElement('b'); cur.textContent = b.currency; navBudAmt.appendChild(cur); }     /* CAD / USD / MXN */
   }
   function navJob(name, budget){
     var clean = function(v, n){ return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, n); };
     navJobName = clean(name, 200);
     navBudget = !budget || typeof budget !== 'object' ? null
       : budget.awaiting ? { awaiting: true }
-      : clean(budget.amount, 40) ? { amount: clean(budget.amount, 40), billing: clean(budget.billing, 40) } : null;
+      : clean(budget.amount, 40) ? { amount: clean(budget.amount, 40), billing: clean(budget.billing, 40), currency: clean(budget.currency, 3).toUpperCase().replace(/[^A-Z]/g, '') } : null;
     navJobPaint();
   }
   var navMenu = document.getElementById('agc-menu'), navScrim = document.getElementById('agc-menu-scrim'), navHamb = document.getElementById('agc-nav-hamb');
@@ -29181,7 +29232,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6057;
+  var AGC_BUILD = 6058;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
