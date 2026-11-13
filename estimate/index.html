@@ -33,7 +33,7 @@ body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-heigh
 .btn.primary{background:var(--green);border-color:var(--green);color:#0d0d0d}
 /* the sheet */
 .sheet{width:8.5in;min-height:11in;margin:0 auto 40px;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;border-radius:6px}
-.top{background:var(--dark-1);color:#fff;padding:.42in .55in .36in;position:relative;overflow:hidden}
+.top{background:var(--dark-1);color:#fff;padding:.3in .35in .28in;margin:.35in .55in 0;border-radius:14px;position:relative;overflow:hidden}
 .top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--green)}
 .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;position:relative}
 .brand{display:flex;gap:14px;align-items:center}
@@ -47,7 +47,7 @@ body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-heigh
 .doc dl{margin-top:8px;display:grid;grid-template-columns:auto auto;gap:3px 14px;font-size:11.5px;justify-content:end}
 .doc dt{color:#8d8d8d;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;padding-top:2px}
 .doc dd{font-weight:700;color:#fff}
-.body{padding:.34in .55in .2in;flex:1;display:flex;flex-direction:column;gap:.2in}
+.body{padding:.3in .55in .2in;flex:1;display:flex;flex-direction:column;gap:.2in}
 .cards{display:grid;grid-template-columns:1fr 1.35fr;gap:14px}
 .card{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .lbl{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--green-dark);margin-bottom:6px}
@@ -100,6 +100,7 @@ tr.info td.svc{color:var(--ink-3);font-weight:700}
   .bar .btns{justify-content:stretch}.btn{flex:1;justify-content:center}
   .sheet{width:auto;min-height:0;margin:0 8px 24px;border-radius:10px}
   .top,.body,.foot{padding-left:18px;padding-right:18px}
+  .top{margin:12px 12px 0}
   .top-row,.sum,.pm{flex-direction:column;align-items:stretch}
   .doc{text-align:left}.doc dl{justify-content:start}
   .cards,.next{grid-template-columns:1fr}.totals{width:auto}.pm .ok{text-align:left}
