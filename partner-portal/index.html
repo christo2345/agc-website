@@ -100,7 +100,7 @@
   .agc-lock-go{position:relative;height:clamp(48px,6.6vh,58px);border-radius:12px;border:1px solid rgba(255,255,255,.35);cursor:pointer;font:inherit;font-size:16px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;
     color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);background:linear-gradient(180deg,#92C64B,#7ab33a);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.45);transition:filter .15s,transform .15s}   /* no glow around the button */
-  .agc-lock-go:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+  .agc-lock-go:hover:not(:disabled){filter:brightness(1.06);transform:scale(1.045)}   /* grows under the pointer */
   .agc-lock-go:disabled{opacity:.75;cursor:wait}
   .agc-lock-go.busy{color:transparent;text-shadow:none}
   .agc-lock-go.busy::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;animation:agcLockSpin .8s linear infinite}
@@ -869,7 +869,8 @@ window.AGC_LOOK_FIELD = {
         keepOut.push({ x: b.left - pad, y: b.top - pad, w: b.width + pad * 2, h: b.height + pad * 2 });
         if (t.caster) {
           var cs = getComputedStyle(el), r = parseFloat(cs.borderTopLeftRadius) || 8, round = r >= Math.min(b.width, b.height) / 2 - 1;
-          casters.push({ x: b.left, y: b.top, w: b.width, h: b.height, rad: Math.min(r, b.height / 2), round: round, lift: t.lift || 1 });
+          /* lit: the light also falls on this one's own face.  on: this one sits on a lit caster and throws its shadow onto it. */
+          casters.push({ x: b.left, y: b.top, w: b.width, h: b.height, rad: Math.min(r, b.height / 2), round: round, lift: t.lift || 1, el: el, lit: t.lit === true ? 1 : (+t.lit || 0), host: t.on ? el.closest(t.on) : null, dark: t.dark || 1, soft: t.soft || 1 });
         }
       });
     });
@@ -920,6 +921,44 @@ window.AGC_LOOK_FIELD = {
     });
   }
   function rrect(c2, x, y, w, h, r){ if (c2.roundRect) c2.roundRect(x, y, w, h, r); else c2.rect(x, y, w, h); }
+  function shape(c2, k){ if (k.round) c2.ellipse(k.x + k.w / 2, k.y + k.h / 2, k.w / 2, k.h / 2, 0, 0, Math.PI * 2); else rrect(c2, k.x, k.y, k.w, k.h, k.rad); }
+  /* the pool of light round the pointer */
+  function pool(R, k){
+    k = (k || 1) * beam;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    var g = ctx.createRadialGradient(px, py, 0, px, py, R);
+    g.addColorStop(0, 'rgba(255,255,255,' + Math.min(1, 0.20 * k).toFixed(3) + ')');
+    g.addColorStop(0.18, 'rgba(255,255,255,' + Math.min(1, 0.12 * k).toFixed(3) + ')');
+    g.addColorStop(0.42, 'rgba(255,255,255,' + Math.min(1, 0.045 * k).toFixed(3) + ')');
+    g.addColorStop(0.7, 'rgba(255,255,255,' + Math.min(1, 0.012 * k).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(px - R, py - R, R * 2, R * 2);
+    ctx.restore();
+  }
+  /* each caster's shadow, thrown away from the pointer */
+  function shadows(list, R){
+    ctx.save(); ctx.fillStyle = '#000';
+    list.forEach(function(c){
+      var cx = c.x + c.w / 2, cy = c.y + c.h / 2, dx = cx - px, dy = cy - py, dist = Math.hypot(dx, dy) || 1;
+      var reach = Math.min(1, Math.max(0, 1 - dist / (R * 1.15 + Math.max(c.w, c.h) / 2))); if (reach <= 0.01) return;
+      var lift = c.lift || 1, len = Math.min(26 * lift, (5 + dist * 0.075) * lift);
+      var ox = (dx / dist) * len, oy = (dy / dist) * len, grow = 1 + 0.045 * (lift - 1);
+      ctx.globalAlpha = Math.min(0.58 + 0.2 * (c.dark - 1), 0.30 * beam * reach * (0.7 + lift * 0.45) * c.dark);
+      ctx.filter = 'blur(' + ((6 + len * 0.5 + lift * 2.5) * c.soft).toFixed(1) + 'px)';
+      ctx.beginPath();
+      var gw = c.w * grow, gh = c.h * grow;
+      if (c.round) ctx.ellipse(cx + ox, cy + oy, gw / 2, gh / 2, 0, 0, Math.PI * 2);
+      else rrect(ctx, cx + ox - gw / 2, cy + oy - gh / 2, gw, gh, c.rad);
+      ctx.fill();
+    });
+    ctx.filter = 'none'; ctx.restore();
+  }
+  /* nothing is drawn over the casters themselves */
+  function cutOut(list){
+    ctx.save(); ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = '#000';
+    list.forEach(function(k){ ctx.beginPath(); shape(ctx, k); ctx.fill(); });
+    ctx.restore();
+  }
   function render(){
     var w = window.innerWidth, h = window.innerHeight, dpr = window.devicePixelRatio || 1;
     if (cvs.width !== Math.round(w * dpr) || cvs.height !== Math.round(h * dpr)) { cvs.width = Math.round(w * dpr); cvs.height = Math.round(h * dpr); }
@@ -930,35 +969,18 @@ window.AGC_LOOK_FIELD = {
     measure();
     if (beam > 0.01) {
       var R = CELL * REACH * 2.2;
-      ctx.save(); ctx.globalCompositeOperation = 'lighter';
-      var pool = ctx.createRadialGradient(px, py, 0, px, py, R);
-      pool.addColorStop(0, 'rgba(255,255,255,' + (0.20 * beam).toFixed(3) + ')');
-      pool.addColorStop(0.18, 'rgba(255,255,255,' + (0.12 * beam).toFixed(3) + ')');
-      pool.addColorStop(0.42, 'rgba(255,255,255,' + (0.045 * beam).toFixed(3) + ')');
-      pool.addColorStop(0.7, 'rgba(255,255,255,' + (0.012 * beam).toFixed(3) + ')');
-      pool.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = pool; ctx.fillRect(px - R, py - R, R * 2, R * 2);
-      ctx.restore();
-      ctx.save(); ctx.fillStyle = '#000';
-      casters.forEach(function(c){
-        var cx = c.x + c.w / 2, cy = c.y + c.h / 2, dx = cx - px, dy = cy - py, dist = Math.hypot(dx, dy) || 1;
-        var reach = Math.min(1, Math.max(0, 1 - dist / (R * 1.15 + Math.max(c.w, c.h) / 2))); if (reach <= 0.01) return;
-        var lift = c.lift || 1, len = Math.min(26 * lift, (5 + dist * 0.075) * lift);
-        var ox = (dx / dist) * len, oy = (dy / dist) * len, grow = 1 + 0.045 * (lift - 1);
-        ctx.globalAlpha = Math.min(0.58, 0.30 * beam * reach * (0.7 + lift * 0.45));
-        ctx.filter = 'blur(' + (6 + len * 0.5 + lift * 2.5).toFixed(1) + 'px)';
-        ctx.beginPath();
-        var gw = c.w * grow, gh = c.h * grow;
-        if (c.round) ctx.ellipse(cx + ox, cy + oy, gw / 2, gh / 2, 0, 0, Math.PI * 2);
-        else rrect(ctx, cx + ox - gw / 2, cy + oy - gh / 2, gw, gh, c.rad);
-        ctx.fill();
+      var lit = casters.filter(function(c){ return c.lit; });
+      var isOn = function(c){ return !!c.host && lit.some(function(l){ return l.el === c.host; }); };
+      var ground = casters.filter(function(c){ return !isOn(c); });
+      pool(R); shadows(ground, R); cutOut(ground);
+      /* a lit surface (the sign-in card): the light falls on its face too, and what sits on it
+         (the button, the boxes) throws a shadow across it, away from the pointer */
+      lit.forEach(function(c){
+        var mine = casters.filter(function(k){ return k.host === c.el; });
+        ctx.save(); ctx.beginPath(); shape(ctx, c); ctx.clip();
+        pool(R * 1.2, c.lit); shadows(mine, R * 1.2); cutOut(mine);
+        ctx.restore();
       });
-      ctx.filter = 'none'; ctx.restore();
-      ctx.save(); ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = '#000';
-      casters.forEach(function(k){ ctx.beginPath();
-        if (k.round) ctx.ellipse(k.x + k.w / 2, k.y + k.h / 2, k.w / 2, k.h / 2, 0, 0, Math.PI * 2); else rrect(ctx, k.x, k.y, k.w, k.h, k.rad);
-        ctx.fill(); });
-      ctx.restore();
     }
     paintGhosts(ctx);
     paintBlocks(ctx);
@@ -5474,7 +5496,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.52</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.53</span>
  </div>
 
  <div class="hero">
@@ -29065,7 +29087,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6052;
+  var AGC_BUILD = 6053;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
@@ -29090,7 +29112,10 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
   try {
     window.AGC_LOOK_FIELD = {
       accent: '#92C64B',
-      specs: [ { sel: '.agc-lock-card', caster: true, lift: 2.6, pad: 12 } ],
+      specs: [
+        { sel: '.agc-lock-card', caster: true, lift: 2.6, pad: 12, lit: 1.7 },                          /* the light falls on the card too (a little stronger than on the black) */
+        { sel: '.agc-lock-go, .agc-lock-input input, .agc-lock:not(.is-armed) .agc-lock-input', caster: true, lift: 1.5, dark: 1.9, soft: 0.5, pad: 0, on: '.agc-lock-card' }   /* and these throw a shadow across it */
+      ],
       off: function(){ var b = document.getElementById('agc-lock'); return !b || b.hidden || b.classList.contains('is-leaving'); }
     };
     (new Function(unescapeBlock(text('agc-look-field'))))();
