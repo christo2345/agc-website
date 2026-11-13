@@ -5541,6 +5541,18 @@ window.AGC_LOOK_FIELD = {
   .cards .card .tool-grid .tool-btn.step.warn-expiring .step-badge-warn::after{animation:stepBadgeExpiringPulse 1.8s ease-in-out infinite;}
   .cards .card.steps-gated .tool-grid .tool-btn.step .step-badge-warn::after{animation:none;}
 }
+/* ── MY PROFILE: THE PROGRESS BAR SITS IN A BLACK CONTAINER ──────────────────
+   The bar and its percentage are held in a black pill drawn exactly like the black circle behind each main
+   card's icon: the same near-black fill, hairline border, shadow inside its top edge and lit lip under it. */
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  .cards .card .profile-status-row{
+    padding:9px 16px 9px 14px;border-radius:999px;
+    background:#0c0c0e;border:1px solid rgba(0,0,0,0.6);
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.16);
+    top:20px;right:28px;gap:12px;
+  }
+  .cards .card .profile-status-row .card-pct{color:#fff !important;font-size:20px;min-width:2.6em;text-align:right;}
+}
 /* ── "BETA" ON SITE MONKEY ───────────────────────────────────────────────────
    The word is small and sits at the right of the card, directly above the coloured line, in solid
    white so it can be read. */
@@ -5831,7 +5843,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.97</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.98</span>
  </div>
 
  <div class="hero">
@@ -29421,7 +29433,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6097;
+  var AGC_BUILD = 6098;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
