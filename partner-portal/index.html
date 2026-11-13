@@ -5462,35 +5462,36 @@ window.AGC_LOOK_FIELD = {
       linear-gradient(165deg, rgba(66,66,74,0.97) 0%, rgba(32,32,38,0.94) 50%, rgba(12,12,14,0.92) 100%);
   }
 }
-/* ── MY PROJECTS + MY TOOLBOX: BLACK TITLE ON A LIGHT STRIP, COLOURED DOT ────
-   On the first two main cards the mini-card title is not coloured and not embossed (neither could be
-   read on the dark card). It is solid black on a light strip that runs the full width of the mini card
-   along its foot, edge to edge (the card's rounded corners crop it). The card stays dark above the strip,
-   with its embossed icon. The card's own colour (--tc) is a dot in the strip's bottom-left corner.
-   My Profile's steps keep their coloured titles. */
-.tool-btn-cdot{display:none;}
+/* ── EVERY MINI CARD IS TWO-TONE: DARK CARD, LIGHT TITLE STRIP ──────────────
+   All mini cards with an icon (My Projects, My Toolbox and the five My Profile steps): the card is dark
+   with its embossed icon, and the title is solid black on a light strip that runs the full width of the
+   card along its foot, edge to edge (the card's rounded corners crop it). The card's own colour (--tc on
+   the tools, the step colour --pc on the profile steps) is a thin line along the top of the strip.
+   No coloured dots, no coloured titles. A profile step that is not done yet has a dimmer strip.
+   "Update My Profile" is not a mini card (it is the pressed-in area) and stays as it is. */
 @media (min-width:901px) and (hover:hover) and (pointer:fine){
-  .cards .card .tool-grid .tool-btn:not(.no-icon):not(.step):not(.soon) .tool-btn-label,
-  .cards .card .tool-grid .tool-btn:not(.no-icon):not(.step):not(.soon):hover .tool-btn-label{
+  .cards .card .tool-grid .tool-btn:not(.no-icon):not(.soon) .tool-btn-label,
+  .cards .card .tool-grid .tool-btn:not(.no-icon):not(.soon):hover .tool-btn-label{
     position:absolute;left:0;right:0;bottom:0;z-index:2;
     width:auto;max-width:none;margin:0;box-sizing:border-box;
     display:flex;align-items:center;justify-content:center;
     -webkit-line-clamp:unset;overflow:hidden;
-    padding:7px 18px 8px;
+    padding:6px 10px 8px;
+    border-top:3px solid var(--tc, var(--pc, #92C64B));
     background:linear-gradient(180deg,#f3f4f6 0%,#d3d6dc 55%,#bfc3cb 100%);
-    box-shadow:inset 0 1px 0 #fff, 0 -2px 7px rgba(0,0,0,0.55);
-    color:#000;-webkit-text-stroke:0.4px #000;text-shadow:none;filter:none;
+    box-shadow:0 -2px 7px rgba(0,0,0,0.55);
+    color:#000;-webkit-text-stroke:0.4px #000;text-shadow:none;filter:none;opacity:1;
     font-size:clamp(17px,1.12vw,21px);line-height:1.08;
   }
   /* Toolbox cards are narrow, so their titles run to two lines: every strip in the row is two lines tall */
-  .cards .card:nth-child(2) .tool-grid .tool-btn:not(.no-icon):not(.step):not(.soon) .tool-btn-label{
-    min-height:calc(2.16em + 15px);
+  .cards .card:nth-child(2) .tool-grid .tool-btn:not(.no-icon):not(.soon) .tool-btn-label{
+    min-height:calc(2.16em + 17px);
   }
-  .cards .card .tool-btn:not(.no-icon):not(.step) > .tool-btn-cdot{
-    display:block;position:absolute;left:7px;bottom:7px;z-index:3;pointer-events:none;
-    width:8px;height:8px;border-radius:50%;
-    background:var(--tc,#92C64B);
-    box-shadow:inset 0 -1px 1px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.18);
+  /* a profile step still to do: same strip, dimmer, so the finished ones stand out */
+  .cards .card .tool-grid .tool-btn.step:not(.done) .tool-btn-label,
+  .cards .card .tool-grid .tool-btn.step:not(.done):hover .tool-btn-label{
+    background:linear-gradient(180deg,#a9acb3 0%,#8e9199 100%);
+    color:#16161a;-webkit-text-stroke:0.3px #16161a;
   }
 }
 /* ── "BETA" ON SITE MONKEY ───────────────────────────────────────────────────
@@ -5776,7 +5777,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.84</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.85</span>
  </div>
 
  <div class="hero">
@@ -5873,7 +5874,6 @@ window.AGC_LOOK_FIELD = {
      <\!-- Action mini-cards — toolbox-style 3D buttons in a 2-col grid. -->
      <div class="tool-grid tool-grid--two">
        <button style="--tc:#a3d65a;" class="tool-btn beta" onclick="goToProjects(event)" aria-label="View Projects">
-         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e06a"/><stop offset="1" stop-color="#6aa22e"/></linearGradient></defs>
@@ -5893,7 +5893,6 @@ window.AGC_LOOK_FIELD = {
          <span class="tool-btn-beta-label">Active</span>
        </button>
        <button style="--tc:#2dd4bf;" class="tool-btn beta" onclick="event.stopPropagation();event.preventDefault();agcMorphOpen(this,openCalendarFullscreen,'#cal-fs',null);" aria-label="View Calendar">
-         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fe0d0"/><stop offset="1" stop-color="#0f9488"/></linearGradient></defs>
@@ -5942,7 +5941,6 @@ window.AGC_LOOK_FIELD = {
        <\!-- 1. Upload Invoice — invoice document with green upload arrow.
             Beta (active) — opens an in-portal popup, not an external URL. -->
        <button style="--tc:#fbbf24;" class="tool-btn beta" onclick="openTool(event,'upload_invoice')">
-         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd655"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
@@ -5960,7 +5958,6 @@ window.AGC_LOOK_FIELD = {
 
        <\!-- 2. Service Area — map pin centered in a coverage radius. Active. -->
        <button style="--tc:#ff6fb0;" class="tool-btn beta" onclick="openTool(event,'service_area')">
-         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff86c0"/><stop offset="1" stop-color="#db2777"/></linearGradient></defs>
@@ -5977,7 +5974,6 @@ window.AGC_LOOK_FIELD = {
 
        <\!-- 3. Site Monkey (formerly Site Survey) — READY -->
        <button style="--tc:#8ea0ff;" class="tool-btn beta" onclick="openTool(event,'site_survey')">
-         <span class="tool-btn-cdot" aria-hidden="true"></span>
          <span class="tool-btn-icon">
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93a4ff"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs>
@@ -29369,7 +29365,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6084;
+  var AGC_BUILD = 6085;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
