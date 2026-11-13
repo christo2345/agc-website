@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0d0d0d">
+<title>AGC Estimate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* AGC digital estimate · v1 · Nov 13 2026
+   The estimate's data travels in the link itself (after the #), so nothing about a client or a price is stored on GitHub.
+   The page only draws what the link carries. Prints on one Letter page (A4 fits too). */
+:root{
+  --green:#92C64B; --green-dark:#6fa332; --green-soft:#eef6e3;
+  --ink:#141414; --ink-2:#3c3c3c; --ink-3:#6b6b6b; --line:#e4e4df;
+  --dark-1:#0d0d0d; --dark-2:#161616; --dark-3:#1f1f1f; --dark-4:#2a2a2a;
+  --font:'Wix Madefor Display',Arial,Helvetica,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:var(--font);background:var(--dark-1);color:var(--ink);min-height:100vh;
+  background-image:radial-gradient(circle at 15% 0%,rgba(146,198,75,.10),transparent 45%),radial-gradient(circle at 100% 100%,rgba(146,198,75,.06),transparent 40%);}
+/* screen toolbar */
+.bar{max-width:8.5in;margin:0 auto;padding:22px 0 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;color:#cfcfcf;font-size:13px}
+.bar .who{display:flex;align-items:center;gap:10px;letter-spacing:.04em}
+.bar .who img{width:26px;height:26px}
+.bar .btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-family:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:10px 18px;cursor:pointer;border:1px solid var(--dark-4);background:var(--dark-2);color:#eee;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px);border-color:var(--green)}
+.btn.primary{background:var(--green);border-color:var(--green);color:#0d0d0d}
+/* the sheet */
+.sheet{width:8.5in;min-height:11in;margin:0 auto 40px;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;border-radius:6px}
+.top{background:var(--dark-1);color:#fff;padding:.42in .55in .36in;position:relative;overflow:hidden}
+.top:before{content:"";position:absolute;right:-1.2in;top:-1.4in;width:3.6in;height:3.6in;border-radius:50%;background:radial-gradient(circle,rgba(146,198,75,.28),transparent 68%)}
+.top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,var(--green),var(--green-dark) 60%,transparent)}
+.top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;position:relative}
+.brand{display:flex;gap:14px;align-items:center}
+.brand img{width:58px;height:58px}
+.word{line-height:1.02}
+.word .l1{font-weight:800;font-size:19px;letter-spacing:.06em}
+.word .l1 .pill{display:inline-block;background:var(--green);color:#0d0d0d;border-radius:999px;padding:1px 10px 2px;margin-left:6px}
+.word .l2{font-weight:800;font-size:27px;letter-spacing:.03em;margin-top:3px}
+.word .addr{font-size:10.5px;color:#a9a9a9;margin-top:7px;letter-spacing:.02em}
+.doc{text-align:right}
+.doc .kind{font-size:30px;font-weight:800;letter-spacing:.12em;color:var(--green)}
+.doc dl{margin-top:8px;display:grid;grid-template-columns:auto auto;gap:3px 14px;font-size:11.5px;justify-content:end}
+.doc dt{color:#8d8d8d;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;padding-top:2px}
+.doc dd{font-weight:700;color:#fff}
+.body{padding:.34in .55in .2in;flex:1;display:flex;flex-direction:column;gap:.2in}
+.cards{display:grid;grid-template-columns:1fr 1.35fr;gap:14px}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.lbl{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--green-dark);margin-bottom:6px}
+.card .big{font-size:15px;font-weight:800;line-height:1.25}
+.card .sub{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.4}
+.locs{font-size:11px;color:var(--ink-2);line-height:1.45;margin-top:6px}
+.locs li{list-style:none;padding-left:14px;position:relative}
+.locs li:before{content:"";position:absolute;left:2px;top:6px;width:6px;height:6px;border-radius:50%;background:var(--green)}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#fff;background:var(--dark-2);font-weight:800;text-align:left;padding:9px 12px;border:0}
+thead th:last-child{text-align:right}
+thead{display:table-header-group}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:11.5px;line-height:1.45}
+tbody tr{break-inside:avoid;page-break-inside:avoid}
+td.svc{width:28%;font-weight:800;font-size:12px}
+td.svc .w{display:flex;gap:8px;align-items:flex-start}
+td.svc .n{flex:0 0 20px;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--green-soft);color:var(--green-dark);font-size:10px}
+td.desc ul{padding-left:15px}
+td.desc li{margin:1px 0}
+td.amt{width:17%;text-align:right;font-weight:800;font-size:13px;white-space:nowrap}
+tr.info td{background:#fafaf7}
+tr.info td.svc{color:var(--ink-3);font-weight:700}
+.sum{display:flex;justify-content:space-between;gap:20px;align-items:stretch}
+.terms{flex:1;font-size:10.5px;color:var(--ink-2);line-height:1.5}
+.terms ul{padding-left:15px;margin-top:2px}
+.totals{width:2.9in;background:var(--dark-1);color:#fff;border-radius:14px;padding:14px 16px;position:relative;overflow:hidden}
+.totals:after{content:"";position:absolute;right:-40px;bottom:-60px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(146,198,75,.35),transparent 70%)}
+.totals .row{display:flex;justify-content:space-between;font-size:11.5px;color:#bdbdbd;padding:3px 0;position:relative}
+.totals .row b{color:#fff}
+.totals .grand{border-top:1px solid #2f2f2f;margin-top:7px;padding-top:9px;align-items:baseline}
+.totals .grand span{color:#fff;font-weight:800;letter-spacing:.12em;font-size:11px}
+.totals .grand b{font-size:24px;color:var(--green)}
+.totals .cur{font-size:9.5px;color:#8d8d8d;text-align:right;position:relative;margin-top:2px}
+.pm{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px dashed #cfd9bf;background:var(--green-soft);border-radius:12px;padding:11px 14px;font-size:11px}
+.pm .nm{font-weight:800;font-size:12.5px}
+.pm .ct{color:var(--ink-2);margin-top:2px}
+.pm .ok{text-align:right;font-weight:700;color:var(--green-dark);max-width:3.2in;line-height:1.35}
+.next{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.step{background:var(--dark-2);color:#d6d6d6;border-radius:12px;padding:12px 14px;font-size:10.5px;line-height:1.45}
+.step b{display:block;color:#fff;font-size:12px;margin-bottom:3px}
+.step i{font-style:normal;display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--green);color:#0d0d0d;font-weight:800;font-size:10.5px;align-items:center;justify-content:center;margin-bottom:7px}
+.foot{background:var(--dark-1);color:#bcbcbc;padding:.16in .55in;display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.03em}
+.foot b{color:var(--green)}
+.foot .code{color:#6e6e6e;font-size:8.5px;letter-spacing:.06em}
+/* states */
+.msg{max-width:6in;margin:14vh auto;color:#ddd;text-align:center;line-height:1.6;font-size:15px}
+.msg img{width:64px;margin-bottom:16px}
+.msg h1{font-size:22px;color:#fff;margin-bottom:8px}
+@media screen and (max-width:900px){
+  .bar{padding:14px 12px;flex-direction:column;align-items:stretch}
+  .bar .btns{justify-content:stretch}.btn{flex:1;justify-content:center}
+  .sheet{width:auto;min-height:0;margin:0 8px 24px;border-radius:10px}
+  .top,.body,.foot{padding-left:18px;padding-right:18px}
+  .top-row,.sum,.pm{flex-direction:column;align-items:stretch}
+  .doc{text-align:left}.doc dl{justify-content:start}
+  .cards,.next{grid-template-columns:1fr}.totals{width:auto}.pm .ok{text-align:left}
+  td.svc{width:auto}
+}
+@page{size:letter;margin:.45in 0}
+@page:first{margin:0}
+@media print{
+  body{background:#fff}
+  .bar{display:none}
+  .sheet{width:8.5in;min-height:11in;margin:0;box-shadow:none;border-radius:0}
+}
+</style>
+</head>
+<body>
+<div class="bar" id="bar" hidden>
+  <div class="who"><img src="agc-mark.webp" alt="">AMERICAN GRAPHIC CONTRACTORS · ESTIMATE</div>
+  <div class="btns">
+    <a class="btn" id="approve" href="#" hidden>✅ Approve by email</a>
+    <button class="btn primary" type="button" onclick="window.print()">⬇ Print / Save as PDF</button>
+  </div>
+</div>
+<div id="app"></div>
+<script>
+(function(){
+  'use strict';
+  var app = document.getElementById('app');
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function fail(t, d){ app.innerHTML = '<div class="msg"><img src="agc-mark.webp" alt=""><h1>' + esc(t) + '</h1><p>' + esc(d) + '</p><p style="margin-top:14px;color:#92C64B">projects@americangraphiccontractors.com · 1 (877) 395-7435</p></div>'; document.title = 'AGC Estimate'; }
+  // the estimate rides in the link: #d=<base64url of UTF-8 JSON>
+  function readData(){
+    var h = (location.hash || '').replace(/^#/, ''), m = h.match(/(?:^|&)d=([A-Za-z0-9_-]+)/);
+    if (!m) { var q = location.search.match(/[?&]d=([A-Za-z0-9_-]+)/); if (q) m = q; }
+    if (!m) return null;
+    var b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+    var bin = atob(b), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+  }
+  var D;
+  try { D = readData(); } catch (e) { D = null; }
+  if (!D || !D.n) { fail('This estimate link is incomplete', 'The link may have been cut off when it was copied. Please use the full link from our email, or reply to it and we will send it again.'); return; }
+  var cur = D.cur === 'CAD' ? 'CAD' : 'USD';
+  function money(v){ var n = Number(v) || 0, s = n.toLocaleString('en-US', {minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2}); return '$' + s; }
+  function fdate(s){ if (!s) return ''; var p = String(s).split('-'); if (p.length < 3) return esc(s); var dt = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2], 12)); return dt.toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC'}); }
+  var lines = Array.isArray(D.l) ? D.l : [];
+  var rows = '', k = 0, sub = 0;
+  lines.forEach(function(L){
+    var info = !(Number(L.a) > 0) && L.i;
+    if (!info) { k++; sub += Number(L.a) || 0; }
+    var bul = (Array.isArray(L.d) ? L.d : [L.d]).filter(Boolean).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('');
+    rows += '<tr class="' + (info ? 'info' : '') + '"><td class="svc"><div class="w">' + (info ? '' : '<span class="n">' + k + '</span>') + '<span>' + esc(L.s || (info ? 'Additional information' : 'Service')) + '</span></div></td>' +
+      '<td class="desc">' + (bul ? '<ul>' + bul + '</ul>' : '') + '</td><td class="amt">' + (info ? '' : (Number(L.a) > 0 ? money(L.a) : 'Included')) + '</td></tr>';
+  });
+  var total = Number(D.tot) > 0 ? Number(D.tot) : sub;
+  var tax = D.tax ? esc(D.tax) : (cur === 'CAD' ? 'Exempt' : 'Not charged');
+  var locs = (Array.isArray(D.loc) ? D.loc : []).filter(Boolean);
+  var terms = (Array.isArray(D.terms) && D.terms.length ? D.terms : [
+    'This estimate is valid for 30 days and may change as new information becomes available.',
+    'A purchase order name or number is required to lock in the work.',
+    'Invoices are due on receipt, except for clients with accounts already set up with AGC.'
+  ]);
+  var pm = D.pm || {};
+  var who = [D.co, D.cn].filter(Boolean);
+  document.title = 'AGC ' + D.n + ' · Estimate' + (D.t ? ' · ' + D.t : '');
+  app.innerHTML =
+  '<div class="sheet">' +
+    '<div class="top"><div class="top-row">' +
+      '<div class="brand"><img src="agc-mark.webp" alt="AGC"><div class="word"><div class="l1">AMERICAN<span class="pill">GRAPHIC</span></div><div class="l2">CONTRACTORS</div>' +
+      '<div class="addr">' + esc(D.ad || '#30 N Gould St Ste R, Sheridan, WY 82801, USA') + '</div></div></div>' +
+      '<div class="doc"><div class="kind">ESTIMATE</div><dl>' +
+        '<dt>Estimate</dt><dd>AGC ' + esc(D.n) + (D.r > 1 ? ' · rev ' + esc(D.r) : '') + '</dd>' +
+        '<dt>Date</dt><dd>' + fdate(D.d) + '</dd>' +
+        (D.x ? '<dt>Valid until</dt><dd>' + fdate(D.x) + '</dd>' : '') +
+        (D.po ? '<dt>Your ref.</dt><dd>' + esc(D.po) + '</dd>' : '') +
+      '</dl></div>' +
+    '</div></div>' +
+    '<div class="body">' +
+      '<div class="cards">' +
+        '<div class="card"><div class="lbl">Prepared for</div><div class="big">' + esc(who[0] || 'Our client') + '</div>' + (who[1] ? '<div class="sub">' + esc(who[1]) + '</div>' : '') + '</div>' +
+        '<div class="card"><div class="lbl">Project</div><div class="big">' + esc(D.n) + (D.t ? ' / ' + esc(D.t) : '') + '</div>' +
+          (locs.length ? '<ul class="locs">' + locs.slice(0, 6).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + (locs.length > 6 ? '<li>+ ' + (locs.length - 6) + ' more locations</li>' : '') + '</ul>' : '') +
+          (D.dt ? '<div class="sub" style="margin-top:6px"><b>Target date:</b> ' + esc(D.dt) + '</div>' : '') + '</div>' +
+      '</div>' +
+      '<table><thead><tr><th>Service</th><th>Description</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="sum">' +
+        '<div class="terms"><div class="lbl">Terms</div><ul>' + terms.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
+        '<div class="totals">' +
+          '<div class="row"><span>Subtotal</span><b>' + money(sub) + '</b></div>' +
+          '<div class="row"><span>Tax</span><b>' + tax + '</b></div>' +
+          '<div class="row grand"><span>TOTAL</span><b>' + money(total) + '</b></div>' +
+          '<div class="cur">All amounts in ' + cur + '</div>' +
+        '</div>' +
+      '</div>' +
+      (pm.nm ? '<div class="pm"><div><div class="lbl" style="margin-bottom:3px">Your project manager</div><div class="nm">' + esc(pm.nm) + '</div><div class="ct">' + [pm.em, pm.ph].filter(Boolean).map(esc).join(' · ') + '</div></div>' +
+        '<div class="ok">Ready to go ahead? Reply to our email with your PO name or number and we will lock in your install.</div></div>' : '') +
+      '<div class="next">' +
+        '<div class="step"><i>1</i><b>Approve + PO</b>Reply with your PO name or number and we book your date.</div>' +
+        '<div class="step"><i>2</i><b>Install</b>A vetted local installation partner completes the work on site.</div>' +
+        '<div class="step"><i>3</i><b>Photo closeout</b>You get completion photos for every location.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="foot"><div><b>americangraphiccontractors.com</b> &nbsp;·&nbsp; projects@americangraphiccontractors.com &nbsp;·&nbsp; 1 (877) 395-7435</div>' +
+      (D.h ? '<div class="code">CHECK ' + esc(D.h) + '</div>' : '') + '</div>' +
+  '</div>';
+  var bar = document.getElementById('bar'); bar.hidden = false;
+  if (pm.em) {
+    var a = document.getElementById('approve'); a.hidden = false;
+    a.href = 'mailto:' + encodeURIComponent(pm.em) + '?subject=' + encodeURIComponent('AGC ' + D.n + ' estimate approved') +
+      '&body=' + encodeURIComponent('Hi ' + String(pm.nm || '').split(' ')[0] + ',\n\nWe approve estimate AGC ' + D.n + (D.t ? ' (' + D.t + ')' : '') + ' for ' + money(total) + ' ' + cur + '.\n\nPO name or number: \n\n');
+  }
+})();
+</script>
+</body>
+</html>
