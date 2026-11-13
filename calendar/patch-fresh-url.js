@@ -1,0 +1,12 @@
+// Nov 13: the box-tick draft step's fresh-link lookup reads each table once (max 8), fixes 'Exceeded quota of 30 table queries'
+window.__FR_OLD = "const __freshUrl = async attId => { // the same file read again from its record (fresh download link)\n  try { const ts = [base.getTable('tblziZ2NmNH2m3HfJ'), ...base.tables.filter(t => t.id !== 'tblziZ2NmNH2m3HfJ')];\n    for (const t of ts) { const fs = t.fields.filter(f => f.type === 'multipleAttachments'); if (!fs.length) continue;\n      const q = await t.selectRecordsAsync({fields: fs});\n      for (const r of q.records) for (const f of fs) for (const x of (r.getCellValue(f) || [])) if (x && x.id === attId && x.url) return x.url; }\n  } catch (e) { console.log('fresh link: ' + e); }\n  return '';\n};";
+window.__FR_NEW = "// Nov 13 (AGC 18341 test): each table is read ONCE per run and at most 8 tables, so a run with several bad files never hits Airtable's\n// limit of 30 table queries per script (that limit stopped the whole draft before).\nconst __freshCache = new Map(); let __freshQ = 0, __freshTables = null;\nconst __freshUrl = async attId => { // the same file read again from its record (fresh download link)\n  try { if (__freshCache.has(attId)) return __freshCache.get(attId);\n    if (!__freshTables) __freshTables = [base.getTable('tblziZ2NmNH2m3HfJ'), ...base.tables.filter(t => t.id !== 'tblziZ2NmNH2m3HfJ')].filter(t => t.fields.some(f => f.type === 'multipleAttachments'));\n    while (__freshTables.length && __freshQ < 8) { const t = __freshTables.shift(); const fs = t.fields.filter(f => f.type === 'multipleAttachments'); __freshQ++;\n      const q = await t.selectRecordsAsync({fields: fs});\n      for (const r of q.records) for (const f of fs) for (const x of (r.getCellValue(f) || [])) if (x && x.id && x.url) __freshCache.set(x.id, x.url);\n      if (__freshCache.has(attId)) return __freshCache.get(attId); }\n  } catch (e) { console.log('fresh link: ' + e); }\n  return '';\n};";
+
+window.__applyFresh = function () {
+  const m = monaco.editor.getModels()[0]; const v = m.getValue();
+  if (v.includes('__freshCache')) return 'already patched';
+  const n = v.split(window.__FR_OLD).length - 1; if (n !== 1) return 'old block found ' + n + ' times';
+  const i = v.indexOf(window.__FR_OLD), a = m.getPositionAt(i), b = m.getPositionAt(i + window.__FR_OLD.length);
+  m.pushEditOperations([], [{range: new monaco.Range(a.lineNumber, a.column, b.lineNumber, b.column), text: window.__FR_NEW}], () => null);
+  return 'patched';
+};
