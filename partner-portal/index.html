@@ -5464,13 +5464,11 @@ window.AGC_LOOK_FIELD = {
     transform:translate(-36%,-34%) rotate(-24deg);
     transition:transform 0.35s cubic-bezier(0.2,0.8,0.2,1), filter 0.3s;
   }
-  /* cards with a banner along the bottom have less room above it */
-  .cards .card .tool-btn.soon:not(.no-icon) .tool-btn-icon,
-  .cards .card .tool-btn:has(> .tool-btn-beta-label.is-beta) .tool-btn-icon{height:126%;}
+  /* every icon is the same size and sits at exactly the same angle (-24deg), on every card, at rest and on hover */
   /* no tile round the symbol: only the symbol itself is pressed into the card */
   .cards .card .tool-btn:not(.no-icon) .tool-btn-icon svg > defs + rect{display:none;}
   .cards .card .tool-btn:not(.no-icon) .tool-btn-icon svg{width:100%;height:100%;}
-  .cards .card .tool-btn:not(.no-icon):hover .tool-btn-icon{transform:translate(-34%,-32%) rotate(-18deg) scale(1.05);}
+  .cards .card .tool-btn:not(.no-icon):hover .tool-btn-icon{transform:translate(-36%,-34%) rotate(-24deg) scale(1.04);}
   .cards .card .tool-btn:not(.no-icon) .tool-btn-label{position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.85);}
   .cards .card .tool-btn:not(.no-icon) .tool-btn-stepnum{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
   /* THE TITLE CARRIES THE COLOUR. Active cards and completed profile steps: bold, in the card's own
@@ -5625,7 +5623,7 @@ window.AGC_LOOK_FIELD = {
 </head>
 <body>
 <\!-- Deboss filter for the mini-card icons (desktop): turns an icon's white symbol into a hollow pressed
-     into the card: a dark fill, a deep shadow along the inside of its top-left edge, and a lit lip just
+     into the card: a light dark fill, a soft shadow along the inside of its top-left edge, and a faint lit lip just
      outside its bottom-right edge. Coloured details inside the symbol are left out, so they stay level
      with the card. Used by .tool-btn-icon as filter:url(#agc-deboss). -->
 <svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false"><defs>
@@ -5633,16 +5631,16 @@ window.AGC_LOOK_FIELD = {
     <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum"/>
     <feComponentTransfer in="lum" result="white"><feFuncA type="linear" slope="7" intercept="-5.5"/></feComponentTransfer>
     <feComposite in="white" in2="SourceAlpha" operator="in" result="shape"/>
-    <feFlood flood-color="#000" flood-opacity="0.66" result="dark"/>
+    <feFlood flood-color="#000" flood-opacity="0.30" result="dark"/>
     <feComposite in="dark" in2="shape" operator="in" result="fill"/>
-    <feOffset in="shape" dx="2.5" dy="4.5" result="shifted"/>
-    <feGaussianBlur in="shifted" stdDeviation="2.2" result="shiftedSoft"/>
+    <feOffset in="shape" dx="1.3" dy="2.3" result="shifted"/>
+    <feGaussianBlur in="shifted" stdDeviation="1.3" result="shiftedSoft"/>
     <feComposite in="shape" in2="shiftedSoft" operator="out" result="innerBand"/>
-    <feFlood flood-color="#000" flood-opacity="1" result="black"/>
+    <feFlood flood-color="#000" flood-opacity="0.55" result="black"/>
     <feComposite in="black" in2="innerBand" operator="in" result="innerShadow"/>
-    <feOffset in="shape" dx="1.2" dy="2.2" result="lipShift"/>
+    <feOffset in="shape" dx="0.9" dy="1.5" result="lipShift"/>
     <feComposite in="lipShift" in2="shape" operator="out" result="lipBand"/>
-    <feFlood flood-color="#fff" flood-opacity="0.5" result="light"/>
+    <feFlood flood-color="#fff" flood-opacity="0.32" result="light"/>
     <feComposite in="light" in2="lipBand" operator="in" result="lip"/>
     <feMerge><feMergeNode in="fill"/><feMergeNode in="innerShadow"/><feMergeNode in="lip"/></feMerge>
   </filter>
@@ -5653,7 +5651,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.71</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.72</span>
  </div>
 
  <div class="hero">
@@ -5883,8 +5881,8 @@ window.AGC_LOOK_FIELD = {
            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
              <defs><linearGradient id="gt5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93a4ff"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs>
              <rect x="3" y="3" width="42" height="42" rx="11" fill="url(#gt5)"/>
-             <circle cx="21.5" cy="21.5" r="8.2" fill="none" stroke="#fff" stroke-width="3.8"/>
-             <path d="M27.8 27.8 L35.4 35.4" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/>
+             <circle cx="24" cy="19.6" r="8.2" fill="none" stroke="#fff" stroke-width="3.8"/>
+             <path d="M24 28.6 L24 38.4" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/>
            </svg>
          </span>
          <span class="tool-btn-label">Site Monkey</span>
@@ -29300,7 +29298,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6071;
+  var AGC_BUILD = 6072;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
