@@ -5855,7 +5855,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.103</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.104</span>
  </div>
 
  <div class="hero">
@@ -19508,7 +19508,7 @@ function _showCloseoutWarning(safeId,opts){
 
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🦺✍️ FIELD QA (6.103, Chris Nov 15 2026): a short RISK CHECK before the
+// 🦺✍️ FIELD QA (6.103, Chris Nov 15 2026; brushed-grey pop-ups 6.104): a short RISK CHECK before the
 // installer starts and a STORE SIGN-OFF (manager name, signature, date,
 // issues) at the end, per store trip. Kept on the phone (localStorage, per
 // project + store) between start and end of the job, then saved with the
@@ -19556,100 +19556,161 @@ function _fqaBar(storeId,safeId){
  '</div>';
 }
 function _fqaClose(){const o=document.getElementById('fqa-overlay');if(o)o.remove();}
-function _fqaShell(title,sub,body,foot){
- _fqaClose();
+// 6.104 (Chris: "both popups need more color, make brushed grey style"): the two pop-ups use the portal's brushed-grey
+// metal (same layers as the AGC 2027 look) with a colour per topic: amber risk check, green sign-off, a coloured stripe and
+// icon per question, dark wells for the fields, brushed buttons that light up in the topic colour when picked.
+function _fqaCss(){
+ if(document.getElementById('fqa-style'))return;
+ const BR='repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px),linear-gradient(90deg,rgba(0,0,0,.18),transparent 30%,transparent 70%,rgba(0,0,0,.18)),linear-gradient(180deg,#5d5f65 0%,#46484d 46%,#35363a 100%)';
+ const BRH='repeating-linear-gradient(180deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px),linear-gradient(90deg,rgba(0,0,0,.16),transparent 30%,transparent 70%,rgba(0,0,0,.16)),linear-gradient(180deg,#66686e 0%,#4d4f54 46%,#3a3b3f 100%)';
+ const SH='linear-gradient(180deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 24%,transparent 46%),radial-gradient(ellipse 120% 80% at 28% -10%,rgba(255,255,255,.12) 0%,transparent 55%),linear-gradient(0deg,rgba(0,0,0,.34) 0%,transparent 26%)';
+ const st=document.createElement('style');st.id='fqa-style';
+ st.textContent=
+ '#fqa-overlay{position:fixed;inset:0;z-index:2147483000;background:radial-gradient(ellipse at 50% 0%,rgba(40,40,46,.55),rgba(0,0,0,.82));display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px 10px;font-family:var(--font,system-ui,sans-serif)}'+
+ '.fqa-card{--c:#92C64B;--c2:#6fa52f;--cs:rgba(146,198,75,.35);position:relative;width:100%;max-width:520px;color:#f1f1f3;border-radius:22px;padding:0 0 16px;overflow:hidden;background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.24);box-shadow:0 40px 70px -24px rgba(0,0,0,.75),0 18px 30px -10px rgba(0,0,0,.6),inset 0 3px 0 rgba(255,255,255,.30),inset 0 -3px 0 rgba(0,0,0,.55)}'+
+ '.fqa-card.risk{--c:#f59e0b;--c2:#d97706;--cs:rgba(245,158,11,.38)}'+
+ '.fqa-band{height:7px;background:linear-gradient(90deg,var(--c2),var(--c) 45%,#fff3 50%,var(--c) 55%,var(--c2));box-shadow:0 2px 10px var(--cs)}'+
+ '.fqa-head{display:flex;align-items:center;gap:12px;padding:16px 16px 12px}'+
+ '.fqa-badge{width:52px;height:52px;flex-shrink:0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:27px;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.45),transparent 55%),linear-gradient(160deg,var(--c),var(--c2));border:1px solid rgba(255,255,255,.35);box-shadow:0 8px 18px -6px var(--cs),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.25)}'+
+ '.fqa-title{font-size:19px;font-weight:900;color:#fff;letter-spacing:-.2px;text-shadow:0 1px 1px rgba(0,0,0,.55)}'+
+ '.fqa-sub{font-size:12px;font-weight:600;color:#d6d7db;margin-top:3px;line-height:1.5}'+
+ '.fqa-x{width:36px;height:36px;margin-left:auto;align-self:flex-start;flex-shrink:0;border-radius:50%;cursor:pointer;color:#fff;font-size:18px;background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.28);box-shadow:0 10px 18px -10px rgba(0,0,0,.8),inset 0 1.5px 0 rgba(255,255,255,.3);transition:background .2s,border-color .2s}'+
+ '.fqa-x:hover{background:linear-gradient(160deg,#ef4444,#b91c1c);border-color:#fca5a5}'+
+ '.fqa-body{padding:0 16px}'+
+ '.fqa-q{position:relative;margin-top:10px;padding:12px 12px 12px 16px;border-radius:14px;background:#17181b;border:1px solid rgba(0,0,0,.65);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.14);overflow:hidden}'+
+ '.fqa-q::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,var(--qc),color-mix(in srgb,var(--qc) 55%,#000))}'+
+ '.fqa-qt{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:800;color:#fff;margin-bottom:9px}'+
+ '.fqa-qi{width:30px;height:30px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;background:color-mix(in srgb,var(--qc) 22%,#1f2024);border:1px solid color-mix(in srgb,var(--qc) 55%,transparent)}'+
+ '.fqa-ppe{font-size:11px;font-weight:800;color:var(--qc);margin:-4px 0 9px 39px}'+
+ '.fqa-opts{display:flex;gap:8px}'+
+ '.fqa-opt{flex:1;padding:11px 6px;border-radius:11px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:900;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.5);background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.26);border-bottom:2px solid rgba(0,0,0,.8);box-shadow:0 10px 18px -10px rgba(0,0,0,.8),inset 0 1.5px 0 rgba(255,255,255,.32);transition:transform .2s,background .2s,box-shadow .2s,border-color .2s}'+
+ '.fqa-opt:hover{background:'+SH+','+BRH+';border-color:color-mix(in srgb,var(--qc) 70%,transparent);transform:translateY(-1px)}'+
+ '.fqa-opt.on{color:#111;text-shadow:none;background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.5),transparent 60%),linear-gradient(170deg,var(--qc),color-mix(in srgb,var(--qc) 70%,#000));border-color:color-mix(in srgb,var(--qc) 60%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,var(--qc) 30%,transparent),0 8px 18px -6px var(--qc),inset 0 1.5px 0 rgba(255,255,255,.5)}'+
+ '.fqa-opt.on.bad{--qc:#ef4444;color:#fff}'+
+ '.fqa-hint{display:none;margin-top:9px;padding:7px 10px;border-radius:9px;font-size:11.5px;font-weight:800;line-height:1.45;color:#fde68a;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4)}'+
+ '.fqa-hint.bad{color:#fecaca;background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.5)}'+
+ '.fqa-lab{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:900;color:#fff;letter-spacing:.2px;margin:14px 0 6px;text-shadow:0 1px 1px rgba(0,0,0,.5)}'+
+ '.fqa-lab i{font-style:normal;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c)}'+
+ '.fqa-in{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:11px;font-family:inherit;font-size:14px;color:#f1f1f3;background:#17181b;border:1px solid rgba(0,0,0,.65);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.14);outline:none;color-scheme:dark}'+
+ '.fqa-in::placeholder{color:#8e8f95}'+
+ '.fqa-in:focus{border-color:var(--c);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 0 0 3px var(--cs)}'+
+ 'textarea.fqa-in{resize:vertical}'+
+ '.fqa-modes{display:flex;flex-direction:column;gap:8px;margin-top:2px}'+
+ '.fqa-mode{--qc:#92C64B;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:13px;cursor:pointer;font-size:13.5px;font-weight:800;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.5);background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.24);box-shadow:0 10px 18px -12px rgba(0,0,0,.8),inset 0 1.5px 0 rgba(255,255,255,.28);transition:border-color .2s,box-shadow .2s}'+
+ '.fqa-mode input{position:absolute;opacity:0;pointer-events:none}'+
+ '.fqa-mode .fqa-qi{width:34px;height:34px;font-size:18px}'+
+ '.fqa-mode.on{border-color:var(--qc);box-shadow:0 0 0 3px color-mix(in srgb,var(--qc) 28%,transparent),0 10px 20px -10px var(--qc),inset 0 1.5px 0 rgba(255,255,255,.35)}'+
+ '.fqa-mode .fqa-dot{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.45);background:#17181b;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}'+
+ '.fqa-mode.on .fqa-dot{border-color:var(--qc);background:radial-gradient(circle,var(--qc) 0 45%,#17181b 50%)}'+
+ '.fqa-sigwrap{position:relative;border-radius:13px;padding:5px;background:linear-gradient(160deg,var(--c),var(--c2));box-shadow:0 8px 18px -8px var(--cs)}'+
+ '.fqa-sigwrap canvas{width:100%;height:170px;display:block;border-radius:9px;background:#fff;touch-action:none}'+
+ '.fqa-sigline{position:absolute;left:22px;right:22px;bottom:36px;border-bottom:1.5px dashed #b8bac0;pointer-events:none}'+
+ '.fqa-sigx{position:absolute;left:14px;bottom:38px;font-size:16px;font-weight:900;color:#b8bac0;pointer-events:none}'+
+ '.fqa-clear{background:transparent;border:none;color:var(--c);font-family:inherit;font-size:12px;font-weight:900;cursor:pointer;margin-left:auto}'+
+ '.fqa-note{font-size:11px;font-weight:600;color:#cfd0d4;margin-top:6px}'+
+ '#fqa-msg{display:none;margin:12px 16px 0;padding:10px 12px;border-radius:11px;background:linear-gradient(160deg,rgba(239,68,68,.22),rgba(127,29,29,.25));border:1px solid rgba(239,68,68,.6);color:#fecaca;font-size:12px;font-weight:800;line-height:1.5}'+
+ '.fqa-foot{display:flex;gap:10px;padding:14px 16px 0}'+
+ '.fqa-btn{flex:1;padding:13px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s}'+
+ '.fqa-btn:hover{transform:translateY(-2px)}.fqa-btn:active{transform:scale(.98)}'+
+ '.fqa-btn.ghost{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.5);background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.28);border-bottom:2px solid rgba(0,0,0,.8);box-shadow:0 14px 26px -10px rgba(0,0,0,.75),inset 0 1.5px 0 rgba(255,255,255,.35)}'+
+ '.fqa-btn.go{color:#111;border:1px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(0,0,0,.45);background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.55),transparent 60%),linear-gradient(170deg,var(--c),var(--c2));box-shadow:0 14px 26px -10px var(--cs),0 0 0 1px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.5)}';
+ document.head.appendChild(st);
+}
+function _fqaShell(kind,icon,title,sub,body,foot){
+ _fqaClose();_fqaCss();
  const o=document.createElement('div');
  o.id='fqa-overlay';
- o.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,0.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px 10px;';
- o.innerHTML='<div style="width:100%;max-width:520px;background:#1d1e22;border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:18px 16px 16px;color:#e8e8e8;font-family:var(--font);box-shadow:0 20px 60px rgba(0,0,0,0.5);">'+
-  '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">'+
-   '<div style="flex:1;min-width:0;"><div style="font-size:18px;font-weight:900;color:#fff;">'+title+'</div><div style="font-size:12px;font-weight:600;color:#a0a0a0;margin-top:3px;line-height:1.5;">'+sub+'</div></div>'+
-   '<button type="button" onclick="_fqaClose()" title="Close" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.25);background:transparent;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;">×</button>'+
-  '</div>'+body+
-  '<div id="fqa-msg" style="display:none;margin-top:10px;padding:9px 11px;border-radius:9px;background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.5);color:#fca5a5;font-size:12px;font-weight:700;line-height:1.5;"></div>'+
-  '<div style="display:flex;gap:10px;margin-top:14px;">'+foot+'</div>'+
- '</div>';
+ o.innerHTML='<div class="fqa-card '+kind+'"><div class="fqa-band"></div>'+
+  '<div class="fqa-head"><div class="fqa-badge">'+icon+'</div><div style="min-width:0;"><div class="fqa-title">'+title+'</div><div class="fqa-sub">'+sub+'</div></div>'+
+   '<button type="button" class="fqa-x" onclick="_fqaClose()" title="Close">×</button></div>'+
+  '<div class="fqa-body">'+body+'</div><div id="fqa-msg"></div><div class="fqa-foot">'+foot+'</div></div>';
  o.addEventListener('click',e=>{if(e.target===o)_fqaClose();});
  document.body.appendChild(o);
  return o;
 }
 function _fqaMsg(t){const m=document.getElementById('fqa-msg');if(!m)return;m.style.display=t?'block':'none';m.innerHTML=t||'';}
 const _FQA_RISK=[
- {k:'lift',q:'Using a lift, or a ladder over 6 ft?'},
- {k:'height',q:'Working at height (over 6 ft / 2 m)?'},
- {k:'power',q:'Live power or electrical near the work area?'},
- {k:'public',q:'Customers or the public near the work area?'},
- {k:'ppe',q:'Wearing the PPE this job needs?',opts:['YES','NOT NEEDED','NO']}
+ {k:'lift',q:'Using a lift, or a ladder over 6 ft?',i:'🪜',c:'#f97316'},
+ {k:'height',q:'Working at height (over 6 ft / 2 m)?',i:'🧗',c:'#a855f7'},
+ {k:'power',q:'Live power or electrical near the work area?',i:'⚡',c:'#eab308'},
+ {k:'public',q:'Customers or the public near the work area?',i:'🚶',c:'#38bdf8'},
+ {k:'ppe',q:'Wearing the PPE this job needs?',i:'🦺',c:'#92C64B',opts:['YES','NOT NEEDED','NO']}
 ];
 function _fqaPick(btn,k){
  const row=btn.parentElement;
- row.querySelectorAll('button').forEach(b=>{const on=b===btn;b.dataset.on=on?'1':'';b.style.background=on?'#92C64B':'transparent';b.style.color=on?'#111':'#e8e8e8';b.style.borderColor=on?'#92C64B':'rgba(255,255,255,0.25)';});
+ row.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b===btn);b.classList.toggle('bad',b===btn&&k==='ppe'&&b.dataset.v==='NO');});
  row.dataset.val=btn.dataset.v;
  const hint=document.getElementById('fqa-hint-'+k);
  if(hint){
   const v=btn.dataset.v;
-  hint.textContent=k==='public'&&v==='YES'?'Set up cones or a barrier around your work area.'
-   :k==='ppe'&&v==='NO'?'Put on the PPE this job needs before you start.'
-   :k==='lift'&&v==='YES'?'Check the lift or ladder before use and keep 3 points of contact.'
-   :k==='power'&&v==='YES'?'Keep clear of live power. Ask the store to switch it off if you need to work near it.':'';
+  hint.textContent=k==='public'&&v==='YES'?'🚧 Set up cones or a barrier around your work area.'
+   :k==='ppe'&&v==='NO'?'⛔ Put on the PPE this job needs before you start.'
+   :k==='lift'&&v==='YES'?'🔎 Check the lift or ladder before use and keep 3 points of contact.'
+   :k==='height'&&v==='YES'?'🪢 Use fall protection where it is required.'
+   :k==='power'&&v==='YES'?'⚡ Keep clear of live power. Ask the store to switch it off if you need to work near it.':'';
+  hint.classList.toggle('bad',k==='ppe'&&v==='NO');
   hint.style.display=hint.textContent?'block':'none';
  }
 }
 function _fqaOpen(kind,storeId,safeId){
  const p=_selected;if(!p)return;
  const s=_fqaGet(storeId);
- const btnS='flex:1;padding:12px;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:900;cursor:pointer;';
- const inS='width:100%;box-sizing:border-box;padding:10px 11px;border-radius:9px;border:1px solid #ccc;background:#fafafa;color:#1c1c1c;font-family:var(--font);font-size:14px;';
- const lab=t=>'<div style="font-size:12px;font-weight:800;color:#fff;margin:12px 0 6px;">'+t+'</div>';
+ const lab=t=>'<div class="fqa-lab"><i></i>'+t+'</div>';
  if(kind==='risk'){
   const r=s.risk||{};
   const ppe=String(p.ppe||'').trim();
   const body=_FQA_RISK.map(it=>{
    const opts=it.opts||['YES','NO'];
-   return '<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,0.08);">'+
-    '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;">'+it.q+(it.k==='ppe'&&ppe?'<div style="font-size:11px;font-weight:700;color:#92C64B;margin-top:3px;">This job: '+esc(ppe)+'</div>':'')+'</div>'+
-    '<div class="fqa-row" data-k="'+it.k+'" data-val="'+esc(r[it.k]||'')+'" style="display:flex;gap:8px;">'+
-     opts.map(o=>{const on=r[it.k]===o;return '<button type="button" data-v="'+o+'" onclick="_fqaPick(this,\''+it.k+'\')" style="flex:1;padding:10px 6px;border-radius:9px;font-family:var(--font);font-size:13px;font-weight:900;cursor:pointer;border:1px solid '+(on?'#92C64B':'rgba(255,255,255,0.25)')+';background:'+(on?'#92C64B':'transparent')+';color:'+(on?'#111':'#e8e8e8')+';">'+(o==='NOT NEEDED'?'Not needed':o==='YES'?'Yes':'No')+'</button>';}).join('')+
+   return '<div class="fqa-q" style="--qc:'+it.c+';">'+
+    '<div class="fqa-qt"><span class="fqa-qi">'+it.i+'</span>'+it.q+'</div>'+
+    (it.k==='ppe'&&ppe?'<div class="fqa-ppe">This job: '+esc(ppe)+'</div>':'')+
+    '<div class="fqa-row fqa-opts" data-k="'+it.k+'" data-val="'+esc(r[it.k]||'')+'">'+
+     opts.map(o=>'<button type="button" data-v="'+o+'" onclick="_fqaPick(this,\''+it.k+'\')" class="fqa-opt'+(r[it.k]===o?' on'+(it.k==='ppe'&&o==='NO'?' bad':''):'')+'">'+(o==='NOT NEEDED'?'Not needed':o==='YES'?'Yes':'No')+'</button>').join('')+
     '</div>'+
-    '<div id="fqa-hint-'+it.k+'" style="display:none;font-size:11px;font-weight:700;color:#f59e0b;margin-top:6px;"></div>'+
+    '<div id="fqa-hint-'+it.k+'" class="fqa-hint"></div>'+
    '</div>';
   }).join('')+
   lab('Anything unsafe on site? (optional)')+
-  '<textarea id="fqa-hazards" rows="2" placeholder="Wet floor, blocked exit, damaged wall..." style="'+inS+'resize:vertical;">'+esc(r.hazards||'')+'</textarea>';
-  _fqaShell('🦺 Risk check','Before you start at this store. Takes 20 seconds.',body,
-   '<button type="button" onclick="_fqaClose()" style="'+btnS+'background:transparent;border:1px solid rgba(255,255,255,0.25);color:#e8e8e8;">Cancel</button>'+
-   '<button type="button" onclick="_fqaSaveRisk(\''+esc(storeId)+'\',\''+safeId+'\')" style="'+btnS+'background:#92C64B;border:none;color:#111;">✅ Site is safe, start work</button>');
+  '<textarea id="fqa-hazards" rows="2" class="fqa-in" placeholder="Wet floor, blocked exit, damaged wall...">'+esc(r.hazards||'')+'</textarea>';
+  _fqaShell('risk','🦺','Risk check','Before you start at this store. Takes 20 seconds.',body,
+   '<button type="button" onclick="_fqaClose()" class="fqa-btn ghost">Cancel</button>'+
+   '<button type="button" onclick="_fqaSaveRisk(\''+esc(storeId)+'\',\''+safeId+'\')" class="fqa-btn go">✅ Site is safe, start work</button>');
   return;
  }
  // sign-off
  const g=s.sign||{};
  const today=new Date();const iso=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
  const mode=g.mode||'signed';
+ const MODES=[['signed','The store manager signs now','✍️','#92C64B'],['away','The manager is not available','🚫','#f59e0b'],['later','Job not finished, more trips to come','🔁','#38bdf8']];
  const body=
-  '<div id="fqa-modes" style="display:flex;flex-direction:column;gap:6px;">'+
-   [['signed','The store manager signs now'],['away','The manager is not available'],['later','Job not finished, more trips to come']].map(([m,t])=>
-    '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.18);cursor:pointer;font-size:13px;font-weight:700;color:#fff;">'+
-     '<input type="radio" name="fqa-mode" value="'+m+'" '+(mode===m?'checked':'')+' onchange="_fqaMode(this.value)" style="width:18px;height:18px;accent-color:#92C64B;">'+t+'</label>').join('')+
+  '<div class="fqa-modes">'+
+   MODES.map(([m,t,i,c])=>
+    '<label class="fqa-mode'+(mode===m?' on':'')+'" style="--qc:'+c+';">'+
+     '<input type="radio" name="fqa-mode" value="'+m+'" '+(mode===m?'checked':'')+' onchange="_fqaMode(this.value)">'+
+     '<span class="fqa-qi">'+i+'</span>'+t+'<span class="fqa-dot"></span></label>').join('')+
   '</div>'+
   '<div id="fqa-signed" style="display:'+(mode==='signed'?'block':'none')+';">'+
-   lab('Store manager name')+'<input id="fqa-name" type="text" autocomplete="off" value="'+esc(g.name||'')+'" placeholder="First and last name" style="'+inS+'">'+
-   lab('Their role')+'<input id="fqa-role" type="text" autocomplete="off" value="'+esc(g.role||'Store Manager')+'" style="'+inS+'">'+
-   lab('Date')+'<input id="fqa-date" type="date" value="'+esc(g.date||iso)+'" style="'+inS+'">'+
-   lab('Any issues with the install? (leave empty if none)')+'<textarea id="fqa-issues" rows="2" placeholder="None" style="'+inS+'resize:vertical;">'+esc(g.issues||'')+'</textarea>'+
-   '<div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px;"><div style="font-size:12px;font-weight:800;color:#fff;">Signature</div>'+
-    '<button type="button" onclick="_fqaSigClear()" style="background:transparent;border:none;color:#92C64B;font-family:var(--font);font-size:12px;font-weight:800;cursor:pointer;">Clear</button></div>'+
-   '<canvas id="fqa-sig" style="width:100%;height:170px;background:#fff;border-radius:9px;border:1px solid #ccc;touch-action:none;display:block;"></canvas>'+
-   '<div style="font-size:11px;font-weight:600;color:#a0a0a0;margin-top:5px;">The manager signs with a finger, confirming the install was completed.</div>'+
+   lab('Store manager name')+'<input id="fqa-name" type="text" autocomplete="off" class="fqa-in" value="'+esc(g.name||'')+'" placeholder="First and last name">'+
+   '<div style="display:flex;gap:10px;">'+
+    '<div style="flex:1.3;min-width:0;">'+lab('Their role')+'<input id="fqa-role" type="text" autocomplete="off" class="fqa-in" value="'+esc(g.role||'Store Manager')+'"></div>'+
+    '<div style="flex:1;min-width:0;">'+lab('Date')+'<input id="fqa-date" type="date" class="fqa-in" value="'+esc(g.date||iso)+'"></div>'+
+   '</div>'+
+   lab('Any issues with the install? (leave empty if none)')+'<textarea id="fqa-issues" rows="2" class="fqa-in" placeholder="None">'+esc(g.issues||'')+'</textarea>'+
+   '<div class="fqa-lab"><i></i>Signature<button type="button" class="fqa-clear" onclick="_fqaSigClear()">Clear</button></div>'+
+   '<div class="fqa-sigwrap"><canvas id="fqa-sig"></canvas><div class="fqa-sigline"></div><div class="fqa-sigx">✕</div></div>'+
+   '<div class="fqa-note">The manager signs with a finger, confirming the install was completed.</div>'+
   '</div>'+
   '<div id="fqa-away" style="display:'+(mode==='away'?'block':'none')+';">'+
-   lab('Why, and who did you speak with?')+'<textarea id="fqa-reason" rows="2" placeholder="Manager off today, approved by Sam (assistant manager)" style="'+inS+'resize:vertical;">'+esc(g.reason||'')+'</textarea>'+
+   lab('Why, and who did you speak with?')+'<textarea id="fqa-reason" rows="2" class="fqa-in" placeholder="Manager off today, approved by Sam (assistant manager)">'+esc(g.reason||'')+'</textarea>'+
   '</div>';
- _fqaShell('✍️ Store sign-off','At the end of the job: the store confirms the install. For AGC only, never shared.',body,
-  '<button type="button" onclick="_fqaClose()" style="'+btnS+'background:transparent;border:1px solid rgba(255,255,255,0.25);color:#e8e8e8;">Cancel</button>'+
-  '<button type="button" onclick="_fqaSaveSign(\''+esc(storeId)+'\',\''+safeId+'\')" style="'+btnS+'background:#92C64B;border:none;color:#111;">✅ Save sign-off</button>');
+ _fqaShell('sign','✍️','Store sign-off','At the end of the job: the store confirms the install. For AGC only, never shared.',body,
+  '<button type="button" onclick="_fqaClose()" class="fqa-btn ghost">Cancel</button>'+
+  '<button type="button" onclick="_fqaSaveSign(\''+esc(storeId)+'\',\''+safeId+'\')" class="fqa-btn go">✅ Save sign-off</button>');
  _fqaSigInit(g.sig||'');
 }
 function _fqaMode(m){
+ const cv=document.getElementById('fqa-sig');if(cv&&cv._inked&&cv.offsetParent)window._fqaSigData=cv.toDataURL('image/png');
+ document.querySelectorAll('#fqa-overlay .fqa-mode').forEach(l=>{const i=l.querySelector('input');l.classList.toggle('on',!!(i&&i.value===m));});
  const a=document.getElementById('fqa-signed'),b=document.getElementById('fqa-away');
  if(a)a.style.display=m==='signed'?'block':'none';
  if(b)b.style.display=m==='away'?'block':'none';
@@ -29682,7 +29743,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6103;
+  var AGC_BUILD = 6104;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
