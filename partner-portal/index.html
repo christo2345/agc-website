@@ -5855,7 +5855,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.102</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.103</span>
  </div>
 
  <div class="hero">
@@ -18326,6 +18326,7 @@ function renderStoreCloseoutDetail(storeId,storeName,trips,logoUrl){
    '<div style="flex:1;min-height:0;border-top:1px solid rgba(255,255,255,0.12);padding:14px 22px 18px;background:rgba(0,0,0,0.2);display:flex;flex-direction:column;overflow:hidden;">'+
    '<div data-store-id="'+esc(storeId)+'" data-store-name="'+esc(storeName)+'" style="display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;">'+
      formHeader+
+     (isEditing?'':_fqaBar(storeId,safeId))+
      // Two-column grid that fills remaining vertical space. Both columns
      // are forced to equal heights via the grid's default stretch alignment;
      // each column then uses flex:1 internally on its primary input
@@ -19505,6 +19506,229 @@ function _showCloseoutWarning(safeId,opts){
  }
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🦺✍️ FIELD QA (6.103, Chris Nov 15 2026): a short RISK CHECK before the
+// installer starts and a STORE SIGN-OFF (manager name, signature, date,
+// issues) at the end, per store trip. Kept on the phone (localStorage, per
+// project + store) between start and end of the job, then saved with the
+// trip closeout: one text block in CLOSEOUT NOTES + the signature as a PNG
+// in CLOSEOUT PHOTOS ("<store> - DAY n - SIGNATURE.png"). The 📸 FIELD QA
+// agent in Airtable reads both. Internal only: never shown to the client.
+// ═══════════════════════════════════════════════════════════════════════════
+let _fqaState={};
+function _fqaKey(storeId){const p=_selected;return 'agcFQA:'+((p&&p.id)||'')+':'+storeId;}
+function _fqaGet(storeId){
+ const k=_fqaKey(storeId);
+ if(_fqaState[k])return _fqaState[k];
+ let v=null;try{v=JSON.parse(localStorage.getItem(k)||'null');}catch(e){}
+ _fqaState[k]=v&&typeof v==='object'?v:{};
+ return _fqaState[k];
+}
+function _fqaSave(storeId,v){
+ const k=_fqaKey(storeId);_fqaState[k]=v;
+ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
+}
+function _fqaClear(storeId){
+ const k=_fqaKey(storeId);delete _fqaState[k];
+ try{localStorage.removeItem(k);}catch(e){}
+}
+function _fqaTime(iso){
+ try{return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return '';}
+}
+function _fqaBar(storeId,safeId){
+ const s=_fqaGet(storeId),r=s.risk||null,g=s.sign||null;
+ const chip=(kind,icon,title,done,line)=>
+  '<button type="button" onclick="_fqaOpen(\''+kind+'\',\''+esc(storeId)+'\',\''+safeId+'\')" style="flex:1 1 220px;min-width:0;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;text-align:left;font-family:var(--font);'+
+   (done?'background:rgba(146,198,75,0.12);border:1px solid rgba(146,198,75,0.45);':'background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.45);')+'">'+
+   '<span style="font-size:20px;line-height:1;">'+icon+'</span>'+
+   '<span style="display:flex;flex-direction:column;min-width:0;">'+
+    '<span style="font-size:12px;font-weight:900;color:#fff;letter-spacing:0.3px;">'+title+'</span>'+
+    '<span style="font-size:11px;font-weight:700;color:'+(done?'#92C64B':'#f59e0b')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(line)+'</span>'+
+   '</span></button>';
+ const signLine=!g?'Not done yet · at the end of the job'
+  :g.mode==='later'?'✅ Job not finished, more trips to come'
+  :g.mode==='away'?'✅ Manager not available'
+  :'✅ Signed by '+(g.name||'the store');
+ return '<div style="display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0;">'+
+  chip('risk','🦺','Risk check',!!(r&&r.at),r&&r.at?'✅ Done '+_fqaTime(r.at):'Not done yet · do it before you start')+
+  chip('sign','✍️','Store sign-off',!!g,signLine)+
+ '</div>';
+}
+function _fqaClose(){const o=document.getElementById('fqa-overlay');if(o)o.remove();}
+function _fqaShell(title,sub,body,foot){
+ _fqaClose();
+ const o=document.createElement('div');
+ o.id='fqa-overlay';
+ o.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,0.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px 10px;';
+ o.innerHTML='<div style="width:100%;max-width:520px;background:#1d1e22;border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:18px 16px 16px;color:#e8e8e8;font-family:var(--font);box-shadow:0 20px 60px rgba(0,0,0,0.5);">'+
+  '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">'+
+   '<div style="flex:1;min-width:0;"><div style="font-size:18px;font-weight:900;color:#fff;">'+title+'</div><div style="font-size:12px;font-weight:600;color:#a0a0a0;margin-top:3px;line-height:1.5;">'+sub+'</div></div>'+
+   '<button type="button" onclick="_fqaClose()" title="Close" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.25);background:transparent;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;">×</button>'+
+  '</div>'+body+
+  '<div id="fqa-msg" style="display:none;margin-top:10px;padding:9px 11px;border-radius:9px;background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.5);color:#fca5a5;font-size:12px;font-weight:700;line-height:1.5;"></div>'+
+  '<div style="display:flex;gap:10px;margin-top:14px;">'+foot+'</div>'+
+ '</div>';
+ o.addEventListener('click',e=>{if(e.target===o)_fqaClose();});
+ document.body.appendChild(o);
+ return o;
+}
+function _fqaMsg(t){const m=document.getElementById('fqa-msg');if(!m)return;m.style.display=t?'block':'none';m.innerHTML=t||'';}
+const _FQA_RISK=[
+ {k:'lift',q:'Using a lift, or a ladder over 6 ft?'},
+ {k:'height',q:'Working at height (over 6 ft / 2 m)?'},
+ {k:'power',q:'Live power or electrical near the work area?'},
+ {k:'public',q:'Customers or the public near the work area?'},
+ {k:'ppe',q:'Wearing the PPE this job needs?',opts:['YES','NOT NEEDED','NO']}
+];
+function _fqaPick(btn,k){
+ const row=btn.parentElement;
+ row.querySelectorAll('button').forEach(b=>{const on=b===btn;b.dataset.on=on?'1':'';b.style.background=on?'#92C64B':'transparent';b.style.color=on?'#111':'#e8e8e8';b.style.borderColor=on?'#92C64B':'rgba(255,255,255,0.25)';});
+ row.dataset.val=btn.dataset.v;
+ const hint=document.getElementById('fqa-hint-'+k);
+ if(hint){
+  const v=btn.dataset.v;
+  hint.textContent=k==='public'&&v==='YES'?'Set up cones or a barrier around your work area.'
+   :k==='ppe'&&v==='NO'?'Put on the PPE this job needs before you start.'
+   :k==='lift'&&v==='YES'?'Check the lift or ladder before use and keep 3 points of contact.'
+   :k==='power'&&v==='YES'?'Keep clear of live power. Ask the store to switch it off if you need to work near it.':'';
+  hint.style.display=hint.textContent?'block':'none';
+ }
+}
+function _fqaOpen(kind,storeId,safeId){
+ const p=_selected;if(!p)return;
+ const s=_fqaGet(storeId);
+ const btnS='flex:1;padding:12px;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:900;cursor:pointer;';
+ const inS='width:100%;box-sizing:border-box;padding:10px 11px;border-radius:9px;border:1px solid #ccc;background:#fafafa;color:#1c1c1c;font-family:var(--font);font-size:14px;';
+ const lab=t=>'<div style="font-size:12px;font-weight:800;color:#fff;margin:12px 0 6px;">'+t+'</div>';
+ if(kind==='risk'){
+  const r=s.risk||{};
+  const ppe=String(p.ppe||'').trim();
+  const body=_FQA_RISK.map(it=>{
+   const opts=it.opts||['YES','NO'];
+   return '<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,0.08);">'+
+    '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;">'+it.q+(it.k==='ppe'&&ppe?'<div style="font-size:11px;font-weight:700;color:#92C64B;margin-top:3px;">This job: '+esc(ppe)+'</div>':'')+'</div>'+
+    '<div class="fqa-row" data-k="'+it.k+'" data-val="'+esc(r[it.k]||'')+'" style="display:flex;gap:8px;">'+
+     opts.map(o=>{const on=r[it.k]===o;return '<button type="button" data-v="'+o+'" onclick="_fqaPick(this,\''+it.k+'\')" style="flex:1;padding:10px 6px;border-radius:9px;font-family:var(--font);font-size:13px;font-weight:900;cursor:pointer;border:1px solid '+(on?'#92C64B':'rgba(255,255,255,0.25)')+';background:'+(on?'#92C64B':'transparent')+';color:'+(on?'#111':'#e8e8e8')+';">'+(o==='NOT NEEDED'?'Not needed':o==='YES'?'Yes':'No')+'</button>';}).join('')+
+    '</div>'+
+    '<div id="fqa-hint-'+it.k+'" style="display:none;font-size:11px;font-weight:700;color:#f59e0b;margin-top:6px;"></div>'+
+   '</div>';
+  }).join('')+
+  lab('Anything unsafe on site? (optional)')+
+  '<textarea id="fqa-hazards" rows="2" placeholder="Wet floor, blocked exit, damaged wall..." style="'+inS+'resize:vertical;">'+esc(r.hazards||'')+'</textarea>';
+  _fqaShell('🦺 Risk check','Before you start at this store. Takes 20 seconds.',body,
+   '<button type="button" onclick="_fqaClose()" style="'+btnS+'background:transparent;border:1px solid rgba(255,255,255,0.25);color:#e8e8e8;">Cancel</button>'+
+   '<button type="button" onclick="_fqaSaveRisk(\''+esc(storeId)+'\',\''+safeId+'\')" style="'+btnS+'background:#92C64B;border:none;color:#111;">✅ Site is safe, start work</button>');
+  return;
+ }
+ // sign-off
+ const g=s.sign||{};
+ const today=new Date();const iso=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+ const mode=g.mode||'signed';
+ const body=
+  '<div id="fqa-modes" style="display:flex;flex-direction:column;gap:6px;">'+
+   [['signed','The store manager signs now'],['away','The manager is not available'],['later','Job not finished, more trips to come']].map(([m,t])=>
+    '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.18);cursor:pointer;font-size:13px;font-weight:700;color:#fff;">'+
+     '<input type="radio" name="fqa-mode" value="'+m+'" '+(mode===m?'checked':'')+' onchange="_fqaMode(this.value)" style="width:18px;height:18px;accent-color:#92C64B;">'+t+'</label>').join('')+
+  '</div>'+
+  '<div id="fqa-signed" style="display:'+(mode==='signed'?'block':'none')+';">'+
+   lab('Store manager name')+'<input id="fqa-name" type="text" autocomplete="off" value="'+esc(g.name||'')+'" placeholder="First and last name" style="'+inS+'">'+
+   lab('Their role')+'<input id="fqa-role" type="text" autocomplete="off" value="'+esc(g.role||'Store Manager')+'" style="'+inS+'">'+
+   lab('Date')+'<input id="fqa-date" type="date" value="'+esc(g.date||iso)+'" style="'+inS+'">'+
+   lab('Any issues with the install? (leave empty if none)')+'<textarea id="fqa-issues" rows="2" placeholder="None" style="'+inS+'resize:vertical;">'+esc(g.issues||'')+'</textarea>'+
+   '<div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px;"><div style="font-size:12px;font-weight:800;color:#fff;">Signature</div>'+
+    '<button type="button" onclick="_fqaSigClear()" style="background:transparent;border:none;color:#92C64B;font-family:var(--font);font-size:12px;font-weight:800;cursor:pointer;">Clear</button></div>'+
+   '<canvas id="fqa-sig" style="width:100%;height:170px;background:#fff;border-radius:9px;border:1px solid #ccc;touch-action:none;display:block;"></canvas>'+
+   '<div style="font-size:11px;font-weight:600;color:#a0a0a0;margin-top:5px;">The manager signs with a finger, confirming the install was completed.</div>'+
+  '</div>'+
+  '<div id="fqa-away" style="display:'+(mode==='away'?'block':'none')+';">'+
+   lab('Why, and who did you speak with?')+'<textarea id="fqa-reason" rows="2" placeholder="Manager off today, approved by Sam (assistant manager)" style="'+inS+'resize:vertical;">'+esc(g.reason||'')+'</textarea>'+
+  '</div>';
+ _fqaShell('✍️ Store sign-off','At the end of the job: the store confirms the install. For AGC only, never shared.',body,
+  '<button type="button" onclick="_fqaClose()" style="'+btnS+'background:transparent;border:1px solid rgba(255,255,255,0.25);color:#e8e8e8;">Cancel</button>'+
+  '<button type="button" onclick="_fqaSaveSign(\''+esc(storeId)+'\',\''+safeId+'\')" style="'+btnS+'background:#92C64B;border:none;color:#111;">✅ Save sign-off</button>');
+ _fqaSigInit(g.sig||'');
+}
+function _fqaMode(m){
+ const a=document.getElementById('fqa-signed'),b=document.getElementById('fqa-away');
+ if(a)a.style.display=m==='signed'?'block':'none';
+ if(b)b.style.display=m==='away'?'block':'none';
+ if(m==='signed')_fqaSigInit(window._fqaSigData||'');
+ _fqaMsg('');
+}
+function _fqaSigInit(existing){
+ const c=document.getElementById('fqa-sig');if(!c)return;
+ const r=c.getBoundingClientRect();if(!r.width)return;
+ const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+ c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);
+ const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
+ x.fillStyle='#fff';x.fillRect(0,0,r.width,r.height);
+ x.strokeStyle='#111';x.lineWidth=2.4;x.lineCap='round';x.lineJoin='round';
+ c._inked=false;window._fqaSigData=existing||'';
+ if(existing){const im=new Image();im.onload=()=>{x.drawImage(im,0,0,r.width,r.height);c._inked=true;};im.src=existing;}
+ let down=false,last=null;
+ const pt=e=>{const b=c.getBoundingClientRect();return {x:e.clientX-b.left,y:e.clientY-b.top};};
+ c.onpointerdown=e=>{down=true;last=pt(e);try{c.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();};
+ c.onpointermove=e=>{if(!down)return;const q=pt(e);x.beginPath();x.moveTo(last.x,last.y);x.lineTo(q.x,q.y);x.stroke();last=q;c._inked=true;e.preventDefault();};
+ c.onpointerup=c.onpointercancel=()=>{down=false;};
+}
+function _fqaSigClear(){window._fqaSigData='';_fqaSigInit('');}
+function _fqaSaveRisk(storeId,safeId){
+ const r={};let missing=[];
+ document.querySelectorAll('#fqa-overlay .fqa-row').forEach(row=>{const k=row.dataset.k,v=row.dataset.val||'';r[k]=v;if(!v)missing.push(k);});
+ if(missing.length){_fqaMsg('Please answer every question ('+missing.length+' left).');return;}
+ if(r.ppe==='NO'){_fqaMsg('You need the PPE this job asks for before you start. Put it on, then answer Yes.');return;}
+ r.hazards=(document.getElementById('fqa-hazards')||{}).value||'';
+ r.at=new Date().toISOString();
+ const s=_fqaGet(storeId);s.risk=r;_fqaSave(storeId,s);
+ _fqaClose();renderStoreDetail();
+}
+function _fqaSaveSign(storeId,safeId){
+ const m=(document.querySelector('#fqa-overlay input[name="fqa-mode"]:checked')||{}).value||'signed';
+ const g={mode:m,at:new Date().toISOString()};
+ if(m==='signed'){
+  g.name=((document.getElementById('fqa-name')||{}).value||'').trim();
+  g.role=((document.getElementById('fqa-role')||{}).value||'').trim();
+  g.date=(document.getElementById('fqa-date')||{}).value||'';
+  g.issues=((document.getElementById('fqa-issues')||{}).value||'').trim();
+  const c=document.getElementById('fqa-sig');
+  if(!g.name){_fqaMsg('Please enter the store manager\'s name.');return;}
+  if(!c||!c._inked){_fqaMsg('Please have the manager sign in the white box.');return;}
+  g.sig=c.toDataURL('image/png');
+ } else if(m==='away'){
+  g.reason=((document.getElementById('fqa-reason')||{}).value||'').trim();
+  if(!g.reason){_fqaMsg('Please say why the manager could not sign, and who you spoke with.');return;}
+ }
+ const s=_fqaGet(storeId);s.sign=g;_fqaSave(storeId,s);
+ _fqaClose();renderStoreDetail();
+}
+// Submit gate: null = blocked (a warning is shown), else {notes, sig}
+function _fqaGate(storeId,safeId){
+ const s=_fqaGet(storeId),r=s.risk,g=s.sign;
+ if(!r||!r.at){
+  _showCloseoutWarning(safeId,{severity:'block',emoji:'🦺',title:'Risk Check Missing',
+   body:'Please do the quick <strong>🦺 Risk check</strong> (above the notes) before submitting. It takes 20 seconds.',okLabel:'Got It'});
+  return null;
+ }
+ if(!g){
+  _showCloseoutWarning(safeId,{severity:'block',emoji:'✍️',title:'Store Sign-off Missing',
+   body:'Please open <strong>✍️ Store sign-off</strong> (above the notes): the manager signs, or say they are not available, or that the job is not finished yet.',okLabel:'Got It'});
+  return null;
+ }
+ const Y=v=>v==='YES'?'YES':v==='NOT NEEDED'?'NOT NEEDED':'NO';
+ const clean=t=>String(t||'').replace(/[–—]/g,',').replace(/\s*\n+\s*/g,' / ').trim();
+ let lines='🦺 RISK CHECK ('+_fqaTime(r.at)+'): Lift/ladder: '+Y(r.lift)+' · Height: '+Y(r.height)+' · Power: '+Y(r.power)+' · Public area: '+Y(r.public)+' · PPE: '+Y(r.ppe)+' · Hazards: '+(clean(r.hazards)||'none');
+ if(g.mode==='signed'){
+  let d=g.date;try{d=new Date(g.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){}
+  lines+='\n✍️ STORE SIGN-OFF: '+clean(g.name)+(g.role?', '+clean(g.role):'')+' · '+d+' · Issues: '+(clean(g.issues)||'none')+' · Signed (SIGNATURE photo)';
+ } else if(g.mode==='away'){
+  lines+='\n✍️ STORE SIGN-OFF: not signed, manager not available · '+clean(g.reason);
+ } else {
+  lines+='\n✍️ STORE SIGN-OFF: not yet, job not finished (more trips to come)';
+ }
+ return {notes:lines,sig:g.mode==='signed'?(g.sig||''):''};
+}
+
 async function submitStoreCloseout(storeId,safeId,storeName){
  const p=_selected; if(!p)return;
  const notesEl=document.getElementById('store-notes-'+safeId);
@@ -19588,6 +19812,9 @@ async function submitStoreCloseout(storeId,safeId,storeName){
    if(!proceed)return;
  }
  // ──────────────────────────────────────────────────────────────────────
+ // 🦺✍️ FIELD QA: risk check + store sign-off are required on a NEW trip
+ const _fqa=editing?null:_fqaGate(storeId,safeId);
+ if(!editing&&!_fqa)return;
 
  // Detect HEIC files in the batch so we can show honest progress copy.
  // Conversion is the slow part on phones; users seeing "Uploading..." for
@@ -19683,12 +19910,23 @@ async function submitStoreCloseout(storeId,safeId,storeName){
    catch(e){console.warn('AGC: closeout photo upload failed',i+1,e);}
  }
 
+ // ✍️ FIELD QA: the store manager's signature goes in as the last photo
+ if(_fqa&&_fqa.sig){
+   try{
+     const sigName=storeSlug+' - DAY '+tripNumber+' - SIGNATURE.png';
+     const fd=new FormData();fd.append('image',_fqa.sig.split(',')[1]||'');fd.append('name',sigName);
+     const resp=await fetch('https://api.imgbb.com/1/upload?key='+encodeURIComponent(IMGBB_KEY),{method:'POST',body:fd});
+     const json=await resp.json().catch(()=>null);
+     if(resp.ok&&json&&json.data&&json.data.url)newAttachments.push({url:json.data.url,filename:sigName});
+     else console.warn('AGC: signature upload failed',resp.status);
+   }catch(e){console.warn('AGC: signature upload failed',e);}
+ }
  // Final photo array: kept-existing photos first, then newly uploaded
  const allPhotos=photosKept.concat(newAttachments);
 
  const fields={
    'STATUS':'SUBMITTED',
-   'CLOSEOUT NOTES':notes.trim(),
+   'CLOSEOUT NOTES':(_fqa?(notes.trim()+'\n\n'+_fqa.notes).trim():notes.trim()),
    'CLOSEOUT PHOTOS':allPhotos
  };
  if(!editing){
@@ -19739,13 +19977,14 @@ async function submitStoreCloseout(storeId,safeId,storeName){
      if(!Array.isArray(_storeCloseouts[storeId]))_storeCloseouts[storeId]=[];
      _storeCloseouts[storeId].unshift({
        id:saved.id,
-       notes:notes.trim(),
+       notes:fields['CLOSEOUT NOTES'],
        photos:allPhotos,
        status:'SUBMITTED',
        submittedAt:fields['SUBMITTED AT:']
      });
    }
    delete _closeoutDrafts[storeId];
+   if(_fqa)_fqaClear(storeId);  // next trip day starts with a fresh risk check
    delete _closeoutPickedFiles[storeId];  // submission consumed them
    delete _addAnotherTripExpanded[storeId];  // collapse form back to "Add Another Trip" state
    renderStoreDetail();
@@ -29443,7 +29682,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6102;
+  var AGC_BUILD = 6103;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
