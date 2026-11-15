@@ -5855,7 +5855,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.105</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.106</span>
  </div>
 
  <div class="hero">
@@ -17687,6 +17687,8 @@ async function fetchExistingStoreCloseouts(projectId){
        _photoAgentCount++;
        if(_photoAgentSamples.length<2)_photoAgentSamples.push({trip:rec.id,preview:String(photoAgentRaw).slice(0,80)});
      }
+     // 🦺 a risk check saved at the start of a job (no photos yet, not submitted) is not a trip: hidden here
+     if(fStr(f['STATUS']||'')!=='SUBMITTED'&&!(Array.isArray(f['CLOSEOUT PHOTOS'])&&f['CLOSEOUT PHOTOS'].length)&&/^\s*🦺 RISK CHECK/.test(fStr(f['CLOSEOUT NOTES']||'')))return;
      out[storeId].push({
        id:rec.id,
        notes:fStr(f['CLOSEOUT NOTES']||''),
@@ -19741,8 +19743,37 @@ function _fqaSaveRisk(storeId,safeId){
  if(r.ppe==='NO'){_fqaMsg('You need the PPE this job asks for before you start. Put it on, then answer Yes.');return;}
  r.hazards=(document.getElementById('fqa-hazards')||{}).value||'';
  r.at=new Date().toISOString();
- const s=_fqaGet(storeId);s.risk=r;_fqaSave(storeId,s);
+ const s=_fqaGet(storeId);r.recId=(s.risk&&s.risk.recId)||'';s.risk=r;_fqaSave(storeId,s);
  _fqaClose();renderStoreDetail();
+ _fqaSendRisk(storeId);
+}
+// 6.106 (Chris: AGC gets a Missive notification for the risk check "right away"): the risk check is saved to Airtable the moment the
+// installer taps 'Site is safe': a STORE CLOSEOUT row with STATUS NEW SUBMISSION and only the 🦺 line in its notes (no photos). The
+// 📸 FIELD QA AGENT posts the notification. When the trip is submitted at the end, that same row becomes the trip (PATCH), so there is
+// one row per trip. Rows like this are hidden from the trip list. Never blocks the installer: if saving fails it goes with the trip.
+function _fqaRiskLine(r){
+ const Y=v=>v==='YES'?'YES':v==='NOT NEEDED'?'NOT NEEDED':'NO';
+ const clean=t=>String(t||'').replace(/[–—]/g,',').replace(/\s*\n+\s*/g,' / ').trim();
+ return '🦺 RISK CHECK ('+_fqaTime(r.at)+'): Lift/ladder: '+Y(r.lift)+' · Height: '+Y(r.height)+' · Power: '+Y(r.power)+' · Public area: '+Y(r.public)+' · PPE: '+Y(r.ppe)+' · Hazards: '+(clean(r.hazards)||'none');
+}
+async function _fqaSendRisk(storeId){
+ const p=_selected;if(!p)return;
+ const s=_fqaGet(storeId),r=s.risk;if(!r||!r.at)return;
+ try{
+  const fields={'CLOSEOUT NOTES':_fqaRiskLine(r)};
+  let resp;
+  if(r.recId){
+   resp=await fetch('https://api.airtable.com/v0/'+BASE+'/'+STORE_CLOSEOUTS_TABLE+'/'+r.recId,{method:'PATCH',headers:hdrs(),body:JSON.stringify({fields,typecast:true})});
+  } else {
+   fields['RELATED PROJECT']=[p.id];fields['STORE']=[storeId];fields['STATUS']='NEW SUBMISSION';fields['SUBMITTED AT:']=new Date().toISOString();
+   if(typeof _recordId!=='undefined'&&_recordId)fields['INSTALLER']=[_recordId];
+   resp=await fetch('https://api.airtable.com/v0/'+BASE+'/'+STORE_CLOSEOUTS_TABLE,{method:'POST',headers:hdrs(),body:JSON.stringify({fields,typecast:true})});
+  }
+  if(!resp.ok){console.warn('AGC: risk check save failed',resp.status);return;}
+  const j=await resp.json().catch(()=>null);
+  const id=(j&&(j.id||(j.records&&j.records[0]&&j.records[0].id)))||r.recId;
+  if(id&&id!==r.recId){const s2=_fqaGet(storeId);if(s2.risk){s2.risk.recId=id;_fqaSave(storeId,s2);}}
+ }catch(e){console.warn('AGC: risk check save failed',e);}
 }
 function _fqaSaveSign(storeId,safeId){
  const m=(document.querySelector('#fqa-overlay input[name="fqa-mode"]:checked')||{}).value||'signed';
@@ -19776,9 +19807,8 @@ function _fqaGate(storeId,safeId){
    body:'Please open <strong>✍️ Store sign-off</strong> (above the notes): the manager signs, or say they are not available, or that the job is not finished yet.',okLabel:'Got It'});
   return null;
  }
- const Y=v=>v==='YES'?'YES':v==='NOT NEEDED'?'NOT NEEDED':'NO';
  const clean=t=>String(t||'').replace(/[–—]/g,',').replace(/\s*\n+\s*/g,' / ').trim();
- let lines='🦺 RISK CHECK ('+_fqaTime(r.at)+'): Lift/ladder: '+Y(r.lift)+' · Height: '+Y(r.height)+' · Power: '+Y(r.power)+' · Public area: '+Y(r.public)+' · PPE: '+Y(r.ppe)+' · Hazards: '+(clean(r.hazards)||'none');
+ let lines=_fqaRiskLine(r);
  if(g.mode==='signed'){
   let d=g.date;try{d=new Date(g.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){}
   lines+='\n✍️ STORE SIGN-OFF: '+clean(g.name)+(g.role?', '+clean(g.role):'')+' · '+d+' · Issues: '+(clean(g.issues)||'none')+' · Signed (SIGNATURE photo)';
@@ -19787,7 +19817,7 @@ function _fqaGate(storeId,safeId){
  } else {
   lines+='\n✍️ STORE SIGN-OFF: not yet, job not finished (more trips to come)';
  }
- return {notes:lines,sig:g.mode==='signed'?(g.sig||''):''};
+ return {notes:lines,sig:g.mode==='signed'?(g.sig||''):'',rec:r.recId||''};
 }
 
 async function submitStoreCloseout(storeId,safeId,storeName){
@@ -20006,6 +20036,16 @@ async function submitStoreCloseout(storeId,safeId,storeName){
      r=await fetch('https://api.airtable.com/v0/'+BASE+'/'+STORE_CLOSEOUTS_TABLE+'/'+editingTripId,{
        method:'PATCH',headers:hdrs(),body:JSON.stringify({fields,typecast:true})
      });
+   } else if(_fqa&&_fqa.rec){
+     // the risk check row saved at the start of the job becomes this trip (one row per trip)
+     r=await fetch('https://api.airtable.com/v0/'+BASE+'/'+STORE_CLOSEOUTS_TABLE+'/'+_fqa.rec,{
+       method:'PATCH',headers:hdrs(),body:JSON.stringify({fields,typecast:true})
+     });
+     if(!r.ok){
+       r=await fetch('https://api.airtable.com/v0/'+BASE+'/'+STORE_CLOSEOUTS_TABLE,{
+         method:'POST',headers:hdrs(),body:JSON.stringify({fields,typecast:true})
+       });
+     }
    } else {
      r=await fetch('https://api.airtable.com/v0/'+BASE+'/'+STORE_CLOSEOUTS_TABLE,{
        method:'POST',headers:hdrs(),body:JSON.stringify({fields,typecast:true})
@@ -20036,6 +20076,7 @@ async function submitStoreCloseout(storeId,safeId,storeName){
      _editingTrip=null;  // exit edit mode
    } else {
      if(!Array.isArray(_storeCloseouts[storeId]))_storeCloseouts[storeId]=[];
+     _storeCloseouts[storeId]=_storeCloseouts[storeId].filter(t=>t.id!==saved.id);
      _storeCloseouts[storeId].unshift({
        id:saved.id,
        notes:fields['CLOSEOUT NOTES'],
@@ -29743,7 +29784,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6105;
+  var AGC_BUILD = 6106;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
