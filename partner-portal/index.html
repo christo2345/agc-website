@@ -5855,7 +5855,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.106</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.107</span>
  </div>
 
  <div class="hero">
@@ -19615,6 +19615,18 @@ function _fqaCss(){
  '.fqa-btn{flex:1;padding:13px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s}'+
  '.fqa-btn:hover{transform:translateY(-2px)}.fqa-btn:active{transform:scale(.98)}'+
  '.fqa-btn.ghost{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.5);background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.28);border-bottom:2px solid rgba(0,0,0,.8);box-shadow:0 14px 26px -10px rgba(0,0,0,.75),inset 0 1.5px 0 rgba(255,255,255,.35)}'+
+ /* 6.107 (Chris: "too narrow on desktop... fit all elements in screen without scroll, up to 100% wider"): desktop = up to 1040 px, 2 columns */
+ '@media (min-width:900px){'+
+  '#fqa-overlay{align-items:center;padding:20px}'+
+  '.fqa-card{max-width:1040px}'+
+  '.fqa-head{padding:14px 20px 10px}.fqa-body{padding:0 20px}.fqa-foot{padding:14px 20px 0;justify-content:flex-end}.fqa-foot .fqa-btn{flex:0 0 260px}'+
+  '.fqa-rgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}'+
+  '.fqa-rgrid .fqa-q{margin-top:0;padding:10px 12px 10px 16px}'+
+  '.fqa-haz{display:flex;flex-direction:column}.fqa-haz .fqa-lab{margin-top:2px}.fqa-haz textarea{min-height:88px}'+
+  '.fqa-modes{flex-direction:row}.fqa-mode{flex:1;min-width:0}'+
+  '.fqa-sgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}'+
+  '.fqa-sigwrap canvas{height:206px}'+
+ '}'+
  '.fqa-btn.go{color:#111;border:1px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(0,0,0,.45);background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.55),transparent 60%),linear-gradient(170deg,var(--c),var(--c2));box-shadow:0 14px 26px -10px rgba(0,0,0,.75),inset 0 2px 0 rgba(255,255,255,.5)}';
  document.head.appendChild(st);
 }
@@ -19661,7 +19673,7 @@ function _fqaOpen(kind,storeId,safeId){
  if(kind==='risk'){
   const r=s.risk||{};
   const ppe=String(p.ppe||'').trim();
-  const body=_FQA_RISK.map(it=>{
+  const body='<div class="fqa-rgrid">'+_FQA_RISK.map(it=>{
    const opts=it.opts||['YES','NO'];
    return '<div class="fqa-q" style="--qc:'+it.c+';">'+
     '<div class="fqa-qt"><span class="fqa-qi">'+it.i+'</span>'+it.q+'</div>'+
@@ -19672,8 +19684,8 @@ function _fqaOpen(kind,storeId,safeId){
     '<div id="fqa-hint-'+it.k+'" class="fqa-hint"></div>'+
    '</div>';
   }).join('')+
-  lab('Anything unsafe on site? (optional)')+
-  '<textarea id="fqa-hazards" rows="2" class="fqa-in" placeholder="Wet floor, blocked exit, damaged wall...">'+esc(r.hazards||'')+'</textarea>';
+  '<div class="fqa-haz">'+lab('Anything unsafe on site? (optional)')+
+  '<textarea id="fqa-hazards" rows="2" class="fqa-in" placeholder="Wet floor, blocked exit, damaged wall...">'+esc(r.hazards||'')+'</textarea></div></div>';
   _fqaShell('risk','🦺','Risk check','Before you start at this store. Takes 20 seconds.',body,
    '<button type="button" onclick="_fqaClose()" class="fqa-btn ghost">Cancel</button>'+
    '<button type="button" onclick="_fqaSaveRisk(\''+esc(storeId)+'\',\''+safeId+'\')" class="fqa-btn go">✅ Site is safe, start work</button>');
@@ -19691,17 +19703,18 @@ function _fqaOpen(kind,storeId,safeId){
      '<input type="radio" name="fqa-mode" value="'+m+'" '+(mode===m?'checked':'')+' onchange="_fqaMode(this.value)">'+
      '<span class="fqa-qi">'+i+'</span>'+t+'<span class="fqa-dot"></span></label>').join('')+
   '</div>'+
-  '<div id="fqa-signed" style="display:'+(mode==='signed'?'block':'none')+';">'+
+  '<div id="fqa-signed" style="display:'+(mode==='signed'?'block':'none')+';"><div class="fqa-sgrid"><div class="fqa-scol">'+
    lab('Store manager name')+'<input id="fqa-name" type="text" autocomplete="off" class="fqa-in" value="'+esc(g.name||'')+'" placeholder="First and last name">'+
    '<div style="display:flex;gap:10px;">'+
     '<div style="flex:1.3;min-width:0;">'+lab('Their role')+'<input id="fqa-role" type="text" autocomplete="off" class="fqa-in" value="'+esc(g.role||'Store Manager')+'"></div>'+
     '<div style="flex:1;min-width:0;">'+lab('Date')+'<input id="fqa-date" type="date" class="fqa-in" value="'+esc(g.date||iso)+'"></div>'+
    '</div>'+
    lab('Any issues with the install? (leave empty if none)')+'<textarea id="fqa-issues" rows="2" class="fqa-in" placeholder="None">'+esc(g.issues||'')+'</textarea>'+
+   '</div><div class="fqa-scol">'+
    '<div class="fqa-lab"><i></i>Signature<button type="button" class="fqa-clear" onclick="_fqaSigClear()">Clear</button></div>'+
    '<div class="fqa-sigwrap"><canvas id="fqa-sig"></canvas><div class="fqa-sigline"></div><div class="fqa-sigx">✕</div></div>'+
    '<div class="fqa-note">The manager signs with a finger, confirming the install was completed.</div>'+
-  '</div>'+
+  '</div></div></div>'+
   '<div id="fqa-away" style="display:'+(mode==='away'?'block':'none')+';">'+
    lab('Why, and who did you speak with?')+'<textarea id="fqa-reason" rows="2" class="fqa-in" placeholder="Manager off today, approved by Sam (assistant manager)">'+esc(g.reason||'')+'</textarea>'+
   '</div>';
@@ -29784,7 +29797,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6106;
+  var AGC_BUILD = 6107;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
