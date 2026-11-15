@@ -5855,7 +5855,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.107</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.108</span>
  </div>
 
  <div class="hero">
@@ -19627,6 +19627,33 @@ function _fqaCss(){
   '.fqa-sgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}'+
   '.fqa-sigwrap canvas{height:206px}'+
  '}'+
+ /* 6.108 (Chris: "flex fit for mobile so theres no scrolling"): phones = compact rows that size to the screen; .fqa-tight is added by _fqaFit only if a short screen still overflows */
+ '@media (max-width:899px){'+
+  '#fqa-overlay{align-items:center;padding:6px;overflow:hidden}'+
+  '.fqa-card{display:flex;flex-direction:column;max-height:calc(100dvh - 12px);padding-bottom:10px;border-radius:18px}'+
+  '.fqa-band{height:5px;flex-shrink:0}'+
+  '.fqa-head{padding:10px 12px 8px;gap:10px;flex-shrink:0}.fqa-badge{width:40px;height:40px;border-radius:12px;font-size:21px}'+
+  '.fqa-title{font-size:17px}.fqa-sub{font-size:11px;margin-top:1px;line-height:1.35}.fqa-x{width:32px;height:32px;font-size:16px}'+
+  '.fqa-body{padding:0 12px;flex:0 1 auto;min-height:0;overflow-y:auto}'+
+  '.fqa-rgrid .fqa-q{display:grid;grid-template-columns:1fr auto;column-gap:8px;align-items:center;margin-top:7px;padding:8px 9px 8px 13px;border-radius:12px}'+
+  '.fqa-rgrid .fqa-qt{margin:0;font-size:13px;line-height:1.25;gap:8px}.fqa-rgrid .fqa-qi{width:26px;height:26px;font-size:14px;border-radius:8px}'+
+  '.fqa-rgrid .fqa-opts{gap:6px}.fqa-rgrid .fqa-opt{flex:0 0 auto;min-width:50px;padding:9px 10px;font-size:12.5px}'+
+  '.fqa-rgrid .q-ppe .fqa-qt,.fqa-rgrid .q-ppe .fqa-ppe,.fqa-rgrid .q-ppe .fqa-opts,.fqa-rgrid .fqa-hint{grid-column:1 / -1}'+
+  '.fqa-rgrid .q-ppe .fqa-ppe{margin:3px 0 0 34px}.fqa-rgrid .q-ppe .fqa-opts{margin-top:7px}.fqa-rgrid .q-ppe .fqa-opt{flex:1}'+
+  '.fqa-rgrid .fqa-hint{margin-top:6px;padding:5px 8px;font-size:11px;line-height:1.35}'+
+  '.fqa-haz .fqa-lab{margin:9px 0 5px}.fqa-haz textarea{height:42px;min-height:42px;padding:9px 11px}'+
+  '.fqa-lab{margin:9px 0 5px}.fqa-in{padding:9px 11px}'+
+  '.fqa-modes{gap:6px}.fqa-mode{padding:8px 10px;gap:9px;font-size:13px;border-radius:12px}.fqa-mode .fqa-qi{width:28px;height:28px;font-size:15px}.fqa-mode .fqa-dot{width:18px;height:18px}'+
+  '#fqa-issues,#fqa-reason{height:42px;min-height:42px}'+
+  '.fqa-sigwrap{padding:4px}.fqa-sigwrap canvas{height:clamp(110px,calc(100dvh - 560px),220px)}.fqa-note{margin-top:4px}'+
+  '#fqa-msg{margin:8px 12px 0;padding:8px 10px;flex-shrink:0}'+
+  '.fqa-foot{padding:10px 12px 0;gap:8px;flex-shrink:0}.fqa-btn{padding:12px 8px;font-size:13.5px;white-space:nowrap}.fqa-foot .fqa-btn.go{flex:1.8}'+
+  '.fqa-tight .fqa-sub{display:none}.fqa-tight .fqa-head{padding:8px 12px 6px}.fqa-tight .fqa-badge{width:34px;height:34px;font-size:18px}'+
+  '.fqa-tight .fqa-rgrid .fqa-q{margin-top:5px;padding:6px 8px 6px 12px}.fqa-tight .fqa-rgrid .fqa-opt{padding:7px 9px}.fqa-tight .fqa-rgrid .fqa-hint{margin-top:4px;padding:3px 7px;font-size:10.5px}'+
+  '.fqa-tight .fqa-lab{margin:6px 0 4px}.fqa-tight .fqa-in{padding:7px 10px}.fqa-tight .fqa-mode{padding:6px 9px}.fqa-tight .fqa-note{display:none}'+
+  '.fqa-tight .fqa-haz textarea{height:38px;min-height:38px}.fqa-tight .fqa-rgrid .q-ppe .fqa-opts{margin-top:5px}'+
+  '.fqa-tight .fqa-sigwrap canvas{height:clamp(96px,calc(100dvh - 470px),160px)}.fqa-tight .fqa-foot{padding-top:8px}.fqa-tight .fqa-btn{padding:10px 8px}'+
+ '}'+
  '.fqa-btn.go{color:#111;border:1px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(0,0,0,.45);background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.55),transparent 60%),linear-gradient(170deg,var(--c),var(--c2));box-shadow:0 14px 26px -10px rgba(0,0,0,.75),inset 0 2px 0 rgba(255,255,255,.5)}';
  document.head.appendChild(st);
 }
@@ -19640,9 +19667,17 @@ function _fqaShell(kind,icon,title,sub,body,foot){
   '<div class="fqa-body">'+body+'</div><div id="fqa-msg"></div><div class="fqa-foot">'+foot+'</div></div>';
  o.addEventListener('click',e=>{if(e.target===o)_fqaClose();});
  document.body.appendChild(o);
+ _fqaFit();
+ if(!window._fqaFitOn){window._fqaFitOn=1;window.addEventListener('resize',_fqaFit);}
  return o;
 }
-function _fqaMsg(t){const m=document.getElementById('fqa-msg');if(!m)return;m.style.display=t?'block':'none';m.innerHTML=t||'';}
+function _fqaFit(){
+ const o=document.getElementById('fqa-overlay');if(!o)return;
+ const c=o.querySelector('.fqa-card'),b=o.querySelector('.fqa-body');if(!c||!b)return;
+ c.classList.remove('fqa-tight');
+ if(window.innerWidth<900&&b.scrollHeight>b.clientHeight+1)c.classList.add('fqa-tight');
+}
+function _fqaMsg(t){const m=document.getElementById('fqa-msg');if(!m)return;m.style.display=t?'block':'none';m.innerHTML=t||'';_fqaFit();}
 const _FQA_RISK=[
  {k:'lift',q:'Using a lift, or a ladder over 6 ft?',i:'🪜',c:'#f97316'},
  {k:'height',q:'Working at height (over 6 ft / 2 m)?',i:'🧗',c:'#a855f7'},
@@ -19665,6 +19700,7 @@ function _fqaPick(btn,k){
   hint.classList.toggle('bad',k==='ppe'&&v==='NO');
   hint.style.display=hint.textContent?'block':'none';
  }
+ _fqaFit();
 }
 function _fqaOpen(kind,storeId,safeId){
  const p=_selected;if(!p)return;
@@ -19675,7 +19711,7 @@ function _fqaOpen(kind,storeId,safeId){
   const ppe=String(p.ppe||'').trim();
   const body='<div class="fqa-rgrid">'+_FQA_RISK.map(it=>{
    const opts=it.opts||['YES','NO'];
-   return '<div class="fqa-q" style="--qc:'+it.c+';">'+
+   return '<div class="fqa-q q-'+it.k+'" style="--qc:'+it.c+';">'+
     '<div class="fqa-qt"><span class="fqa-qi">'+it.i+'</span>'+it.q+'</div>'+
     (it.k==='ppe'&&ppe?'<div class="fqa-ppe">This job: '+esc(ppe)+'</div>':'')+
     '<div class="fqa-row fqa-opts" data-k="'+it.k+'" data-val="'+esc(r[it.k]||'')+'">'+
@@ -19729,6 +19765,7 @@ function _fqaMode(m){
  const a=document.getElementById('fqa-signed'),b=document.getElementById('fqa-away');
  if(a)a.style.display=m==='signed'?'block':'none';
  if(b)b.style.display=m==='away'?'block':'none';
+ _fqaFit();
  if(m==='signed')_fqaSigInit(window._fqaSigData||'');
  _fqaMsg('');
 }
@@ -29797,7 +29834,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6107;
+  var AGC_BUILD = 6108;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
