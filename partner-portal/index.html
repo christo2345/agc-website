@@ -5855,7 +5855,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.104</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.105</span>
  </div>
 
  <div class="hero">
@@ -19556,7 +19556,7 @@ function _fqaBar(storeId,safeId){
  '</div>';
 }
 function _fqaClose(){const o=document.getElementById('fqa-overlay');if(o)o.remove();}
-// 6.104 (Chris: "both popups need more color, make brushed grey style"): the two pop-ups use the portal's brushed-grey
+// 6.105: no coloured glows (Chris: "i hate colors glows"). 6.104 (Chris: "both popups need more color, make brushed grey style"): the two pop-ups use the portal's brushed-grey
 // metal (same layers as the AGC 2027 look) with a colour per topic: amber risk check, green sign-off, a coloured stripe and
 // icon per question, dark wells for the fields, brushed buttons that light up in the topic colour when picked.
 function _fqaCss(){
@@ -19569,9 +19569,9 @@ function _fqaCss(){
  '#fqa-overlay{position:fixed;inset:0;z-index:2147483000;background:radial-gradient(ellipse at 50% 0%,rgba(40,40,46,.55),rgba(0,0,0,.82));display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px 10px;font-family:var(--font,system-ui,sans-serif)}'+
  '.fqa-card{--c:#92C64B;--c2:#6fa52f;--cs:rgba(146,198,75,.35);position:relative;width:100%;max-width:520px;color:#f1f1f3;border-radius:22px;padding:0 0 16px;overflow:hidden;background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.24);box-shadow:0 40px 70px -24px rgba(0,0,0,.75),0 18px 30px -10px rgba(0,0,0,.6),inset 0 3px 0 rgba(255,255,255,.30),inset 0 -3px 0 rgba(0,0,0,.55)}'+
  '.fqa-card.risk{--c:#f59e0b;--c2:#d97706;--cs:rgba(245,158,11,.38)}'+
- '.fqa-band{height:7px;background:linear-gradient(90deg,var(--c2),var(--c) 45%,#fff3 50%,var(--c) 55%,var(--c2));box-shadow:0 2px 10px var(--cs)}'+
+ '.fqa-band{height:7px;background:linear-gradient(90deg,var(--c2),var(--c) 45%,#fff3 50%,var(--c) 55%,var(--c2))}'+
  '.fqa-head{display:flex;align-items:center;gap:12px;padding:16px 16px 12px}'+
- '.fqa-badge{width:52px;height:52px;flex-shrink:0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:27px;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.45),transparent 55%),linear-gradient(160deg,var(--c),var(--c2));border:1px solid rgba(255,255,255,.35);box-shadow:0 8px 18px -6px var(--cs),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.25)}'+
+ '.fqa-badge{width:52px;height:52px;flex-shrink:0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:27px;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.45),transparent 55%),linear-gradient(160deg,var(--c),var(--c2));border:1px solid rgba(255,255,255,.35);box-shadow:0 8px 16px -8px rgba(0,0,0,.7),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.25)}'+
  '.fqa-title{font-size:19px;font-weight:900;color:#fff;letter-spacing:-.2px;text-shadow:0 1px 1px rgba(0,0,0,.55)}'+
  '.fqa-sub{font-size:12px;font-weight:600;color:#d6d7db;margin-top:3px;line-height:1.5}'+
  '.fqa-x{width:36px;height:36px;margin-left:auto;align-self:flex-start;flex-shrink:0;border-radius:50%;cursor:pointer;color:#fff;font-size:18px;background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.28);box-shadow:0 10px 18px -10px rgba(0,0,0,.8),inset 0 1.5px 0 rgba(255,255,255,.3);transition:background .2s,border-color .2s}'+
@@ -19585,24 +19585,24 @@ function _fqaCss(){
  '.fqa-opts{display:flex;gap:8px}'+
  '.fqa-opt{flex:1;padding:11px 6px;border-radius:11px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:900;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.5);background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.26);border-bottom:2px solid rgba(0,0,0,.8);box-shadow:0 10px 18px -10px rgba(0,0,0,.8),inset 0 1.5px 0 rgba(255,255,255,.32);transition:transform .2s,background .2s,box-shadow .2s,border-color .2s}'+
  '.fqa-opt:hover{background:'+SH+','+BRH+';border-color:color-mix(in srgb,var(--qc) 70%,transparent);transform:translateY(-1px)}'+
- '.fqa-opt.on{color:#111;text-shadow:none;background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.5),transparent 60%),linear-gradient(170deg,var(--qc),color-mix(in srgb,var(--qc) 70%,#000));border-color:color-mix(in srgb,var(--qc) 60%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,var(--qc) 30%,transparent),0 8px 18px -6px var(--qc),inset 0 1.5px 0 rgba(255,255,255,.5)}'+
+ '.fqa-opt.on{color:#111;text-shadow:none;background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.5),transparent 60%),linear-gradient(170deg,var(--qc),color-mix(in srgb,var(--qc) 70%,#000));border-color:color-mix(in srgb,var(--qc) 60%,#fff);box-shadow:0 10px 18px -10px rgba(0,0,0,.8),inset 0 1.5px 0 rgba(255,255,255,.5)}'+
  '.fqa-opt.on.bad{--qc:#ef4444;color:#fff}'+
  '.fqa-hint{display:none;margin-top:9px;padding:7px 10px;border-radius:9px;font-size:11.5px;font-weight:800;line-height:1.45;color:#fde68a;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4)}'+
  '.fqa-hint.bad{color:#fecaca;background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.5)}'+
  '.fqa-lab{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:900;color:#fff;letter-spacing:.2px;margin:14px 0 6px;text-shadow:0 1px 1px rgba(0,0,0,.5)}'+
- '.fqa-lab i{font-style:normal;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c)}'+
+ '.fqa-lab i{font-style:normal;width:8px;height:8px;border-radius:50%;background:var(--c)}'+
  '.fqa-in{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:11px;font-family:inherit;font-size:14px;color:#f1f1f3;background:#17181b;border:1px solid rgba(0,0,0,.65);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.14);outline:none;color-scheme:dark}'+
  '.fqa-in::placeholder{color:#8e8f95}'+
- '.fqa-in:focus{border-color:var(--c);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 0 0 3px var(--cs)}'+
+ '.fqa-in:focus{border-color:var(--c)}'+
  'textarea.fqa-in{resize:vertical}'+
  '.fqa-modes{display:flex;flex-direction:column;gap:8px;margin-top:2px}'+
  '.fqa-mode{--qc:#92C64B;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:13px;cursor:pointer;font-size:13.5px;font-weight:800;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.5);background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.24);box-shadow:0 10px 18px -12px rgba(0,0,0,.8),inset 0 1.5px 0 rgba(255,255,255,.28);transition:border-color .2s,box-shadow .2s}'+
  '.fqa-mode input{position:absolute;opacity:0;pointer-events:none}'+
  '.fqa-mode .fqa-qi{width:34px;height:34px;font-size:18px}'+
- '.fqa-mode.on{border-color:var(--qc);box-shadow:0 0 0 3px color-mix(in srgb,var(--qc) 28%,transparent),0 10px 20px -10px var(--qc),inset 0 1.5px 0 rgba(255,255,255,.35)}'+
+ '.fqa-mode.on{border-color:var(--qc)}'+
  '.fqa-mode .fqa-dot{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.45);background:#17181b;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}'+
  '.fqa-mode.on .fqa-dot{border-color:var(--qc);background:radial-gradient(circle,var(--qc) 0 45%,#17181b 50%)}'+
- '.fqa-sigwrap{position:relative;border-radius:13px;padding:5px;background:linear-gradient(160deg,var(--c),var(--c2));box-shadow:0 8px 18px -8px var(--cs)}'+
+ '.fqa-sigwrap{position:relative;border-radius:13px;padding:5px;background:linear-gradient(160deg,var(--c),var(--c2))}'+
  '.fqa-sigwrap canvas{width:100%;height:170px;display:block;border-radius:9px;background:#fff;touch-action:none}'+
  '.fqa-sigline{position:absolute;left:22px;right:22px;bottom:36px;border-bottom:1.5px dashed #b8bac0;pointer-events:none}'+
  '.fqa-sigx{position:absolute;left:14px;bottom:38px;font-size:16px;font-weight:900;color:#b8bac0;pointer-events:none}'+
@@ -19613,7 +19613,7 @@ function _fqaCss(){
  '.fqa-btn{flex:1;padding:13px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s}'+
  '.fqa-btn:hover{transform:translateY(-2px)}.fqa-btn:active{transform:scale(.98)}'+
  '.fqa-btn.ghost{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.5);background:'+SH+','+BR+';border:1px solid rgba(255,255,255,.28);border-bottom:2px solid rgba(0,0,0,.8);box-shadow:0 14px 26px -10px rgba(0,0,0,.75),inset 0 1.5px 0 rgba(255,255,255,.35)}'+
- '.fqa-btn.go{color:#111;border:1px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(0,0,0,.45);background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.55),transparent 60%),linear-gradient(170deg,var(--c),var(--c2));box-shadow:0 14px 26px -10px var(--cs),0 0 0 1px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.5)}';
+ '.fqa-btn.go{color:#111;border:1px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(0,0,0,.45);background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.55),transparent 60%),linear-gradient(170deg,var(--c),var(--c2));box-shadow:0 14px 26px -10px rgba(0,0,0,.75),inset 0 2px 0 rgba(255,255,255,.5)}';
  document.head.appendChild(st);
 }
 function _fqaShell(kind,icon,title,sub,body,foot){
@@ -29743,7 +29743,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6104;
+  var AGC_BUILD = 6105;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
