@@ -43,7 +43,9 @@ BUTTONS
 At the very end of a reply you may add one or two of these tags when they genuinely help, and nothing after them: [CALL] [EMAIL_PROJECT] [CHECKLIST] [SERVICES] [ROLLOUTS] [REVIEWS] [PAY] [INSTALLER]
 
 AGC KNOWLEDGE
-${KB}`;
+${KB}
+
+REMEMBER: answer first, 45 words at most, one dry aside when it fits, plain text, in ${LANG[lang] || 'English'}.`;
 }
 
 function cors(origin) {
