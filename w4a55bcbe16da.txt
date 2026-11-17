@@ -106,6 +106,13 @@ export default {
       if (ACTS[k] && actions.length < 2 && !actions.some(a => a[1] === ACTS[k][1])) actions.push([ACTS[k][0][lang], ACTS[k][1]]);
       return '';
     }).replace(/\*\*|__|^#+\s*/gm, '').replace(/[ \t]+\n/g, '\n').trim();
+    // keep replies short: if the model runs long, keep whole sentences up to about 55 words
+    const sents = text.split(/(?<=[.!?…])\s+/);
+    if (text.split(/\s+/).length > 60 && sents.length > 1) {
+      let keep = [], n = 0;
+      for (const x of sents) { const w = x.split(/\s+/).length; if (keep.length && n + w > 55) break; keep.push(x); n += w; }
+      text = keep.join(' ');
+    }
     if (!text) { console.log('empty reply', JSON.stringify(out).slice(0, 400)); return json({ error: 'empty' }, 502, origin); }
     return json({ reply: text, actions }, 200, origin);
   },
