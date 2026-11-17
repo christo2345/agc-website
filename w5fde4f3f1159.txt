@@ -147,6 +147,8 @@ export default {
     }).replace(/\*\*|__|^#+\s*/gm, '').replace(/[ \t]+\n/g, '\n').trim();
     // safety net: contact details live on the buttons below the chat
     text = text.replace(/\s*(?:at|au|al|:)?\s*\+?1?\s*\(?877\)?[\s.-]*395[\s.-]*7435/gi, '').replace(/\s*(?:at|à|a)?\s*[a-z]+@americangraphiccontractors\.com/gi, '').replace(/\s+(?:le|al|at|to|à|a)(?=\s*[,.;:!?])/gi, '').replace(/\s+([,.;:!?])/g, '$1').replace(/\(\s*\)/g, '').trim();
+    // never say the same sentence twice
+    { const seen = new Set(); text = text.split(/(?<=[.!?…])\s+/).filter(x => { const k = x.toLowerCase().replace(/[^a-zà-ÿ0-9]+/g, ''); if (!k || seen.has(k)) return false; seen.add(k); for (const p of seen) if (p !== k && (p.includes(k) || k.includes(p)) && k.length > 30) return false; return true; }).join(' '); }
     // keep replies short: if the model runs long, keep whole sentences up to about 55 words
     const sents = text.split(/(?<=[.!?…])\s+/);
     if (text.split(/\s+/).length > 60 && sents.length > 1) {
