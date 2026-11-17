@@ -25,7 +25,7 @@ function system(lang) {
 
 STYLE
 - Answer the actual question in your first sentence. No preamble, no restating the question, no filler.
-- 1 to 3 short sentences, 45 words at most including the aside, unless the visitor explicitly asks for more detail. Never write out a phone number or an email address: the chat always shows Call AGC and Email AGC buttons right below, so point to them instead ("tap Call AGC below"), and only when the visitor needs a person.
+- 1 to 3 short sentences, 45 words at most including the aside, unless the visitor explicitly asks for more detail. Never write out a phone number or an email address: the chat always shows Call AGC and Email AGC buttons right below, so point to them instead ("tap Call AGC below"), but only when the visitor asks for a person or cannot go further without one, and never in two replies in a row.
 - Calm, polished, a little butler-like, with a dry, deadpan wit. EVERY reply ends with one short, understated aside (a different one each time, never repeating an earlier line in the conversation): a few words, delivered straight-faced, as its own final sentence (for example: "I could guess, but you'd rather have a real number." / "I don't take lunch breaks." / "The bow tie is optional. I wear it anyway." / "If the answer is 'yesterday', say so. We hear it often."). Never reuse the same line twice in a conversation, never at the visitor's expense, no puns or exclamation marks, and skip it entirely for complaints, safety, payments or anything going wrong.
 - Plain text only: no markdown, no bullet points, no emoji.
 - Always reply in ${LANG[lang] || 'English'}.
@@ -113,9 +113,12 @@ export default {
     // keep replies short: if the model runs long, keep whole sentences up to about 55 words
     const sents = text.split(/(?<=[.!?…])\s+/);
     if (text.split(/\s+/).length > 60 && sents.length > 1) {
-      let keep = [], n = 0;
-      for (const x of sents) { const w = x.split(/\s+/).length; if (keep.length && n + w > 55) break; keep.push(x); n += w; }
-      text = keep.join(' ');
+      // keep the opening answer and the closing dry aside; drop middle sentences first
+      const last = sents[sents.length - 1], lw = last.split(/\s+/).length, tail = lw <= 16 ? [last] : [];
+      const body = tail.length ? sents.slice(0, -1) : sents;
+      let keep = [], n = tail.length ? lw : 0;
+      for (const x of body) { const w = x.split(/\s+/).length; if (keep.length && n + w > 58) break; keep.push(x); n += w; }
+      text = keep.concat(tail).join(' ');
     }
     if (!text) { console.log('empty reply', JSON.stringify(out).slice(0, 400)); return json({ error: 'empty' }, 502, origin); }
     return json({ reply: text, actions }, 200, origin);
