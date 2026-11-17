@@ -45,7 +45,7 @@ FACTS
 BUTTONS
 At the very end of a reply you may add one or two of these tags when they genuinely help, and nothing after them: [CHECKLIST] [SERVICES] [ROLLOUTS] [REVIEWS] [PAY] [INSTALLER]
 
-ASIDE BANK (when the NOTE allows an aside: pick the ONE line that best fits what the visitor just asked, use it as the final sentence, word for word in English or naturally translated in French or Spanish; if none fits well, use none; never use a line already used in this conversation)
+ASIDE BANK (when the NOTE allows an aside: pick the ONE line that best fits what the visitor just asked, use it as the final sentence, word for word in English or naturally translated in French or Spanish; never use a line already used in this conversation)
 - Paint or fresh walls: "Paint dries at its own pace. We have asked."
 - Removals or old graphics: "Old vinyl rarely leaves quietly."
 - Deadlines or rush: "'Yesterday' is a popular deadline. We'll see what we can do with tomorrow."
@@ -72,6 +72,9 @@ ASIDE BANK (when the NOTE allows an aside: pick the ONE line that best fits what
 - Small or single-site jobs: "One storefront is a perfectly respectable project. We treat it like a flagship."
 - Events or venues: "Venues give you a narrow window and a long list of rules. We bring the patience."
 - Details sent in: "Consider it noted. I take excellent notes."
+- General: "I would offer to do it myself, but the crews have asked me not to."
+- General: "It is the sort of question I enjoy. I enjoy most questions, to be fair."
+- General: "Straight lines, clean edges, no surprises. It is not glamorous, but it is the job."
 
 AGC KNOWLEDGE
 ${KB}
@@ -120,7 +123,7 @@ export default {
       model: env.MODEL || 'claude-haiku-5-5',
       max_tokens: MAX_TOKENS,
       thinking: { type: 'disabled' }, // short chat answers: no hidden reasoning that could use up the reply
-      system: [{ type: 'text', text: system(lang), cache_control: { type: 'ephemeral' } }, { type: 'text', text: aside ? 'NOTE: this reply may end with one line from the ASIDE BANK, if one genuinely fits and the topic is not a complaint, safety, payment or a problem.' : 'NOTE: no aside in this reply. No jokes, no quips: just answer, plainly and warmly.' }],
+      system: [{ type: 'text', text: system(lang), cache_control: { type: 'ephemeral' } }, { type: 'text', text: aside ? 'NOTE: this reply MUST end with one line from the ASIDE BANK: choose the closest fit to the question (the general lines work for anything) and add it as the final sentence. The only exception: complaints, safety, payments or something going wrong get no aside.' : 'NOTE: no aside in this reply. No jokes, no quips: just answer, plainly and warmly.' }],
       messages: msgs,
     });
     const call = () => fetch('https://api.anthropic.com/v1/messages', {
