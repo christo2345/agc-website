@@ -63,7 +63,12 @@ export default {
         voice_settings: { stability: 0.55, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true, speed: 1.0 },
       }),
     });
-    if (!r.ok) return new Response('Voice service error', { status: 502, headers: cors(origin) });
+    if (!r.ok) {
+      // shows in Cloudflare's logs why the voice service refused (for example: monthly characters used up)
+      let why = ''; try { why = (await r.text()).slice(0, 300); } catch {}
+      console.log('ElevenLabs error', r.status, why);
+      return new Response('Voice service error', { status: 502, headers: cors(origin) });
+    }
 
     // pass the audio on as it is made (no waiting for the whole file), and keep a copy in the cache
     const [toVisitor, toCache] = r.body.tee();
