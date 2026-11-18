@@ -1,0 +1,73 @@
+/**
+ * ALFRED voice: a tiny Cloudflare Worker that turns ALFRED's chat replies into speech with ElevenLabs.
+ * The ElevenLabs key lives here as a secret (never in the website), so nobody can copy it.
+ *
+ * Secrets / variables to set in Cloudflare (Settings → Variables and Secrets):
+ *   ELEVEN_API_KEY   (Secret)  your ElevenLabs API key
+ *   VOICE_EN         (Text)    ElevenLabs voice ID for English
+ *   VOICE_FR         (Text)    voice ID for French  (optional; falls back to VOICE_EN)
+ *   VOICE_ES         (Text)    voice ID for Spanish (optional; falls back to VOICE_EN)
+ */
+const ALLOWED = [
+  'https://www.americangraphiccontractors.com',
+  'https://americangraphiccontractors.com',
+  'https://christo2345.github.io',
+  'https://www-americangraphiccontractors-com.filesusr.com', // Wix's embed box on phones
+];
+const MODEL = 'eleven_flash_v2_5';   // fast, multilingual (EN / FR / ES)
+// 64 kbps: half the size of before, still clear for a voice, so replies arrive quickly on a phone connection
+const FORMAT = 'mp3_44100_64';
+const MAX_CHARS = 900;               // ALFRED's replies are short; this stops anyone using the voice for long text
+
+function cors(origin) {
+  const ok = ALLOWED.includes(origin);
+  return {
+    'Access-Control-Allow-Origin': ok ? origin : ALLOWED[0],
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
+  };
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const origin = request.headers.get('Origin') || '';
+    if (request.method === 'OPTIONS') return new Response(null, { headers: cors(origin) });
+    if (request.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: cors(origin) });
+    if (!ALLOWED.includes(origin)) return new Response('Forbidden', { status: 403, headers: cors(origin) });
+
+    let body;
+    try { body = await request.json(); } catch { return new Response('Bad request', { status: 400, headers: cors(origin) }); }
+    const text = String(body.text || '').replace(/\s+/g, ' ').trim().slice(0, MAX_CHARS);
+    const lang = ['en', 'fr', 'es'].includes(body.lang) ? body.lang : 'en';
+    if (!text) return new Response('Bad request', { status: 400, headers: cors(origin) });
+
+    const voice = (lang === 'fr' && env.VOICE_FR) || (lang === 'es' && env.VOICE_ES) || env.VOICE_EN;
+
+    // the same sentence in the same voice is cached, so repeated answers (like the greeting) cost nothing and play instantly
+    // (keyed by a short fingerprint of the text, so long replies never make an over-long cache address)
+    const dig = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(voice + '|' + lang + '|' + FORMAT + '|' + text));
+    const hex = [...new Uint8Array(dig)].map(b => b.toString(16).padStart(2, '0')).join('');
+    const key = new Request('https://alfred-voice.cache/v2/' + hex);
+    const cache = caches.default;
+    const hit = await cache.match(key);
+    if (hit) { const h = new Headers(hit.headers); Object.entries(cors(origin)).forEach(([k, v]) => h.set(k, v)); return new Response(hit.body, { headers: h }); }
+
+    const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=${FORMAT}`, {
+      method: 'POST',
+      headers: { 'xi-api-key': env.ELEVEN_API_KEY, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+      body: JSON.stringify({
+        text,
+        model_id: MODEL,
+        language_code: lang,
+        voice_settings: { stability: 0.55, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true, speed: 1.0 },
+      }),
+    });
+    if (!r.ok) return new Response('Voice service error', { status: 502, headers: cors(origin) });
+
+    // pass the audio on as it is made (no waiting for the whole file), and keep a copy in the cache
+    const [toVisitor, toCache] = r.body.tee();
+    ctx.waitUntil(cache.put(key, new Response(toCache, { headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'public, max-age=2592000' } })).catch(() => {}));
+    return new Response(toVisitor, { headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'no-store', ...cors(origin) } });
+  },
+};
