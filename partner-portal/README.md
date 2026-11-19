@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.114 = 6114). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.118 = 6118). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -28,12 +28,25 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   with its volume pill and the menu panel look and behave the same in both places. The portal's bar
   carries the AGC mark, the job name and budget, the sound button and the menu button (no cart, no
   person button). Its menu is the portal's own list: Home (the website), My Portal, My Calendar,
-  My Projects, My Profile, Upload Invoice, Service Area, Site Monkey and Sign out.
+  My Projects, My Profile, Upload Invoice, Service Area, Site Monkey and Sign out, then the website's
+  own Call us / Email us row (since 6.118; the email is projects@).
+- Home has two cards, My Projects and My Profile (since 6.117). My Toolbox is no longer a card: its
+  tools (Upload Invoice, Service Area, Site Monkey) open from the menu. The old card is kept in the
+  page, never shown, because the menu opens two of those pop-ups by pressing its buttons.
 - ALFRED is in the portal (since 6.114), also the website's own: the bubble in the corner, his chat,
   the live 3D ALFRED whose head follows the pointer, his chimes and his voice when sound is on. He
-  appears only once sign-in has succeeded. His answers are the website's knowledge base and its live
-  answer service; asked about one specific project he points at My Projects. The 3D code is carried
-  as inert text and only run the first time the chat is opened.
+  appears only once sign-in has succeeded. The 3D code is carried as inert text and only run the
+  first time the chat is opened.
+- Signed in, ALFRED is "unlocked" (since 6.115): he answers the installer's questions about their own
+  projects (schedule, address, budget, scope, notes, PPE, shipping, contacts, files, invoice,
+  close-out, their list, their next job, their total) and their own profile (steps done, rates,
+  insurance, contract, banking with account numbers masked, tax forms, services, service area). He
+  reads them from the same backend, with the same sign-in session, as the three pages, so he sees
+  only what they see. Every figure, date and name in an answer comes from a field; an empty field is
+  reported as empty. Those answers are worked out in the page: the question and the answer are not
+  sent to the live answer service, and with sound on he says one fixed line rather than reading the
+  data to the voice service. Anything that is not about the installer's own work or profile goes to
+  the website's ALFRED exactly as before. His welcome says he is unlocked (since 6.116).
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 
