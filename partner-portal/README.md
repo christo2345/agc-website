@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.109 = 6109). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.111 = 6111). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -27,7 +27,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   `index.html` at the root of this repository, lifted out rule for rule, so the bar, its menu, the sound
   button with its volume pill, and the payments pop-up look and behave the same in both places. The
   portal adds the job name and budget beside the mark, a row of portal tiles (My Portal, My Toolbox,
-  My Projects) and Sign out. When the website's header changes, the portal's is regenerated from the
+  My Projects) and Sign out, and leaves the cart and person buttons off the bar (6.111). When the website's header changes, the portal's is regenerated from the
   website file rather than edited by hand.
 
 ## The Wix side
