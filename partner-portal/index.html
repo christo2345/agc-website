@@ -6701,14 +6701,7 @@ window.AGC_ALFRED_PORTAL = (function(){
   function aScope(p){ var f = p.f, out = [], scope = clean(pick(f, 'PROJECT SCOPE:', 'PROJECT SCOPE'), 600), brief = clean(f['PROJECT BRIEF'], 400);
     out.push(scope ? 'Scope for ' + head(p) + ': ' + scope : head(p) + ' has no written scope yet.');
     if (brief && brief !== scope) out.push('Brief: ' + brief);
-    var prods = []; for (var i = 1; i <= 5; i++) { var x = S(f['PRODUCT / SERVICE ' + i]); if (x) prods.push(x); }
-    var bits = [];
-    if (S(f['SERVICE TYPE'])) bits.push('Service type: ' + S(f['SERVICE TYPE']));
-    if (prods.length) bits.push('Products: ' + prods.join(', '));
-    if (S(f['Total FT2'])) bits.push('Size: ' + S(f['Total FT2']) + ' sq ft');
-    if (S(f['GRAPHIC LOCATION'])) bits.push('Graphic location: ' + S(f['GRAPHIC LOCATION']));
-    if (S(f['QTY WORKERS'])) bits.push('Workers: ' + S(f['QTY WORKERS']));
-    if (bits.length) out.push(bits.join(' · '));
+    /* PORTAL 6.132 (Chris): no Products / Size / Service type line under the scope (product links showed as record ids) */
     return out; }
   function aNotes(p){ var f = p.f, out = [], any = false;
     [['Important notes', pick(f, 'IMPORTANT NOTES FOR INSTALLER')], ['AGC directives', pick(f, 'AGC DIRECTIVES:')], ['AGC requirements', pick(f, 'AGC REQUIREMENTS')], ['Photo requirements', pick(f, 'AGC Photo Requirements')]]
