@@ -111,6 +111,11 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   The scope answer is the scope (and brief) only: no Products / Size / Service type line.
   Dry humour (6.132): the welcome adds one dry line at random; "tell me a joke" (or the A joke chip) gets one of 12
   installer-shop jokes at random, no repeat until all are told; a question he cannot place gets a dry opener.
+- Step 1 leak fix (Wix backend published Nov 20 2026, with 6.132): the backend no longer sends PROJECT STATUS / STATUS,
+  the other installers (names, phones, ids), VENDOR INVOICES, INSTALLER UPDATES, the partner STATUS or INSURANCE AGENT,
+  nor the budget of a job shared by several installers. It sends AGC SHARED JOB and AGC DELAYED (yes / no) instead, and
+  hides the hands-off projects 17329, 17334, 19043 and 19072 everywhere. Home's Total AGC Earnings (and ALFRED's answer)
+  count only jobs budgeted for this installer alone and approved by the client.
 - ALFRED's welcome (since 6.130) is one line: "Hey <first name>, have any questions about this project?" (the
   project open on screen; otherwise "your projects", or "your profile" while on My Profile).
 - Chat answers (since 6.129):
