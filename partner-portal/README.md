@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.123 = 6123). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.124 = 6124). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -62,6 +62,11 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   is showing (Files, Scope, Schedule, Map, Shipping, Closeout). On Home he describes what the cards
   show, or the tool that is open (My Calendar, Upload Invoice, Service Area). The portal reads what
   is on screen from its own pages (`AGC_ALFRED_ONSCREEN` in the router).
+- He answers weather questions (since 6.124): the forecast for a job's address on its install day
+  (and due date), or for "today", "tomorrow" or a weekday, and says when a day is inside the
+  thresholds My Projects warns on (below 5°C, wet, windy). He gets it the way the project's Weather
+  view does: that page's own geocoder, then Open-Meteo's 7-day forecast (Celsius, km/h, mm). With no
+  job named or on screen he uses the next job. A job with no address has no forecast.
 - With sound on he reads his replies aloud (since 6.120), which sends the reply text to the voice
   service, the same one the website uses.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file

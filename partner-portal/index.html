@@ -6429,6 +6429,7 @@ window.AGC_ALFRED_PORTAL = (function(){
 
   /* ── what is being asked? ── */
   var I = {                                              /* the first that matches wins, so the narrow ones come first */
+    weather: /\b(weather|forecast|rain\w*|snow\w*|storm\w*|thunder\w*|wind|winds|windy|temperature|temp|cold|freez\w*|hot|humid\w*|sunny|cloud\w*|precipitation|degrees|umbrella)\b/,
     shipping: /\b(ship\w*|track\w*|deliver\w*|packages?|pkgs?|boxes|freight|courier|arriv\w*|materials?)\b/,
     invoice: /\b(invoic\w*|billing|bill)\b/,
     closeout: /\b(close ?out|closeouts?|photos?|pictures?|sign ?off)\b/,
@@ -6486,11 +6487,11 @@ window.AGC_ALFRED_PORTAL = (function(){
   /* Buttons under an answer ask a follow-up for the same project. The target carries the project and the kind of
      question ("ask:<the words shown as the installer's message>|<project id>|<kind>"), so nothing has to be re-read from the words. */
   var QT = { '': 'Tell me about', when: 'When is', where: 'What is the address for', budget: 'What is the budget for', scope: 'What is the scope for', shipping: 'What is the shipping for',
-    contact: 'Who are the contacts for', status: 'What is the status of', notes: 'What are the notes for', ppe: 'What PPE is needed for', crew: 'How many workers for', files: 'What files are on',
+    contact: 'Who are the contacts for', weather: 'What is the weather for', status: 'What is the status of', notes: 'What are the notes for', ppe: 'What PPE is needed for', crew: 'How many workers for', files: 'What files are on',
     invoice: 'Is there an invoice on', closeout: 'Where is the closeout for' };
   function nameOf(p){ return p.num ? 'AGC #' + p.num : p.title; }
   function askFor(p, kind){ kind = QT[kind] ? kind : ''; return 'ask:' + QT[kind] + ' ' + nameOf(p).replace(/\|/g, ' ') + '?|' + p.id + '|' + kind; }
-  function follow(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Budget', 'budget'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
+  function follow(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
     .filter(function(a){ return a[1] !== skip; }).slice(0, 4).map(function(a){ return [a[0], askFor(p, a[1])]; }); }
   function open(){ return ['Open My Projects', 'sel:#links [data-nav=projects]']; }
   function head(p){ return p.title; }
@@ -6582,7 +6583,56 @@ window.AGC_ALFRED_PORTAL = (function(){
     out.push(aBudget(p)[0]);
     var pm = S(pick(p.f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')); if (pm) out.push('Project manager: ' + pm + '.');
     return out; }
-  var ONE = { when: aWhen, where: aWhere, budget: aBudget, status: aStatus, scope: aScope, notes: aNotes, ppe: aPpe, crew: aCrew, shipping: aShipping, contact: aContact, files: aFiles, invoice: aInvoice, closeout: aCloseout };
+  /* ── weather: the forecast for the job's address (AGC_ALFRED_WEATHER in look/nav.js: Open-Meteo, as in the project's Weather view).
+        By default the install day; "today", "tomorrow" or a weekday asks for that day instead. Only what the forecast says. ── */
+  var WMO = { 0: 'clear sky', 1: 'mainly clear', 2: 'partly cloudy', 3: 'overcast', 45: 'fog', 48: 'freezing fog', 51: 'light drizzle', 53: 'drizzle', 55: 'heavy drizzle', 56: 'freezing drizzle', 57: 'heavy freezing drizzle',
+    61: 'light rain', 63: 'rain', 65: 'heavy rain', 66: 'freezing rain', 67: 'heavy freezing rain', 71: 'light snow', 73: 'snow', 75: 'heavy snow', 77: 'snow grains', 80: 'light rain showers', 81: 'rain showers', 82: 'heavy rain showers',
+    85: 'snow showers', 86: 'heavy snow showers', 95: 'thunderstorm', 96: 'thunderstorm with hail', 99: 'thunderstorm with heavy hail' };
+  var WXBAD = { 51: 1, 53: 1, 55: 1, 56: 1, 57: 1, 61: 1, 63: 1, 65: 1, 66: 1, 67: 1, 71: 1, 73: 1, 75: 1, 77: 1, 80: 1, 81: 1, 82: 1, 85: 1, 86: 1, 95: 1, 96: 1, 99: 1 };   /* the same list My Projects warns on */
+  function ymd(d){ var z = function(n){ return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); }
+  function num(v){ return typeof v === 'number' && isFinite(v) ? v : null; }
+  function wxDay(w, i){ var d = w.daily, bits = [], c = d.weathercode && d.weathercode[i], hi = num(d.temperature_2m_max && d.temperature_2m_max[i]), lo = num(d.temperature_2m_min && d.temperature_2m_min[i]),
+        pr = num(d.precipitation_probability_max && d.precipitation_probability_max[i]), mm = num(d.precipitation_sum && d.precipitation_sum[i]), wd = num(d.wind_speed_10m_max && d.wind_speed_10m_max[i]);
+    if (WMO[c]) bits.push(WMO[c]); if (hi !== null) bits.push('high ' + Math.round(hi) + '°C'); if (lo !== null) bits.push('low ' + Math.round(lo) + '°C');
+    if (pr !== null) bits.push(Math.round(pr) + '% chance of precipitation' + (mm ? ' (' + (Math.round(mm * 10) / 10) + ' mm)' : '')); if (wd !== null) bits.push('wind up to ' + Math.round(wd) + ' km/h');
+    return bits.length ? bits.join(', ') : 'no figures given'; }
+  /* the reasons My Projects flags a day as unfavorable for outdoor work (same thresholds as its Weather warning) */
+  function wxWhy(w, i){ var d = w.daily, out = [], c = d.weathercode && d.weathercode[i], hi = num(d.temperature_2m_max && d.temperature_2m_max[i]), pr = num(d.precipitation_probability_max && d.precipitation_probability_max[i]),
+        mm = num(d.precipitation_sum && d.precipitation_sum[i]), wd = num(d.wind_speed_10m_max && d.wind_speed_10m_max[i]);
+    if (hi !== null && hi < 5) out.push('cold (' + Math.round(hi) + '°C)'); if (mm !== null && mm > 1) out.push('wet (' + (Math.round(mm * 10) / 10) + ' mm)');
+    else if (pr !== null && pr >= 60) out.push('precipitation likely (' + Math.round(pr) + '%)'); if (wd !== null && wd > 35) out.push('windy (' + Math.round(wd) + ' km/h)');
+    if (!out.length && WXBAD[c]) out.push(WMO[c] || 'bad weather'); return out; }
+  function wxAskedDay(q){ var t = midnight(new Date()), names = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'], i;
+    if (/\b(today|tonight|right now|now|currently)\b/.test(q)) return t; if (/\btomorrow\b/.test(q)) { t.setDate(t.getDate() + 1); return t; }
+    for (i = 0; i < 7; i++) if (new RegExp('\\b' + names[i] + '\\b').test(q)) { var d = new Date(t); d.setDate(t.getDate() + ((i - t.getDay() + 7) % 7)); return d; }
+    return null; }
+  function weather(p, q){
+    var addr = p.addresses[0] || '', where = p.stores[0] || clean(addr, 60), more = Math.max(p.stores.length, p.addresses.length) > 1 ? ' (the first of this job’s locations)' : '';
+    if (!addr) return Promise.resolve([p.title + ' has no address on it yet, so there is no location to get a forecast for.']);
+    if (!window.AGC_ALFRED_WEATHER) return Promise.resolve(['I can’t get the forecast right now. The Weather button on the job in My Projects shows it.']);
+    return window.AGC_ALFRED_WEATHER(addr).then(function(w){
+      if (!w) return ['I couldn’t get the forecast for ' + p.title + ' just now. Try again in a moment, or use the Weather button on the job in My Projects.'];
+      var t = w.daily.time, out = [], at = function(d){ return d ? t.indexOf(ymd(d)) : -1; }, last = toDate(t[t.length - 1]), asked = wxAskedDay(q || ''), today = midnight(new Date());
+      var cur = function(){ var c = w.current || {}, b = []; if (WMO[c.weathercode]) b.push(WMO[c.weathercode]); if (num(c.temperature_2m) !== null) b.push(Math.round(c.temperature_2m) + '°C' + (num(c.apparent_temperature) !== null ? ' (feels like ' + Math.round(c.apparent_temperature) + '°C)' : ''));
+            if (num(c.wind_speed_10m) !== null) b.push('wind ' + Math.round(c.wind_speed_10m) + ' km/h'); return b.length ? 'Right now at ' + where + ': ' + b.join(', ') + '.' : ''; };
+      var flag = function(i){ var why = wxWhy(w, i), g = clean(p.f['GRAPHIC LOCATION'], 80); if (why.length) out.push('That is inside the portal’s bad-weather thresholds for outdoor work: ' + why.join(', ') + '.' + (g ? ' Graphic location on this job: ' + g + '.' : '')); };
+      if (asked) { var ai = at(asked);
+        if (ai < 0) return ['The forecast for ' + where + ' only reaches ' + (last ? day(last) : '7 days ahead') + ', so I have nothing for ' + day(asked) + '.'];
+        out.push('Forecast for ' + where + more + ' on ' + day(asked) + (p.date && ymd(p.date) === ymd(asked) ? ' (install day for ' + p.title + ')' : '') + ': ' + wxDay(w, ai) + '.');
+        if (ai === 0 && cur()) out.push(cur()); flag(ai); return out; }
+      var di = at(p.date);
+      if (p.date && di >= 0) {
+        out.push('Forecast for ' + p.title + ' on install day, ' + day(p.date) + (whenWords(p.date) ? ' (' + whenWords(p.date) + ')' : '') + ', at ' + where + more + ': ' + wxDay(w, di) + '.'); flag(di);
+        var ui = p.due && ymd(p.due) !== ymd(p.date) ? at(p.due) : -1; if (ui >= 0) { out.push('Due date, ' + day(p.due) + ': ' + wxDay(w, ui) + '.'); flag(ui); }
+        return out; }
+      if (!p.date) out.push(p.title + ' has no install date yet, so here is the outlook at ' + where + more + '.');
+      else if (midnight(p.date) < today) out.push('The install date for ' + p.title + ' was ' + day(p.date) + ', so there is no forecast for that day. Here is ' + where + more + ' now.');
+      else out.push(p.title + ' is scheduled for ' + day(p.date) + '. The forecast only reaches ' + (last ? shortDay(last) : '7 days ahead') + ', so it is too early for install day. Here is ' + where + more + ' now.');
+      if (cur()) out.push(cur());
+      ['Today', 'Tomorrow'].forEach(function(lbl, i){ if (t[i]) out.push(lbl + ': ' + wxDay(w, i) + '.'); });
+      return out; }, function(){ return ['I couldn’t get the forecast for ' + p.title + ' just now.']; });
+  }
+  var ONE = { weather: function(){ return []; }, when: aWhen, where: aWhere, budget: aBudget, status: aStatus, scope: aScope, notes: aNotes, ppe: aPpe, crew: aCrew, shipping: aShipping, contact: aContact, files: aFiles, invoice: aInvoice, closeout: aCloseout };
 
   /* ── answers about the list of projects ── */
   function line(p){ return p.title + (p.date ? ' · ' + shortDay(p.date) : ' · no date yet') + (p.status ? ' · ' + p.status : ''); }
@@ -6618,7 +6668,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     return out; }
   /* WHAT IS ON SCREEN (other than a project) */
   function SECTION(label){ var l = String(label || '').toLowerCase();
-    return /file|layout|plan/.test(l) ? 'files' : /scope/.test(l) ? 'scope' : /schedul/.test(l) ? 'when' : /map/.test(l) ? 'where' : /ship/.test(l) ? 'shipping' : /close|photo/.test(l) ? 'closeout' : /budget/.test(l) ? 'budget' : /note/.test(l) ? 'notes' : /contact/.test(l) ? 'contact' : ''; }
+    return /weather/.test(l) ? 'weather' : /file|layout|plan/.test(l) ? 'files' : /scope/.test(l) ? 'scope' : /schedul/.test(l) ? 'when' : /map/.test(l) ? 'where' : /ship/.test(l) ? 'shipping' : /close|photo/.test(l) ? 'closeout' : /budget/.test(l) ? 'budget' : /note/.test(l) ? 'notes' : /contact/.test(l) ? 'contact' : ''; }
   /* the step of My Profile that is open: whether the portal ticks it, and what is on file for it */
   function stepAnswer(n, part, inst, steps){
     var f = inst, done = steps && Array.isArray(steps.done) ? steps.done.map(Number) : null, cur = currencyOf(inst), body = [], amt = function(v){ return typeof v === 'number' ? money(v, cur) : S(v); };
@@ -6739,6 +6789,8 @@ window.AGC_ALFRED_PORTAL = (function(){
     else if (LISTS.next.test(q) && (aboutJobs || /\b(schedul\w*|calendar|booked|working|what do i have|what s next|whats next|what is next|anything)\b/.test(q)) && !howto) listAsk = 'next';
     else if ((/\b(list|show)\b.*\b(projects?|jobs?|installs?)\b/.test(q) || (mine && /\b(what are|which|all|see)\b.*\b(projects?|jobs?|installs?)\b/.test(q)) || /^ (my )?(projects|jobs) $/.test(q))) listAsk = 'list';
     if (hintId) { fieldAsk = ONE[hintKind] ? hintKind : null; profAsk = listAsk = null; nums = []; }
+    var wxNext = fieldAsk === 'weather' && listAsk === 'next';                        /* "weather for my next job": the next job's forecast, not the schedule */
+    if (fieldAsk === 'weather' && (listAsk === 'next' || listAsk === 'list')) listAsk = null;
     var aboutAgc = !hintId && !nums.length && !mine && ABOUT_AGC.test(q);         /* a question about AGC itself: not in the portal's data */
     return window.AGC_ALFRED_DATA().then(function(data){
       if (!data) return { paras: ['I can’t see your portal data right now. Please sign in again.'], acts: [] };
@@ -6807,8 +6859,9 @@ window.AGC_ALFRED_PORTAL = (function(){
       var byId = function(id){ return ps.filter(function(p){ return p.id === id; })[0] || null; }, shortQ = q.trim().split(' ').length <= 6 || /\b(it|that|there|same)\b/.test(q);
       if (!one && fieldAsk && !howto) {
         var named = lastId && shortQ && lastId !== (scr && scr.id) && lastCtx === key ? byId(lastId) : null;
-        if (!named && !scr && onStep && !aboutJobs) return step();                                 /* on My Profile, "status" or "when does it expire" is about the step that is open */
+        if (!named && !scr && onStep && !aboutJobs && fieldAsk !== 'weather') return step();                                 /* on My Profile, "status" or "when does it expire" is about the step that is open */
         one = named || scr || (lastId && shortQ ? byId(lastId) : null);
+        if (fieldAsk === 'weather' && (wxNext || !one)) { var tdy = midnight(new Date()), nx = ps.filter(function(p){ return p.date && midnight(p.date) >= tdy; })[0]; if (nx && (wxNext || !one)) one = nx; }   /* no job named or on screen: their next job */
         if (!one && (aboutJobs || mine || shortQ)) {
           if (!ps.length) return { paras: ['You have no projects with AGC yet, so there is nothing for me to look that up on.'], acts: [] };
           if (ps.length === 1) one = ps[0];
@@ -6818,6 +6871,7 @@ window.AGC_ALFRED_PORTAL = (function(){
         if (scr && (aboutJobs || gen)) one = scr; else if (gen && onStep && !aboutJobs && !(lastId && lastCtx === key)) return step(); else if (gen && lastId && shortQ) one = byId(lastId); }
       if (!one) return other(q, ps, data, aboutJobs, false, scr, onStep ? step : null);
       keep(one);
+      if (fieldAsk === 'weather') return weather(one, q).then(function(paras){ return { paras: paras, acts: follow(one, 'weather') }; });
       var fn = fieldAsk ? ONE[fieldAsk] : aSummary;
       return { paras: fn(one), acts: (fieldAsk === 'files' || fieldAsk === 'closeout' ? [open()] : fieldAsk === 'invoice' ? [INVOICE] : []).concat(follow(one, fieldAsk)).slice(0, 4) };
     }, function(){ return { paras: ['I couldn’t reach your portal data just now. Please try again in a moment.'], acts: [] }; });
@@ -6890,17 +6944,17 @@ var root=document.documentElement,BY={};KB.forEach(function(e){BY[e.id]=e});
     'Ask me things like “What’s my next job?”, “What’s the address for my next install?” or “When does my insurance expire?” I read it straight from what AGC has on file for you, and I never guess.',
     'Still want a human? Just say the word. No hard feelings. I know who signs my paychecks.']);
   /* chips that ask him about their own work (each one asks the question in q) */
-  [['p_next','My next job','What is my next job?'],['p_list','My projects','List my projects'],['p_week','This week','What do I have this week?'],['p_profile','My profile','Is my profile complete?'],['p_ins','My insurance','When does my insurance expire?'],['p_earn','My earnings','What are my total earnings?']]
+  [['p_next','My next job','What is my next job?'],['p_list','My projects','List my projects'],['p_week','This week','What do I have this week?'],['p_wx','Weather','What is the weather for my next job?'],['p_profile','My profile','Is my profile complete?'],['p_ins','My insurance','When does my insurance expire?'],['p_earn','My earnings','What are my total earnings?']]
     .forEach(function(x){BY[x[0]]={id:x[0],chip:x[1],q:x[2],a:[],acts:[],next:null,k:[],kn:[],st:[],w:0}});
-  START=['p_next','p_list','p_week','p_profile','p_ins','p_earn'];
+  START=['p_next','p_list','p_week','p_wx','p_profile','p_ins','p_earn'];
   /* while a project is open in My Projects, the first chips are about that project (the one on screen) */
-  [['j_this','This job','Tell me about this job'],['j_when','Schedule','When is this job?'],['j_where','Address','What is the address for this job?'],['j_budget','Budget','What is the budget for this job?'],['j_scope','Scope','What is the scope for this job?'],['j_ship','Shipping','What is the shipping for this job?'],['j_contact','Contacts','Who are the contacts for this job?'],['j_files','Files','What files are on this job?']]
+  [['j_this','This job','Tell me about this job'],['j_when','Schedule','When is this job?'],['j_where','Address','What is the address for this job?'],['j_wx','Weather','What is the weather for this job?'],['j_budget','Budget','What is the budget for this job?'],['j_scope','Scope','What is the scope for this job?'],['j_ship','Shipping','What is the shipping for this job?'],['j_contact','Contacts','Who are the contacts for this job?'],['j_files','Files','What files are on this job?']]
     .forEach(function(x){BY[x[0]]={id:x[0],chip:x[1],q:x[2],a:[],acts:[],next:null,k:[],kn:[],st:[],w:0}});
   /* on My Profile, the first chips are about the step that is open and the profile */
   [['s_this','This step','What is on file for this step?'],['s_bank','My banking','What banking do you have on file for me?'],['s_contract','My contract','Is my contract signed?'],['s_rates','My rates','What are my rates?'],['s_tax','My tax forms','Do you have my tax forms?']]
     .forEach(function(x){BY[x[0]]={id:x[0],chip:x[1],q:x[2],a:[],acts:[],next:null,k:[],kn:[],st:[],w:0}});
 })();
-var JOBCHIPS=['j_this','j_when','j_where','j_budget','j_scope','j_ship','j_contact','j_files'],STEPCHIPS=['s_this','p_profile','p_ins','s_bank','s_contract','s_rates','s_tax'],STEPS=['Basic Info','Contract','Banking','Insurance','US Tax Forms'];
+var JOBCHIPS=['j_this','j_when','j_where','j_wx','j_budget','j_scope','j_ship','j_contact','j_files'],STEPCHIPS=['s_this','p_profile','p_ins','s_bank','s_contract','s_rates','s_tax'],STEPS=['Basic Info','Contract','Banking','Insurance','US Tax Forms'];
 function onScreen(){try{return (window.AGC_ALFRED_ONSCREEN&&AGC_ALFRED_ONSCREEN())||{}}catch(e){return {}}}
 /* the chips offered by default start with what is on screen: the open project, or the profile step */
 function chipIds(){var on=onScreen(),first=on.id||on.title?JOBCHIPS:on.view==='profile'&&on.step?STEPCHIPS:[];return first.concat(START.filter(function(id){return first.indexOf(id)<0}))}
@@ -12347,7 +12401,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.123</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.124</span>
  </div>
 
  <div class="hero">
@@ -36160,7 +36214,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
        view     'home' | 'projects' | 'profile'
        title,id the project open in My Projects (only while My Projects is the page being shown), or named by Home's
                 "Project Details" pop-up (title only)
-       section  the section of that project that is showing: Files, Scope, Schedule, Map, Shipping, Closeout…
+       section  the section of that project that is showing: Files, Scope, Schedule, Map, Shipping, Weather, Closeout…
        step     1-5, the step of My Profile that is showing (Basic Info, Contract, Banking, Insurance, US Tax Forms)
        part     for step 1, which part: "Contact Info", "Skills & Work Type", "Price & Availability", "Notes"
        popup    on Home, a tool that is open: 'invoice' | 'area' | 'calendar'
@@ -36171,7 +36225,8 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     try { doc = frames[current] && frames[current].contentDocument; } catch (e) {}
     try {
       if (current === 'projects' && navJobName) { o.title = navJobName; o.id = navJobId;
-        if (doc) o.section = txt(doc.querySelector('.d-nav-btn.active')).replace(/[^A-Za-z &]/g, '').trim().slice(0, 30); }
+        if (doc) { o.section = txt(doc.querySelector('.d-nav-btn.active')).replace(/[^A-Za-z &]/g, '').trim().slice(0, 30);
+          var wx = doc.getElementById('wx-fullscreen'); if (wx && wx.style.display && wx.style.display !== 'none') o.section = 'Weather'; } }      /* the Weather view covers the section */
       else if (current === 'profile' && doc) { var m = txt(doc.getElementById('part-heading')).match(/Step\s+(\d)\s+of\s+5/i);
         if (m) { o.step = +m[1]; if (o.step === 1) o.part = txt(doc.getElementById('part-sub-green')).replace(/^Part\s+\d\s*\S\s*/i, '').slice(0, 40); } }
       else if (current === 'home' && doc) { var up = function(id){ var el = doc.getElementById(id); return !!(el && el.classList.contains('show')); };
@@ -36179,6 +36234,28 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
         if (up('proj-popup')) o.title = txt(doc.getElementById('proj-popup-name')).slice(0, 200); }      /* Home's "Project Details" pop-up names a project */
     } catch (e) {}
     return o;
+  };
+
+  /* ALFRED's weather: the 7-day forecast for a project's address, exactly as My Projects gets it for its Weather view
+     (that page's own geocoder, then Open-Meteo: free, no key, Celsius, km/h, mm). Kept for 20 minutes per address.
+     Resolves to Open-Meteo's answer ({current, daily}) or null when there is no address or it cannot be had. */
+  var alfWx = {};
+  window.AGC_ALFRED_WEATHER = function(address){
+    address = String(address || '').replace(/\s+/g, ' ').trim();
+    if (!gate.open || !address) return Promise.resolve(null);
+    var k = address.toLowerCase(), c = alfWx[k];
+    if (c && Date.now() - c.at < 20 * 60000) return c.p;
+    var w = null; try { w = frames.projects && frames.projects.contentWindow; } catch (e) {}
+    if (!w || typeof w.geocode !== 'function') return Promise.resolve(null);
+    var p = Promise.resolve().then(function(){ return w.geocode(address); }).then(function(co){
+      if (!co || co.length < 2 || !isFinite(co[0]) || !isFinite(co[1])) return null;
+      return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + (+co[0]) + '&longitude=' + (+co[1]) +
+        '&current=temperature_2m,apparent_temperature,wind_speed_10m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max,precipitation_sum,wind_speed_10m_max' +
+        '&timezone=auto&forecast_days=7&temperature_unit=celsius', { credentials: 'omit' }).then(function(r){ return r.ok ? r.json() : null; });
+    }).then(function(d){ return d && d.daily && Array.isArray(d.daily.time) ? d : null; }, function(){ return null; });
+    alfWx[k] = { at: Date.now(), p: p };
+    p.then(function(v){ if (!v && alfWx[k] && alfWx[k].p === p) delete alfWx[k]; });
+    return p;
   };
 
 
@@ -36411,7 +36488,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6123;
+  var AGC_BUILD = 6124;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
