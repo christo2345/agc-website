@@ -6166,6 +6166,17 @@ function voEl(){/* an element stays tied to the audio engine it was first routed
   if(vo&&vo.__ctx&&vo.__ctx!==ctx){try{vo.pause()}catch(e){}vo=null}
   if(!vo){vo=new Audio();vo.setAttribute('playsinline','');vo.preload='auto';vo.volume=VOV}
   if(ctx&&!vo.__g){try{var src=ctx.createMediaElementSource(vo),g=ctx.createGain();g.gain.value=VOV;src.connect(g);g.connect(uvol||ctx.destination);vo.__g=g;vo.__ctx=ctx;vo.volume=1}catch(e){vo.__g=null}}return vo}
+/* PORTAL 6.128 (Chris, Nov 20 2026): money is said in words ("$1,800.50" = "one thousand eight hundred dollars and fifty cents") */
+function numWords(n){n=Math.floor(Number(n));if(!isFinite(n))return '';if(n===0)return 'zero';
+  var O=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'],
+      T=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'],
+      h=function(x){var s=[];if(x>=100){s.push(O[Math.floor(x/100)]+' hundred');x%=100}if(x>=20){s.push(T[Math.floor(x/10)]+(x%10?'-'+O[x%10]:''));}else if(x>0)s.push(O[x]);return s.join(' ')},
+      G=[[1e9,'billion'],[1e6,'million'],[1e3,'thousand']],out=[];
+  G.forEach(function(g){if(n>=g[0]){out.push(h(Math.floor(n/g[0]))+' '+g[1]);n%=g[0]}});if(n)out.push(h(n));return out.join(' ')}
+function moneyWords(n,unit,k){var s=String(n).replace(/,/g,''),m=s.match(/^(\d+)(?:\.(\d{1,2}))?$/);if(!m)return String(n).replace(/\.00$/,'')+' '+unit;
+  if(k)return String(n).replace(/\.00$/,'')+' '+unit;                                   /* French and Spanish: the voice reads the figure */
+  var d=Number(m[1]),c=m[2]?Number((m[2]+'0').slice(0,2)):0;
+  return numWords(d)+' '+(d===1?unit.replace(/s$/,'').replace(/^(.*)dollar$/,'$1dollar'):unit)+(c?' and '+numWords(c)+(c===1?' cent':' cents'):'')}
 /* PORTAL 6.126 (Chris, Nov 20 2026): a store is said short: its chain and store number only ("SDM 2 2 1"), without the
    mall, street or city after it; a store with no number is said by the part before its location ("Scotiabank") */
 var STORE_CHAINS=[[/^(?:SDM|Shoppers Drug Mart|Shoppers)\b/i,'SDM'],[/^(?:HBC|Hudson'?’?s Bay|The Bay)\b/i,'HBC'],[/^TD\b/i,'TD'],[/^(?:BMO|Bank of Montreal)\b/i,'BMO'],
@@ -6269,9 +6280,9 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
   var nums=[],re=/\bAGC (\d{4,6})\b/g,m;while((m=re.exec(t)))if(nums.indexOf(m[1])<0)nums.push(m[1]);
   if(nums.length===1){var seen=0;t=t.replace(/\bAGC (\d{4,6})\b/g,function(x,n,at){if(!seen++)return x;var start=/(^|[.!?:]\s*)$/.test(t.slice(0,at));return start?JOB[k].charAt(0).toUpperCase()+JOB[k].slice(1):JOB[k]})}
   /* money */
-  t=t.replace(/(?:(?:US|CA|C|MX)?\$\s?)?(\d[\d,]*(?:\.\d+)?)\s*(CAD|USD|MXN)\b/g,function(x,n,c){return amt(n)+' '+CUR[c][k]})
-   .replace(/(?:US|CA|C)?\$\s?(\d[\d,]*(?:\.\d+)?)/g,function(x,n){return amt(n)+' '+DOL[k]})
-   .replace(/(\d)\s?\$(?!\s*(?:CAD|USD|MXN)\b)/g,function(x,d){return d+' '+DOL[k]})
+  t=t.replace(/(?:(?:US|CA|C|MX)?\$\s?)?(\d[\d,]*(?:\.\d+)?)\s*(CAD|USD|MXN)\b/g,function(x,n,c){return moneyWords(n,CUR[c][k],k)})
+   .replace(/(?:US|CA|C)?\$\s?(\d[\d,]*(?:\.\d+)?)/g,function(x,n){return moneyWords(n,DOL[k],k)})
+   .replace(/(\d[\d,]*(?:\.\d{1,2})?)\s?\$(?!\s*(?:CAD|USD|MXN)\b)/g,function(x,n){return moneyWords(n,DOL[k],k)})
    .replace(/\b(CAD|USD|MXN)\b/g,function(x,c){return CUR[c][k]});
   t=sayInFull(t,k);
   /* symbols */
@@ -12520,7 +12531,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.127</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.128</span>
  </div>
 
  <div class="hero">
