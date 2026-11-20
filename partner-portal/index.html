@@ -18769,7 +18769,7 @@ let _installerAddr='', _installerName='', _installerPhotoUrl='', _installerCoord
        try{
          selectProject(proj.id);
          /* PORTAL 6.129: ALFRED can ask for a tab too (the Map) */
-         if(tab&&/^(details|map|photos)$/.test(tab)&&typeof showTab==='function')setTimeout(function(){try{showTab(tab);}catch(e){}},350);
+         if(tab&&/^(details|map|photos)$/.test(tab))setTimeout(function(){try{if(typeof navDispatch==='function'&&document.getElementById('nav-'+tab))navDispatch('nav-'+tab);else if(typeof showTab==='function')showTab(tab);}catch(e){}},350);
          console.log('AGC: focus_project matched and opened:',proj.title,'(id:'+proj.id+')');
        }catch(e){
          console.warn('AGC: focus_project selectProject threw:',e);
