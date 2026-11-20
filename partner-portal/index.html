@@ -6686,7 +6686,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (p.awaiting) return ['No budget yet: the client hasn’t approved this job.'];
     if (p.shared) return ['Shared job: paid hourly plus costs, no single total.'];
     if (p.total == null || !p.total) return ['No budget entered yet.'];
-    return [money(p.total, p.cur) + (p.billing ? ', ' + p.billing.toLowerCase().replace(/\b(?:ft2|ft²|sq\.? ?ft|sqft)\b/g, 'square foot') : '') + '.']; }
+    return ['The budget is ' + money(p.total, p.cur) + (p.billing ? ', ' + p.billing.toLowerCase().replace(/\b(?:ft2|ft²|sq\.? ?ft|sqft)\b/g, 'square foot') : '') + '.']; }
   function aStatus(p){ var out = [head(p) + (p.status ? ' is at: ' + p.status + '.' : ' has no installer status set.')];
     if (p.projectStatus && p.projectStatus !== p.status) out.push('Project status: ' + p.projectStatus + '.');
     if (p.date) out.push('Scheduled for ' + day(p.date) + '.');
@@ -6770,7 +6770,7 @@ window.AGC_ALFRED_PORTAL = (function(){
   function aSummary(p){ var out = [head(p) + (p.status ? ' · ' + p.status : '')];
     if (p.date) out.push('Scheduled: ' + day(p.date) + (whenWords(p.date) ? ' (' + whenWords(p.date) + ')' : '') + (p.time ? ', ' + p.time : '') + '.'); else out.push('No install date set yet.');
     if (p.stores.length || p.addresses.length) { var n = Math.max(p.stores.length, p.addresses.length); out.push(n === 1 ? 'Where: ' + [p.stores[0], p.addresses[0]].filter(Boolean).join(', ') + '.' : 'Where: ' + n + ' locations.'); }
-    out.push('Budget: ' + aBudget(p)[0]);
+    out.push(aBudget(p)[0]);
     var pm = S(pick(p.f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')); if (pm) out.push('Project manager: ' + pm + '.');
     return out; }
   /* ── weather: the forecast for the job's address (AGC_ALFRED_WEATHER in look/nav.js: Open-Meteo, as in the project's Weather view).
