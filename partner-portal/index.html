@@ -6166,6 +6166,43 @@ function voEl(){/* an element stays tied to the audio engine it was first routed
   if(vo&&vo.__ctx&&vo.__ctx!==ctx){try{vo.pause()}catch(e){}vo=null}
   if(!vo){vo=new Audio();vo.setAttribute('playsinline','');vo.preload='auto';vo.volume=VOV}
   if(ctx&&!vo.__g){try{var src=ctx.createMediaElementSource(vo),g=ctx.createGain();g.gain.value=VOV;src.connect(g);g.connect(uvol||ctx.destination);vo.__g=g;vo.__ctx=ctx;vo.volume=1}catch(e){vo.__g=null}}return vo}
+/* PORTAL 6.125 (Chris, Nov 20 2026): abbreviations are said in full (months, weekdays, street types, provinces and states,
+   units, and the short forms the portal uses), and an AGC number is read one digit at a time ("AGC 1 9 0 4 6") */
+function sayInFull(t,k){
+  var MO=[{Jan:'January',Feb:'February',Mar:'March',Apr:'April',Jun:'June',Jul:'July',Aug:'August',Sep:'September',Sept:'September',Oct:'October',Nov:'November',Dec:'December'},
+          {'janv':'janvier','févr':'février','fevr':'février','avr':'avril','juil':'juillet','sept':'septembre','oct':'octobre','nov':'novembre','déc':'décembre','dec':'décembre'},
+          {ene:'enero',feb:'febrero',abr:'abril',jun:'junio',jul:'julio',ago:'agosto',sept:'septiembre',sep:'septiembre',oct:'octubre',nov:'noviembre',dic:'diciembre'}][k];
+  var mo=Object.keys(MO).sort(function(a,b){return b.length-a.length}).join('|');
+  t=t.replace(new RegExp('\\b('+mo+')\\.?(?=\\s+\\d)|(\\d\\s+)('+mo+')\\b','g'+(k?'i':'')),function(x,a,d,b){return a?MO[a]||MO[a.toLowerCase()]||a:d+(MO[b]||MO[b.toLowerCase()]||b)});
+  if(k)return t;
+  var DAY={Mon:'Monday',Tue:'Tuesday',Tues:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Thur:'Thursday',Thurs:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday'};
+  t=t.replace(/\b(Mon|Tues|Tue|Wed|Thurs|Thur|Thu|Fri|Sat|Sun)\b\.?(?=,?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|\d))/g,function(x,d){return DAY[d]});
+  /* addresses: street types after a house number and street name, the compass part after them, Suite, Saint, Fort, Mount */
+  var ST={St:'Street',Ave:'Avenue',Av:'Avenue',Rd:'Road',Blvd:'Boulevard',Dr:'Drive',Hwy:'Highway',Pkwy:'Parkway',Ln:'Lane',Ct:'Court',Cres:'Crescent',Cr:'Crescent',Pl:'Place',Trl:'Trail',Terr:'Terrace',Sq:'Square',Cir:'Circle',Gdns:'Gardens',Pt:'Point',Hts:'Heights',Ctr:'Centre',Mtn:'Mountain'},
+      DIR={NW:'Northwest',NE:'Northeast',SW:'Southwest',SE:'Southeast',N:'North',S:'South',E:'East',W:'West'};
+  t=t.replace(/(\b\d+[A-Za-z]?\s+(?:[A-Z0-9][\w'’.-]*\s+){1,4}?)(St|Ave|Av|Rd|Blvd|Dr|Hwy|Pkwy|Ln|Ct|Cres|Cr|Pl|Trl|Terr|Sq|Cir|Gdns|Pt|Hts|Ctr|Mtn)\b\.?(\s+(?:NW|NE|SW|SE|N|S|E|W)\b\.?)?/g,function(x,a,s,d){return a+ST[s]+(d?' '+DIR[d.trim().replace('.','')]:'')});
+  t=t.replace(/\b(NW|NE|SW|SE)\b/g,function(x){return DIR[x]})
+   .replace(/\b(?:Ste|Suite)\.?\s*#?\s*(?=\d)/g,'Suite ').replace(/\bSt\.?\s+(?=[A-Z][a-z])/g,'Saint ').replace(/\bFt\.?\s+(?=[A-Z][a-z])/g,'Fort ').replace(/\bMt\.?\s+(?=[A-Z][a-z])/g,'Mount ');
+  /* provinces and states after a city */
+  var PR={AB:'Alberta',BC:'British Columbia',MB:'Manitoba',SK:'Saskatchewan',ON:'Ontario',QC:'Quebec',NB:'New Brunswick',NS:'Nova Scotia',PE:'Prince Edward Island',PEI:'Prince Edward Island',NL:'Newfoundland and Labrador',YT:'Yukon',NT:'Northwest Territories',NU:'Nunavut',
+    AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'D C',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
+  t=t.replace(/(,\s*)(PEI|[A-Z]{2})\b(?=\s+[A-Z]\d[A-Z]|\s+\d{5}|\s*[,.;]|\s*$)/g,function(x,c,p){return PR[p]?c+PR[p]:x});
+  /* units and sizes */
+  t=t.replace(/(\d(?:\.\d+)?\s*(?:"|”|″|'|′)?)\s*[x×]\s*(?=\d)/g,'$1 by ').replace(/(\d)\s*(?:km\/h|kmh|kph)\b/gi,'$1 kilometres an hour').replace(/(\d)\s*km\b/gi,'$1 kilometres').replace(/(\d)\s*mm\b/g,'$1 millimetres').replace(/(\d)\s*cm\b/g,'$1 centimetres')
+   .replace(/(\d)\s*°\s*C\b/g,'$1 degrees Celsius').replace(/(\d)\s*°\s*F\b/g,'$1 degrees Fahrenheit').replace(/(\d)\s*°/g,'$1 degrees')
+   .replace(/(\d)\s*(?:sq\.?\s*\/?\s*ft|sqft|ft2|ft²)\b/gi,'$1 square feet').replace(/(\d)\s*ft\b(?=\s+(?:ladder|step|extension|long|wide|high|tall)\b)/gi,'$1 foot').replace(/(\d)\s*ft\b/gi,'$1 feet').replace(/(\d)\s*(?:lbs?)\b/gi,'$1 pounds').replace(/(\d)\s*kg\b/gi,'$1 kilograms')
+   .replace(/(\d)\s*hrs?\b/gi,function(x,d){return d+' hours'}).replace(/(\d)\s*mins?\b/gi,'$1 minutes')
+   .replace(/(\d(?:\.\d+)?)\s*(?:"|”|″)/g,'$1 inches').replace(/(\d)\s*(?:'|′)(?=\s|$|[,.;])/g,'$1 feet')
+   ;
+  /* short forms */
+  t=t.replace(/\be\.g\.,?/gi,'for example').replace(/\bi\.e\.,?/gi,'that is').replace(/\betc\b\.?/gi,'et cetera').replace(/\bvs\b\.?/gi,'versus').replace(/\bw\/\s*/gi,'with ')
+   .replace(/\bapprox\b\.?/gi,'approximately').replace(/\bqty\b\.?/gi,'quantity').replace(/\bpkgs\b\.?/gi,'packages').replace(/\bpkg\b\.?/gi,'package').replace(/\bdept\b\.?/gi,'department')
+   .replace(/\b(?:No|Nbr|Num)\.\s*(?=\d)/g,'number ').replace(/\bN\/A\b/g,'not available').replace(/\bTBD\b/g,'to be determined').replace(/\bTBC\b/g,'to be confirmed').replace(/\bASAP\b/g,'as soon as possible')
+   .replace(/\bETA\b/g,'arrival time').replace(/\bCOI\b/g,'certificate of insurance').replace(/\bPOs\b/g,'purchase orders').replace(/\bPO\b(?!\s*Box)/g,'purchase order').replace(/\bP\.?O\.?\s*Box\b/gi,'P O Box')
+   .replace(/\bInc\b\.?/g,'Incorporated').replace(/\bLtd\b\.?/g,'Limited').replace(/\bCo\b\.(?=\s)/g,'Company').replace(/\bCorp\b\.?/g,'Corporation')
+   .replace(/\bmgr\b\.?/gi,'manager').replace(/\binfo\b/gi,'information');
+  return t.replace(/([.!?]\s+)([a-z])/g,function(x,p,c){return p+c.toUpperCase()})}
+function digitsAGC(t){return t.replace(/\bAGC\s+(\d{3,7})\b/g,function(x,n){return 'AGC '+n.split('').join(' ')})}
 /* PORTAL 6.125 (Chris, Nov 20 2026): what ALFRED SAYS is made easy to listen to. The written reply on screen does not change.
    · a project is said by its number only ("AGC 19046"), never its long name; when the reply is about one job, later mentions are "this job"
    · CAD, USD and MXN are said as Canadian dollars, US dollars and Mexican pesos; ".00" cents are dropped
@@ -6186,7 +6223,9 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
   /* money */
   t=t.replace(/(?:(?:US|CA|C|MX)?\$\s?)?(\d[\d,]*(?:\.\d+)?)\s*(CAD|USD|MXN)\b/g,function(x,n,c){return amt(n)+' '+CUR[c][k]})
    .replace(/(?:US|CA|C)?\$\s?(\d[\d,]*(?:\.\d+)?)/g,function(x,n){return amt(n)+' '+DOL[k]})
+   .replace(/(\d)\s?\$(?!\s*(?:CAD|USD|MXN)\b)/g,function(x,d){return d+' '+DOL[k]})
    .replace(/\b(CAD|USD|MXN)\b/g,function(x,c){return CUR[c][k]});
+  t=sayInFull(t,k);
   /* symbols */
   t=t.replace(/\s&\s/g,AND[k]).replace(/(\d)\s?%/g,'$1'+PCT[k]+' ')
    .replace(/\p{Extended_Pictographic}|[️‍⃣]/gu,' ')
@@ -6194,7 +6233,7 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
    .replace(/([^\d\s])\s*\/\s*|\s*\/\s*(?=[^\d\s])/g,'$1, ').replace(/[()\[\]{}]/g,', ')
    .replace(/[#*_~`^<>="“”«»+$\\]/g,' ');
   /* tidy the pauses left behind */
-  return t.replace(/\s+/g,' ').replace(/\s+([,.!?;:])/g,'$1').replace(/,(\s*,)+/g,',').replace(/,\s*([.!?;:])/g,'$1').replace(/([.!?:])\s*,/g,'$1').replace(/^\s*,\s*/,'').trim()}
+  return digitsAGC(t).replace(/\s+/g,' ').replace(/\s+([,.!?;:])/g,'$1').replace(/,(\s*,)+/g,',').replace(/,\s*([.!?;:])/g,'$1').replace(/([.!?:])\s*,/g,'$1').replace(/^\s*,\s*/,'').trim()}
 window.AGC_say=function(text,lang){var cc=chatEl();if(!on||voOff||!text||(cc&&!cc.classList.contains('open')))return;
   text=forVoice(text,(lang||'en').slice(0,2));if(!text)return;
   var wait=1300-(performance.now()-openedAt);if(wait>0){clearTimeout(window.__sayT);window.__sayT=setTimeout(function(){window.AGC_say(text,lang)},wait);return}

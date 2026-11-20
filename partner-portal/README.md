@@ -74,6 +74,10 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   mention when the reply is about one job. CAD / USD / MXN are said as Canadian dollars / US dollars /
   Mexican pesos, with ".00" dropped. No symbols are read out (emoji, the dots and bars between facts,
   slashes, hashes, stars, arrows, brackets); a link is "the link", an email "name at domain dot com".
+  An AGC number is read one digit at a time ("AGC 1 9 0 4 6"). Abbreviations are said in full: months,
+  weekdays, street types and NW / NE / SW / SE, provinces and states after a city, units (km/h, mm, °C,
+  ft, sq ft, ", hrs), sizes (34" x 72" = 34 inches by 72 inches) and short forms (PO, COI, TBD, ETA,
+  approx, e.g.). A dollar sign is said as dollars ($100 = 100 dollars).
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 
