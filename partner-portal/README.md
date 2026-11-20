@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.121 = 6121). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.122 = 6122). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -51,6 +51,11 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   Since 6.121 that list also covers onboarding ("am I fully onboarded", "what's missing"), single
   facts from the installer's record (website, emails, company, country…), and a question he cannot
   place gets an overview of what is on file instead of a dead end.
+- The project on screen comes first (since 6.122). While a project is open in My Projects, a question
+  that names no project ("what's the address", "budget", "tell me about this job") is about that
+  one, his welcome names it, and the first chips are about it. Naming another job by its AGC number
+  or name always wins. My Projects tells the portal which project is open (`agc_project_title`
+  now carries the record id as well as the name and budget).
 - With sound on he reads his replies aloud (since 6.120), which sends the reply text to the voice
   service, the same one the website uses.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
