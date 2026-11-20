@@ -6348,14 +6348,19 @@ window.AGC_alf3dStart=(function(){var state=0;/* 0 not started · 1 starting · 
    (targets: "ask:<question>|<project id>|<kind>" asks a follow-up, "sel:<css>" presses something on the page,
    "tel:" / "mailto:" are plain links). */
 window.AGC_ALFRED_PORTAL = (function(){
-  var lastId = null, lastScr = '';                     /* the project the conversation is about (for "and the address?"), and what was on screen then */
-  /* THE PROJECT ON SCREEN comes first (since 6.122). While a project is open in My Projects, a question that names no
+  var lastId = null, lastScr = '', lastCtx = '';                     /* the project the conversation is about (for "and the address?"), and what was on screen then */
+  /* WHAT IS ON SCREEN comes first, in every view (the project since 6.122, the rest since 6.123): the section of the
+     project that is showing, the step of My Profile that is open, a tool open on Home. See screenAnswer below.
+     THE PROJECT ON SCREEN: While a project is open in My Projects, a question that names no
      project is about that one: "what's the address", "when is it", "tell me about this job". Naming another job (its
      AGC number or name) always wins, and a short follow-up straight after naming one stays with the named job until
      the installer opens a different project. */
   function onScreen(ps, data){ var id = S(data.openId), t = norm(data.open);
     return (id && ps.filter(function(p){ return p.id === id; })[0]) || (t && ps.filter(function(p){ return norm(p.title) === t; })[0]) || null; }
-  var THIS = /\bthis (job|project|install\w*|one|site|store)\b|\b(current|open|displayed|selected) (job|project|one)\b|\bon (the |my )?screen\b|\b(i m|im|i am) looking at\b|\b(job|project) i have open\b/;
+  var THIS = /\bthis (job|project|install\w*|site|store)\b|\b(current|open|displayed|selected) (job|project)\b|\b(job|project) (i have open|on (the |my )?screen)\b/;      /* the job on screen, said in words */
+  var HERE = /\bthis (one|page|tab|step|section|screen|view|part|form|card|popup|pop up)\b|\b(current|open|displayed|selected) (one|page|step|tab|section)\b|\bon (the |my )?screen\b|\b(i m|im|i am) (looking at|seeing|on)\b|\bwhat am i (looking at|seeing)\b|\bwhat s (this|here)\b|\bwhat is this\b|\bwhere am i\b|\bhere\b|\b(is|are|was) (this|it|that|everything) (all )?(done|complete\w*|finished|ok|okay|approved|good|fine|right|correct|valid|signed|uploaded|on file|in order)\b/;   /* whatever is on screen */
+  var NAMES5 = ['Basic Info', 'Contract', 'Banking', 'Insurance', 'US Tax Forms'];
+  function ctxKey(scr, screen){ return [screen.view || '', scr ? scr.id : '', screen.step || '', screen.popup || ''].join('|'); }
   /* ── reading values ── */
   function S(v){ if (v == null || v === false) return ''; if (Array.isArray(v)) return v.map(S).filter(Boolean).join(', ');
     if (typeof v === 'object') return v.name || v.filename || v.text || ''; return String(v).trim(); }
@@ -6611,6 +6616,35 @@ window.AGC_ALFRED_PORTAL = (function(){
       out.push(NAMES[n - 1] + ': ' + (!done ? (d || 'nothing on file') : ok ? 'done' + (d ? ', ' + d : '') : 'still to do' + (d && NEG.test(d) ? ', ' + d : ', some details are missing (My Profile shows which)')) + '.'); });
     if (steps && steps.insuranceRejected && steps.agentMessage) out.push('AGC’s insurance check flagged your certificate: ' + clean(steps.agentMessage, 400));
     return out; }
+  /* WHAT IS ON SCREEN (other than a project) */
+  function SECTION(label){ var l = String(label || '').toLowerCase();
+    return /file|layout|plan/.test(l) ? 'files' : /scope/.test(l) ? 'scope' : /schedul/.test(l) ? 'when' : /map/.test(l) ? 'where' : /ship/.test(l) ? 'shipping' : /close|photo/.test(l) ? 'closeout' : /budget/.test(l) ? 'budget' : /note/.test(l) ? 'notes' : /contact/.test(l) ? 'contact' : ''; }
+  /* the step of My Profile that is open: whether the portal ticks it, and what is on file for it */
+  function stepAnswer(n, part, inst, steps){
+    var f = inst, done = steps && Array.isArray(steps.done) ? steps.done.map(Number) : null, cur = currencyOf(inst), body = [], amt = function(v){ return typeof v === 'number' ? money(v, cur) : S(v); };
+    var head = 'On your screen: step ' + n + ' of 5, ' + NAMES5[n - 1] + (n === 1 && part ? ' (' + clean(part, 40) + ')' : '') + '. ' + (done ? (done.indexOf(n) >= 0 ? 'This step is done.' : 'This step is still to do.') : '');
+    if (n === 1) {
+      var nm = [S(f['FIRST NAME']), S(f['LAST NAME'])].filter(Boolean).join(' '), sk = list(f['SKILLS']), r = [], av = S(pick(f, 'AVAILABILITY:', 'AVAILABILITY', 'Availability')), un = S(pick(f, 'UNIONIZED', 'Unionized'));
+      if (S(f['HOURLY'])) r.push('hourly ' + amt(f['HOURLY'])); if (S(f['MIN CHARGE'])) r.push('minimum charge ' + amt(f['MIN CHARGE'])); if (S(f['PRORATED'])) r.push('prorated ' + amt(f['PRORATED'])); if (S(f['CANCELLATION FEE'])) r.push('cancellation fee ' + amt(f['CANCELLATION FEE']));
+      var contact = ['Name: ' + (nm || 'not filled in') + (S(f['COMPANY']) ? ' · ' + S(f['COMPANY']) : ''), 'Email: ' + (S(f['EMAIL 1']) || 'not filled in'), 'Phone: ' + (S(f['PHONE']) || 'not filled in'), 'Address: ' + (clean(f['ADDRESS'], 200) || 'not filled in')],
+          skills = ['Services: ' + (sk.length ? sk.join(', ') : 'none selected (they are optional)')].concat(un ? ['Union status: ' + un] : []),
+          rates = ['Rates: ' + (r.length ? r.join(', ') : 'none entered'), 'Availability: ' + (av || 'not set')],
+          notes = ['Notes: ' + (clean(f['PORTAL NOTES'], 400) || 'none (they are optional)')];
+      body = /skill|work type|service/i.test(part) ? skills : /price|rate|availab/i.test(part) ? rates : /note/i.test(part) ? notes : /contact/i.test(part) ? contact : contact.concat(skills, rates);
+    } else body = profile({ 2: 'contract', 3: 'banking', 4: 'insurance', 5: 'tax' }[n], inst, steps).paras;
+    return { paras: [head.trim()].concat(body), acts: [['Am I fully onboarded?', 'ask:Am I fully onboarded?']] }; }
+  /* Home: a tool that is open, or what the Home cards show */
+  function homeAnswer(q, ps, data, screen){
+    var inst = (data.installer && data.installer.fields) || {}, cur = currencyOf(inst), n = nextLine(ps);
+    if (screen.popup === 'area') { var a = profile('area', inst, data.steps); return { paras: ['On your screen: Service Area.'].concat(a.paras), acts: [] }; }
+    if (screen.popup === 'invoice') return { paras: ['On your screen: Upload Invoice.', 'To check whether an invoice is already in for one of your jobs, pick the job:'], acts: pickButtons(ps, 'invoice') };
+    if (screen.popup === 'calendar') { var today = midnight(new Date()), up = ps.filter(function(p){ return p.date && midnight(p.date) >= today; });
+      return up.length ? { paras: aList(up, 'On your screen: My Calendar. Your ' + up.length + ' upcoming job' + (up.length === 1 ? '' : 's') + ':'), acts: pickButtons(up) } : { paras: ['On your screen: My Calendar.', n.text], acts: [] }; }
+    if (screen.view === 'profile') return { paras: ['On your screen: My Profile.'].concat(onboard(inst, data.steps)), acts: [] };
+    var withB = ps.filter(function(p){ return p.total; }), all = withB.reduce(function(s, p){ return s + p.total; }, 0);
+    return { paras: ['On your screen: your Home page.', 'My Projects: ' + ps.length + ' project' + (ps.length === 1 ? '' : 's') + (withB.length ? ', total AGC earnings ' + money(all, cur) : '') + '. ' + n.text,
+        'My Profile: ' + onboard(inst, data.steps)[0].replace(/^(Not yet: |Yes\. )/, '').replace(/^./, function(c){ return c.toUpperCase(); })],
+      acts: (n.p ? [['Next job details', askFor(n.p, '')]] : []).concat([['My projects', 'ask:List my projects'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?'], ['My earnings', 'ask:What are my total earnings?']]) }; }
   /* one fact from their record, asked for by name */
   function facts(q, inst){ var f = inst, out = [], seen = {};
     FIELDS.forEach(function(r){ if (!r[0].test(q) || seen[r[2][0]]) return; r[2].forEach(function(k){ seen[k] = 1; });
@@ -6623,10 +6657,11 @@ window.AGC_ALFRED_PORTAL = (function(){
   function overview(ps, data, scr){
     var inst = (data.installer && data.installer.fields) || {}, n = nextLine(ps), ob = onboard(inst, data.steps)[0], out = ['I’m not sure which part of your data that is about. Here is what I have on file for you:'];
     if (scr) out.push('On your screen: ' + line(scr) + '.');
+    else if (data.screen && data.screen.view === 'profile' && data.screen.step) out.push('On your screen: My Profile, step ' + data.screen.step + ' of 5, ' + NAMES5[data.screen.step - 1] + '.');
     out.push('Profile: ' + ob.replace(/^(Not yet: |Yes\. )/, '').replace(/^./, function(c){ return c.toUpperCase(); }));
     out.push('Projects: ' + ps.length + ' with AGC. ' + n.text);
     out.push(scr ? 'Ask about the job on your screen, another job by its AGC number or name, or any part of your profile.' : 'Ask about a job by its AGC number or name, or about any part of your profile.');
-    return { paras: out, acts: (scr ? [['This job', askFor(scr, '')]] : []).concat([['My projects', 'ask:List my projects'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']], !scr && n.p ? [['Next job details', askFor(n.p, '')]] : []) }; }
+    return { paras: out, acts: (scr ? [['This job', askFor(scr, '')]] : data.screen && data.screen.view === 'profile' && data.screen.step ? [['This step', 'ask:What is on file for this step?']] : []).concat([['My projects', 'ask:List my projects'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']], !scr && n.p ? [['Next job details', askFor(n.p, '')]] : []) }; }
   function profile(kind, inst, steps){ var f = inst, out = [], cur = currencyOf(inst), goto = ['Open My Profile', 'sel:#links [data-nav=profile]'];
     var done = steps && Array.isArray(steps.done) ? steps.done.map(Number) : null, NAMES = ['Basic Info', 'Contract', 'Banking', 'Insurance', 'US Tax Forms'];
     function expiry(){ var d = toDate(f['Liability Insurance Expiry Date']); if (!d) return ''; var n = daysFromToday(d);
@@ -6709,8 +6744,10 @@ window.AGC_ALFRED_PORTAL = (function(){
       if (!data) return { paras: ['I can’t see your portal data right now. Please sign in again.'], acts: [] };
       var inst = (data.installer && data.installer.fields) || {}, cur = currencyOf(inst);
       var ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); });
-      var one = null, many = [], scr = onScreen(ps, data), thisAsk = THIS.test(q);
-      function keep(p){ lastId = p.id; lastScr = scr ? scr.id : ''; }
+      var one = null, many = [], scr = onScreen(ps, data), screen = data.screen || {}, hereAsk = !hintId && HERE.test(q), thisAsk = THIS.test(q) || (hereAsk && !!scr);
+      var onStep = screen.view === 'profile' && screen.step >= 1 && screen.step <= 5 ? screen.step : 0, key = ctxKey(scr, screen);
+      function keep(p){ lastId = p.id; lastScr = scr ? scr.id : ''; lastCtx = key; }
+      function step(){ return stepAnswer(onStep, screen.part, inst, data.steps); }
       if (aboutAgc) return other(q, ps, data, false, true);
       if (hintId) { one = ps.filter(function(p){ return p.id === hintId; })[0] || null; if (!one) return { paras: ['I don’t see that project among yours any more.'], acts: [] }; many = [one]; }
       /* an AGC number: theirs, or not one of theirs */
@@ -6726,11 +6763,14 @@ window.AGC_ALFRED_PORTAL = (function(){
       /* "this job", "the one on my screen" */
       if (!many.length && thisAsk && !hintId) {
         if (!scr) return { paras: ['No project is open on your screen right now. Open one in My Projects, or pick one:'], acts: ps.length ? pickButtons(ps, fieldAsk) : [open()] };
-        one = scr; many = [scr]; }
+        one = scr; many = [scr];
+        if (!fieldAsk && hereAsk && SECTION(screen.section)) fieldAsk = SECTION(screen.section); }        /* "what's on this page": the section that is showing */
+      /* what is on screen that is not a project: the profile step that is open, a tool open on Home, Home itself */
+      if (!many.length && hereAsk && !nums.length && !hintId) { if (onStep) return step(); if (screen.view === 'home' || screen.view === 'profile') return homeAnswer(q, ps, data, screen); }
       /* the profile, unless the question names a job */
       if (profAsk && !many.length && !(aboutJobs && fieldAsk)) return profile(profAsk, inst, data.steps);
       /* one fact from their record ("what's my website") */
-      if (!many.length && !aboutJobs && !listAsk && (mine || q.trim().split(' ').length <= 4) && !(fieldAsk && (lastId || scr) && !mine)) { var fa = facts(q, inst); if (fa) return fa; }
+      if (!many.length && !aboutJobs && !listAsk && (mine || q.trim().split(' ').length <= 4) && !(fieldAsk && (scr || (onStep ? (lastId && lastCtx === key && q.trim().split(' ').length <= 6) : lastId)) && !mine)) { var fa = facts(q, inst); if (fa) return fa; }
       /* their list of projects */
       if (!one && listAsk && !many.length) {
         if (!ps.length) return { paras: ['You have no projects with AGC yet. When one is assigned to you it shows up in My Projects.'], acts: [] };
@@ -6766,7 +6806,8 @@ window.AGC_ALFRED_PORTAL = (function(){
       /* no project named: the one on screen first; a short follow-up straight after naming another job stays with that job */
       var byId = function(id){ return ps.filter(function(p){ return p.id === id; })[0] || null; }, shortQ = q.trim().split(' ').length <= 6 || /\b(it|that|there|same)\b/.test(q);
       if (!one && fieldAsk && !howto) {
-        var named = lastId && shortQ && lastId !== (scr && scr.id) && lastScr === (scr ? scr.id : '') ? byId(lastId) : null;
+        var named = lastId && shortQ && lastId !== (scr && scr.id) && lastCtx === key ? byId(lastId) : null;
+        if (!named && !scr && onStep && !aboutJobs) return step();                                 /* on My Profile, "status" or "when does it expire" is about the step that is open */
         one = named || scr || (lastId && shortQ ? byId(lastId) : null);
         if (!one && (aboutJobs || mine || shortQ)) {
           if (!ps.length) return { paras: ['You have no projects with AGC yet, so there is nothing for me to look that up on.'], acts: [] };
@@ -6774,8 +6815,8 @@ window.AGC_ALFRED_PORTAL = (function(){
           else return { paras: ['Which project do you mean?'], acts: pickButtons(ps, fieldAsk) }; } }
       /* "tell me about the job", "details", with a project on screen: that one */
       if (!one && !howto) { var gen = /\b(tell me (about|more)|details?|summary|overview|info|more)\b/.test(q);
-        if (scr && (aboutJobs || gen)) one = scr; else if (gen && lastId && shortQ) one = byId(lastId); }
-      if (!one) return other(q, ps, data, aboutJobs, false, scr);
+        if (scr && (aboutJobs || gen)) one = scr; else if (gen && onStep && !aboutJobs && !(lastId && lastCtx === key)) return step(); else if (gen && lastId && shortQ) one = byId(lastId); }
+      if (!one) return other(q, ps, data, aboutJobs, false, scr, onStep ? step : null);
       keep(one);
       var fn = fieldAsk ? ONE[fieldAsk] : aSummary;
       return { paras: fn(one), acts: (fieldAsk === 'files' || fieldAsk === 'closeout' ? [open()] : fieldAsk === 'invoice' ? [INVOICE] : []).concat(follow(one, fieldAsk)).slice(0, 4) };
@@ -6800,10 +6841,12 @@ window.AGC_ALFRED_PORTAL = (function(){
       var lp = ps.filter(function(p){ return p.id === lastId; })[0], pm = lp ? S(pick(lp.f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')) : '';
       return { paras: ['Call or email AGC and the team will pick it up.'].concat(pm ? ['Your project manager on ' + lp.title + ' is ' + pm + '.'] : []), acts: [CALL, MAIL] }; }
     return null; }
-  function other(q, ps, data, aboutJobs, aboutAgc, scr){
+  function other(q, ps, data, aboutJobs, aboutAgc, scr, onStepAnswer){
+    var st = !scr && data.screen && data.screen.view === 'profile' ? data.screen.step : 0;
     var name = S(data.name), n;
     if (/^ (hi|hello|hey|yo|good (morning|afternoon|evening)|bonjour|hola)\b/.test(q) && q.trim().split(' ').length <= 4) { n = nextLine(ps);
       return scr ? { paras: ['Hi' + (name ? ', ' + name : '') + '. You have ' + scr.title + ' on your screen.', 'Ask me anything about it, or about your other projects or your profile.'], acts: follow(scr) }
+        : st ? { paras: ['Hi' + (name ? ', ' + name : '') + '. You’re on My Profile, step ' + st + ' of 5, ' + NAMES5[st - 1] + '.', 'Ask me anything about it, or about your projects.'], acts: [['This step', 'ask:What is on file for this step?'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']] }
         : { paras: ['Hi' + (name ? ', ' + name : '') + '. ' + n.text, 'Ask me anything about your projects or your profile.'], acts: n.p ? [['Next job details', askFor(n.p, '')]] : [] }; }
     if (/\b(thanks|thank you|thx|cheers|merci|gracias)\b/.test(q) && q.trim().split(' ').length <= 5) return { paras: ['You’re welcome.'], acts: [] };
     if (/\b(help|what can you (do|tell|see|answer)|what do you (know|do)|who are you|what are you)\b/.test(q))
@@ -6811,6 +6854,9 @@ window.AGC_ALFRED_PORTAL = (function(){
         acts: [['My next job', 'ask:What is my next job?'], ['My projects', 'ask:List my projects'], ['My profile', 'ask:Is my profile complete?']] };
     if (aboutJobs && ps.length) return { paras: aList(ps, 'I’m not sure which job or what about it. Your ' + ps.length + ' project' + (ps.length === 1 ? '' : 's') + ':'), acts: pickButtons(ps) };
     if (aboutAgc) return { paras: ['That is a question about AGC rather than about your work, and it is not in your portal, so I won’t guess.', 'I answer from what AGC has on file for you: your projects and your profile. For anything else, call or email AGC.'], acts: [CALL, MAIL] };
+    /* not sure what was asked: what is on screen first (the job, or the profile step), otherwise an overview of what is on file */
+    var ctx = scr ? { paras: aSummary(scr), acts: follow(scr) } : onStepAnswer ? onStepAnswer() : null;
+    if (ctx && !aboutJobs) return { paras: ['I’m not sure what that is about, so here is what is on your screen.'].concat(ctx.paras.map(function(x){ return x.replace(/^On your screen: s/, 'S'); })), acts: ctx.acts };
     return overview(ps, data, scr);
   }
   /* opened again: what matters now, from their data */
@@ -6818,11 +6864,11 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (!window.AGC_ALFRED_DATA) return Promise.resolve(null);
     return window.AGC_ALFRED_DATA().then(function(data){ if (!data) return null;
       var cur = currencyOf((data.installer && data.installer.fields) || {}), ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); });
-      var scr = onScreen(ps, data), n = nextLine(ps), out = ['Welcome back' + (S(data.name) ? ', ' + S(data.name) : '') + '. ' + (scr ? 'On your screen: ' + line(scr) + '. Ask me anything about it.' : n.text)], NAMES = ['Basic Info', 'Contract', 'Banking', 'Insurance', 'US Tax Forms'];
+      var scr = onScreen(ps, data), st = !scr && data.screen && data.screen.view === 'profile' ? data.screen.step : 0, n = nextLine(ps), out = ['Welcome back' + (S(data.name) ? ', ' + S(data.name) : '') + '. ' + (scr ? 'On your screen: ' + line(scr) + '. Ask me anything about it.' : st ? 'On your screen: My Profile, step ' + st + ' of 5, ' + NAMES5[st - 1] + '. Ask me anything about it.' : n.text)], NAMES = ['Basic Info', 'Contract', 'Banking', 'Insurance', 'US Tax Forms'];
       if (data.steps && Array.isArray(data.steps.done)) { var miss = [1, 2, 3, 4, 5].filter(function(x){ return data.steps.done.map(Number).indexOf(x) < 0; });
         if (miss.length) out.push('Your profile still needs: ' + miss.map(function(x){ return NAMES[x - 1]; }).join(', ') + '.'); }
-      if (scr && n.p && n.p !== scr) out.push(n.text);
-      return { paras: out, acts: scr ? follow(scr) : n.p ? [['Next job details', askFor(n.p, '')]] : [] }; }, function(){ return null; });
+      if ((scr || st) && n.p && n.p !== scr) out.push(n.text);
+      return { paras: out, acts: scr ? follow(scr) : st ? [['This step', 'ask:What is on file for this step?'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']] : n.p ? [['Next job details', askFor(n.p, '')]] : [] }; }, function(){ return null; });
   }
   return { answer: answer, back: back };
 })();
@@ -6850,12 +6896,17 @@ var root=document.documentElement,BY={};KB.forEach(function(e){BY[e.id]=e});
   /* while a project is open in My Projects, the first chips are about that project (the one on screen) */
   [['j_this','This job','Tell me about this job'],['j_when','Schedule','When is this job?'],['j_where','Address','What is the address for this job?'],['j_budget','Budget','What is the budget for this job?'],['j_scope','Scope','What is the scope for this job?'],['j_ship','Shipping','What is the shipping for this job?'],['j_contact','Contacts','Who are the contacts for this job?'],['j_files','Files','What files are on this job?']]
     .forEach(function(x){BY[x[0]]={id:x[0],chip:x[1],q:x[2],a:[],acts:[],next:null,k:[],kn:[],st:[],w:0}});
+  /* on My Profile, the first chips are about the step that is open and the profile */
+  [['s_this','This step','What is on file for this step?'],['s_bank','My banking','What banking do you have on file for me?'],['s_contract','My contract','Is my contract signed?'],['s_rates','My rates','What are my rates?'],['s_tax','My tax forms','Do you have my tax forms?']]
+    .forEach(function(x){BY[x[0]]={id:x[0],chip:x[1],q:x[2],a:[],acts:[],next:null,k:[],kn:[],st:[],w:0}});
 })();
-var JOBCHIPS=['j_this','j_when','j_where','j_budget','j_scope','j_ship','j_contact','j_files'];
-function onScreen(){try{return window.AGC_ALFRED_ONSCREEN?AGC_ALFRED_ONSCREEN():null}catch(e){return null}}
-function chipIds(){return onScreen()?JOBCHIPS.concat(START):START}
+var JOBCHIPS=['j_this','j_when','j_where','j_budget','j_scope','j_ship','j_contact','j_files'],STEPCHIPS=['s_this','p_profile','p_ins','s_bank','s_contract','s_rates','s_tax'],STEPS=['Basic Info','Contract','Banking','Insurance','US Tax Forms'];
+function onScreen(){try{return (window.AGC_ALFRED_ONSCREEN&&AGC_ALFRED_ONSCREEN())||{}}catch(e){return {}}}
+/* the chips offered by default start with what is on screen: the open project, or the profile step */
+function chipIds(){var on=onScreen(),first=on.id||on.title?JOBCHIPS:on.view==='profile'&&on.step?STEPCHIPS:[];return first.concat(START.filter(function(id){return first.indexOf(id)<0}))}
 function helloP(){var n='',a=BY.hello.a.slice(),on=onScreen();try{n=window.AGC_ALFRED_NAME?String(AGC_ALFRED_NAME()||''):''}catch(e){}if(n)a[0]='Welcome in, '+n+'. You’ve just unlocked the full ALFRED.';
-  if(on&&on.title)a.splice(1,0,'You have '+on.title+' open on your screen, so that is the job I’ll answer about unless you name another.');return a}
+  if(on.title)a.splice(1,0,'You have '+on.title+' open on your screen, so that is the job I’ll answer about unless you name another.');
+  else if(on.view==='profile'&&on.step>=1&&on.step<=5)a.splice(1,0,'You’re on My Profile, step '+on.step+' of 5, '+STEPS[on.step-1]+', so that is what I’ll answer about unless you ask for something else.');return a}
 function L(){return root.getAttribute('data-lang')||'en'}
 function tr(s){try{return window.AGC_T?window.AGC_T(s):s}catch(e){return s}}
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘`]/g,"'").replace(/[^a-z0-9'\s]/g,' ').replace(/\s+/g,' ').trim()}
@@ -12296,7 +12347,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.122</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.123</span>
  </div>
 
  <div class="hero">
@@ -36100,13 +36151,35 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
       if (s && Array.isArray(s.incompleteSteps)) steps = { done: [1, 2, 3, 4, 5].filter(function(n){ return s.incompleteSteps.indexOf(n) < 0; }),
         insuranceRejected: !!s.insuranceRejected, agentMessage: String(s.agentMessage || '').slice(0, 600) };
       var on = window.AGC_ALFRED_ONSCREEN();
-      return { installer: d.installer, projects: d.projects, steps: steps, open: on ? on.title : '', openId: on ? on.id : '', name: gate.name || '' };
+      return { installer: d.installer, projects: d.projects, steps: steps, open: on ? on.title : '', openId: on ? on.id : '', screen: on || {}, name: gate.name || '' };
     });
   };
   window.AGC_ALFRED_NAME = function(){ return gate.open ? (gate.name || '') : ''; };
-  /* The project on screen: the one open in My Projects, while My Projects is the page being shown. ALFRED answers about
-     it by default, and offers its chips first. null when no project is on screen. */
-  window.AGC_ALFRED_ONSCREEN = function(){ return gate.open && current === 'projects' && navJobName ? { title: navJobName, id: navJobId } : null; };
+  /* WHAT IS ON SCREEN, in every view (ALFRED answers about it by default, names it in his welcome, and offers its chips
+     first). null when signed out; otherwise:
+       view     'home' | 'projects' | 'profile'
+       title,id the project open in My Projects (only while My Projects is the page being shown), or named by Home's
+                "Project Details" pop-up (title only)
+       section  the section of that project that is showing: Files, Scope, Schedule, Map, Shipping, Closeout…
+       step     1-5, the step of My Profile that is showing (Basic Info, Contract, Banking, Insurance, US Tax Forms)
+       part     for step 1, which part: "Contact Info", "Skills & Work Type", "Price & Availability", "Notes"
+       popup    on Home, a tool that is open: 'invoice' | 'area' | 'calendar'
+     Read from the pages themselves (they are the portal's own pages), so it is always what the installer sees. */
+  window.AGC_ALFRED_ONSCREEN = function(){
+    if (!gate.open) return null;
+    var o = { view: current, title: '', id: '', section: '', step: 0, part: '', popup: '' }, doc = null, txt = function(el){ return el ? String(el.textContent || '').replace(/\s+/g, ' ').trim() : ''; };
+    try { doc = frames[current] && frames[current].contentDocument; } catch (e) {}
+    try {
+      if (current === 'projects' && navJobName) { o.title = navJobName; o.id = navJobId;
+        if (doc) o.section = txt(doc.querySelector('.d-nav-btn.active')).replace(/[^A-Za-z &]/g, '').trim().slice(0, 30); }
+      else if (current === 'profile' && doc) { var m = txt(doc.getElementById('part-heading')).match(/Step\s+(\d)\s+of\s+5/i);
+        if (m) { o.step = +m[1]; if (o.step === 1) o.part = txt(doc.getElementById('part-sub-green')).replace(/^Part\s+\d\s*\S\s*/i, '').slice(0, 40); } }
+      else if (current === 'home' && doc) { var up = function(id){ var el = doc.getElementById(id); return !!(el && el.classList.contains('show')); };
+        o.popup = up('inv-popup') ? 'invoice' : up('svc-popup') ? 'area' : doc.querySelector('.cal-fs.show') ? 'calendar' : '';
+        if (up('proj-popup')) o.title = txt(doc.getElementById('proj-popup-name')).slice(0, 200); }      /* Home's "Project Details" pop-up names a project */
+    } catch (e) {}
+    return o;
+  };
 
 
   function show(name){
@@ -36338,7 +36411,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6122;
+  var AGC_BUILD = 6123;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
