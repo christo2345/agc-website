@@ -6979,7 +6979,29 @@ window.AGC_ALFRED_PORTAL = (function(){
     re = /(?:#|\b(?:agc|project|job|po)\s*(?:#|no\.?|number)?\s*:?\s*#?)(\d{3,7})\b/gi;
     while ((m = re.exec(t))) if (out.indexOf(m[1]) < 0) out.push(m[1]);
     return out; }
+  /* PORTAL 6.132 (Chris): dry humour, and a random joke when asked. Installer-shop jokes, clean, never about a client
+     or a person. In one visit he never repeats a joke until he has told them all. */
+  var JOKES = [
+    'Why did the window graphic go to therapy? Too many bubbles it never dealt with.',
+    'A squeegee walks into a bar. Smooth exit. No bubbles.',
+    'What do you call a ladder that tells jokes? A step comedian.',
+    'Measure twice, cut once. Then the client changes the size. Measure a third time.',
+    'Why do window graphics win every argument? They can see both sides.',
+    'My favourite install is the one where the photos arrive before the invoice. I have heard it exists.',
+    'The forecast says sunny. The loading dock says a 45 minute walk through the food court.',
+    'Why did the installer bring a ladder to the meeting? He heard the project had high expectations.',
+    'First surface or second surface? The glass doesn’t care. The client does.',
+    'Heat gun, squeegee, patience. Only two of those come in a toolbox.',
+    'Hoarding walls are like secrets. Everyone walks by wondering what’s behind them.',
+    'I tried to write a joke about mall security, but it wasn’t allowed in before 9.'
+  ], joked = [];
+  function joke(){ if (joked.length >= JOKES.length) joked = []; var i; do { i = Math.floor(Math.random() * JOKES.length); } while (joked.indexOf(i) >= 0); joked.push(i); return JOKES[i]; }
+  var QUIPS = ['I read your projects so you don’t have to.', 'Ask away. I’m cheaper than a site visit.', 'I don’t climb ladders, but I know who’s booked on them.',
+    'Unlike the loading dock, I’m open.', 'I’m here all day. That’s not a threat.', 'No pound signs, I promise.'];
+  window.AGC_ALFRED_QUIP = function(){ return QUIPS[Math.floor(Math.random() * QUIPS.length)]; };
+  var JOKE_Q = /\b(joke|jokes|funny|make me laugh|humou?r|blague|blagues|drole|fais moi rire|chiste|chistes|broma|gracioso|hazme reir)\b/;
   function answer(text, hintId, hintKind){
+    if (JOKE_Q.test(' ' + norm(text) + ' ')) return Promise.resolve({ paras: [joke()], acts: [['Another one', 'ask:Tell me another joke']] });
     if (!window.AGC_ALFRED_DATA) return Promise.resolve({ paras: ['I can’t see your portal data right now.'], acts: [] });
     var q = ' ' + norm(text).replace(/#/g, ' ') + ' ', k;
     var mine = MINE.test(q), aboutJobs = /\b(projects?|jobs?|installs?|installation|gig|gigs)\b/.test(q), howto = HOWTO.test(q), nums = numbers(text);
@@ -7114,7 +7136,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (aboutAgc) return { paras: ['That is a question about AGC rather than about your work, and it is not in your portal, so I won’t guess.', 'I answer from what AGC has on file for you: your projects and your profile. For anything else, call or email AGC.'], acts: [CALL, MAIL] };
     /* not sure what was asked: what is on screen first (the job, or the profile step), otherwise an overview of what is on file */
     var ctx = scr ? { paras: aSummary(scr), acts: follow(scr) } : onStepAnswer ? onStepAnswer() : null;
-    if (ctx && !aboutJobs) return { paras: ['I’m not sure what that is about, so here is what is on your screen.'].concat(ctx.paras.map(function(x){ return x.replace(/^On your screen: s/, 'S'); })), acts: ctx.acts };
+    if (ctx && !aboutJobs) return { paras: ['That one went over my head, and I don’t even own a ladder. Here is what is on your screen.'].concat(ctx.paras.map(function(x){ return x.replace(/^On your screen: s/, 'S'); })), acts: ctx.acts };
     return overview(ps, data, scr);
   }
   /* opened again: what matters now, from their data */
@@ -7124,7 +7146,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       var cur = currencyOf((data.installer && data.installer.fields) || {}), ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); }); keepTitles(ps);
       /* PORTAL 6.132 (Chris: too long): opened again = one line, like the first welcome */
       var scr = onScreen(ps, data), st = !scr && data.screen && data.screen.view === 'profile' ? data.screen.step : 0, n = nextLine(ps),
-          out = ['Hey ' + (S(data.name) || 'there') + ', have any questions about ' + (scr ? 'this project' : st ? 'your profile' : 'your projects') + '?'];
+          out = ['Hey ' + (S(data.name) || 'there') + ', have any questions about ' + (scr ? 'this project' : st ? 'your profile' : 'your projects') + '? ' + window.AGC_ALFRED_QUIP()];
       return { paras: out, acts: scr ? follow(scr) : st ? [['This step', 'ask:What is on file for this step?'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']] : n.p ? [['Next job details', askFor(n.p, '')]] : [] }; }, function(){ return null; });
   }
   return { answer: answer, back: back };
@@ -7147,9 +7169,9 @@ var root=document.documentElement,BY={};KB.forEach(function(e){BY[e.id]=e});
     'Ask me things like “What’s my next job?”, “What’s the address for my next install?” or “When does my insurance expire?” I read it straight from what AGC has on file for you, and I never guess.',
     'Still want a human? Just say the word. No hard feelings. I know who signs my paychecks.']);
   /* chips that ask him about their own work (each one asks the question in q) */
-  [['p_next','My next job','What is my next job?'],['p_list','My projects','List my projects'],['p_week','This week','What do I have this week?'],['p_wx','Weather','What is the weather for my next job?'],['p_profile','My profile','Is my profile complete?'],['p_ins','My insurance','When does my insurance expire?'],['p_earn','My earnings','What are my total earnings?']]
+  [['p_next','My next job','What is my next job?'],['p_list','My projects','List my projects'],['p_week','This week','What do I have this week?'],['p_wx','Weather','What is the weather for my next job?'],['p_profile','My profile','Is my profile complete?'],['p_ins','My insurance','When does my insurance expire?'],['p_earn','My earnings','What are my total earnings?'],['p_joke','A joke','Tell me a joke']]
     .forEach(function(x){BY[x[0]]={id:x[0],chip:x[1],q:x[2],a:[],acts:[],next:null,k:[],kn:[],st:[],w:0}});
-  START=['p_next','p_list','p_week','p_wx','p_profile','p_ins','p_earn'];
+  START=['p_next','p_list','p_week','p_wx','p_profile','p_ins','p_earn','p_joke'];
   /* while a project is open in My Projects, the first chips are about that project (the one on screen) */
   [['j_this','This job','Tell me about this job'],['j_when','Schedule','When is this job?'],['j_where','Address','What is the address for this job?'],['j_wx','Weather','What is the weather for this job?'],['j_budget','Budget','What is the budget for this job?'],['j_scope','Scope','What is the scope for this job?'],['j_ship','Shipping','What is the shipping for this job?'],['j_contact','Contacts','Who are the contacts for this job?'],['j_files','Files','What files are on this job?']]
     .forEach(function(x){BY[x[0]]={id:x[0],chip:x[1],q:x[2],a:[],acts:[],next:null,k:[],kn:[],st:[],w:0}});
@@ -7165,7 +7187,7 @@ function chipIds(){var on=onScreen(),first=on.id||on.title?JOBCHIPS:on.view==='p
    (about the project open on screen; otherwise about their projects, or their profile while they are on it) */
 function helloP(){var n='',on=onScreen();try{n=window.AGC_ALFRED_NAME?String(AGC_ALFRED_NAME()||''):''}catch(e){}
   var what=on.title?'this project':(on.view==='profile'?'your profile':'your projects');
-  return ['Hey '+(n||'there')+', have any questions about '+what+'?']}
+  return ['Hey '+(n||'there')+', have any questions about '+what+'? '+(window.AGC_ALFRED_QUIP?AGC_ALFRED_QUIP():'')]}
 function L(){return root.getAttribute('data-lang')||'en'}
 function tr(s){try{return window.AGC_T?window.AGC_T(s):s}catch(e){return s}}
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘`]/g,"'").replace(/[^a-z0-9'\s]/g,' ').replace(/\s+/g,' ').trim()}
