@@ -6559,7 +6559,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     p.stores = names;
     p.addresses = list(pick(f, 'ADDRESS: (from STORE NAME(s) & ADDRESS(es))', 'ADDRESS (from STORE NAME(s) & ADDRESS(es))', 'STORE ADDRESS'));
     var ids = {}; [].concat(f['INSTALLER(S)'] || [], f['ADDITIONAL INSTALLER(S)'] || []).forEach(function(x){ var k = typeof x === 'string' ? x : (x && x.id) || ''; if (k) ids[k] = 1; });
-    p.shared = Object.keys(ids).length > 1;                     /* several installers on the job: no single total (as in My Projects) */
+    p.shared = f['AGC SHARED JOB'] === true || Object.keys(ids).length > 1;   /* STEP 1: the backend says yes / no instead of naming the others */                     /* several installers on the job: no single total (as in My Projects) */
     p.awaiting = !!AWAITING[p.statusRaw];                         /* not approved by the client yet: no budget shown (as in My Projects) */
     p.total = typeof f['TOTAL BUDGET'] === 'number' ? f['TOTAL BUDGET'] : parseFloat(String(S(f['TOTAL BUDGET'])).replace(/[^0-9.\-]/g, ''));
     if (!isFinite(p.total)) p.total = null;
@@ -14558,6 +14558,13 @@ async function fetchProjectsBudgetTotal(){
       const raw=rec.fields['INSTALLER STATUS']||rec.fields['Installer Status']||'';
       const status=(typeof raw==='object'&&raw.name?raw.name:String(raw||'')).toLowerCase();
       return !/cancel|void/.test(status);
+    }).filter(rec=>{
+      // STEP 1 (Chris, Nov 20 2026): earnings = jobs budgeted for this installer alone and approved by the client,
+      // the same jobs My Projects shows a total for: no shared jobs, no jobs still waiting on the client.
+      if(rec.fields['AGC SHARED JOB']===true)return false;
+      const raw=rec.fields['INSTALLER STATUS']||'';
+      const st=(typeof raw==='object'&&raw.name?raw.name:String(raw||'')).trim();
+      return !/^(🕘 TBD 🕘|⭐ UPCOMING PROJECT ⭐|📄 NEED QUOTE 📄|📄 QUOTES RECEIVED 📄)$/.test(st);
     });
 
     let total=0;
@@ -19676,7 +19683,7 @@ function parseProject(rec){
  // in each of their portals, so the project total is not this installer's figure. Those projects
  // show "HOURLY PLUS COSTS" in place of the total, and no billing-type line.
  const _instIds=new Set([].concat(f['INSTALLER(S)']||[],f['ADDITIONAL INSTALLER(S)']||[]).map(x=>typeof x==='string'?x:((x&&x.id)||'')).filter(Boolean));
- const shared=_instIds.size>1;
+ const shared=f['AGC SHARED JOB']===true||_instIds.size>1;   // STEP 1: yes / no from the backend
  return {
  id:rec.id,
  title:fStr(f['PROJECT NAME:']||f['PROJECT NAME']||f['ID']||f['Name']||'Unnamed Project'),
@@ -19686,6 +19693,7 @@ function parseProject(rec){
  // delays. Airtable field name varies — try the common spellings. Single-
  // selects come back as {name:...} objects, plain text as strings.
  projStatusRaw:(()=>{
+   if(f['AGC DELAYED']===true)return 'PROJECT DELAYED';   // STEP 1: the backend sends delayed yes / no, never the project status
    const ps=f['PROJECT STATUS']||f['Project Status']||f['STATUS']||f['PROJECT STAGE']||'';
    return typeof ps==='object'&&ps&&ps.name?ps.name:fStr(ps);
  })(),

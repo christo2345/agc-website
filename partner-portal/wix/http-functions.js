@@ -112,7 +112,18 @@ async function signedIn(request) {
   try { return await sessionInstaller(m[1]); } catch (e) { console.warn('session check failed', e && e.message); return null; }
 }
 async function ownsProject(inst, projectId) {
-  return isRecordId(projectId) && installerProjectIds(inst).indexOf(projectId) >= 0;
+  return isRecordId(projectId) && !HANDS_OFF_IDS.has(projectId) && installerProjectIds(inst).indexOf(projectId) >= 0;
+}
+// STEP 1 (Chris, Nov 20 2026): the four hands-off projects never reach any portal (by record id, and by AGC # as a second check).
+const HANDS_OFF_IDS = new Set(['recLQXSTZshZiSTkf', 'recQMIMQCdHZTQuQw', 'rec2Rb4zGnPjsqk0D', 'recqnnavmbIOU8K8Y']);   // 17329, 17334, 19043, 19072
+const HANDS_OFF_AGC = new Set(['17329', '17334', '19043', '19072']);
+function isHandsOff(rec) {
+  if (!rec) return true;
+  if (HANDS_OFF_IDS.has(rec.id)) return true;
+  const f = rec.fields || {};
+  const n = String(Array.isArray(f['AGC #']) ? f['AGC #'][0] : (f['AGC #'] == null ? '' : f['AGC #'])).replace(/\D/g, '')
+    || ((String(f['PROJECT NAME:'] || '').match(/^\s*(\d{5})\b/) || [])[1] || '');
+  return HANDS_OFF_AGC.has(n);
 }
 
 // ─── WHAT AN INSTALLER MAY WRITE ─────────────────────────────────────────────
@@ -142,28 +153,30 @@ const CLOSEOUT_WRITABLE = new Set(['RELATED PROJECT', 'STORE', 'INSTALLER', 'CLO
 // ─── WHAT AN INSTALLER MAY SEE (allow-lists: anything not named here stays out) ───
 // Installer record: what My Profile, Home and the sign-in screen show.
 const INSTALLER_READABLE = new Set([...INSTALLER_WRITABLE,
-  'SHIPPING TO:', 'STATUS', 'STATE / PROVINCE', 'Country', 'SERVICE AREAS',
-  'Added AGC to Insurance Policy', 'INSURANCE AGENT', 'CONTRACT 2.0', 'VENDOR PORTAL URL',
+  'SHIPPING TO:', 'STATE / PROVINCE', 'Country', 'SERVICE AREAS',
+  'Added AGC to Insurance Policy', 'CONTRACT 2.0', 'VENDOR PORTAL URL',   // STEP 1: no partner STATUS, no INSURANCE AGENT AI text
   'AGC PROJECTS 3', 'AGC PROJECTS 4'
 ]);
 // Project: what the installer needs for the job. Never prices, profit, margins, client details,
 // internal notes, PO numbers or AGC's ratings.
 const PROJECT_READABLE = new Set([
-  'PROJECT NAME:', 'AGC #', 'ID', 'PROJECT STATUS', 'STATUS', 'INSTALLER STATUS', '.',
+  'PROJECT NAME:', 'AGC #', 'ID', 'INSTALLER STATUS', '.',
   'DATE SCHEDULED:', 'DATE & TIME SCHEDULED', 'TIME:', 'TIME', 'DUE DATE:', 'DUE DATE.', 'DATE SHIPPED',
   'STORE NAME(s) & ADDRESS(es)', 'STORE NAME(s)', 'STORE ADDRESS', 'ADDRESS: (from STORE NAME(s) & ADDRESS(es))',
   'LOGO (from STORE NAME(s) & ADDRESS(es))', 'STORE CLOSEOUTS',
   'PROJECT SCOPE:', 'IMPORTANT NOTES FOR INSTALLER', 'AGC DIRECTIVES:', 'AGC Photo Requirements', 'AGC REQUIREMENTS',
   'INVOICING REQUIREMENTS PDF', 'PROJECT BRIEF', 'GRAPHIC LOCATION', 'REACH', 'PPE REQUIRED', 'QTY WORKERS', 'Total FT2',
   'SERVICE TYPE', 'PRODUCT / SERVICE 1', 'PRODUCT / SERVICE 2', 'PRODUCT / SERVICE 3', 'PRODUCT / SERVICE 4', 'PRODUCT / SERVICE 5',
-  'DATA SHEET', 'LAYOUTS & PLANS', 'PROJECT FILES - INSTALLER', 'INSTALLER PHOTOS', 'INSTALLER CLOSEOUT NOTES', 'INSTALLER UPDATES',
+  'DATA SHEET', 'LAYOUTS & PLANS', 'PROJECT FILES - INSTALLER', 'INSTALLER PHOTOS', 'INSTALLER CLOSEOUT NOTES',
   'TOTAL BUDGET', 'BUDGET 1', 'BUDGET 2', 'BUDGET 3', 'BUDGET 4', 'BUDGET 5',
   'DETAILS 1', 'DETAILS 2', 'DETAILS 3', 'DETAILS 4', 'DETAILS 5',
   'BUDGET TYPE', 'BUDGET TYPE 2', 'BUDGET TYPE 3', 'BUDGET TYPE 4', 'BUDGET TYPE 5', 'INSTALLER CURRENCY',
   'SHIPPING TO:', 'SHIPPING CO.', 'TRACKING NUMBER', 'Number of PKGS', 'SHIPPING ADDRESS:', 'ONSITE CONTACT',
-  'SHIPMENT CONDITION', 'SHIPMENT NOTES', 'SHIPMENT PHOTOS', ' INVOICE FOR REVIEW', 'VENDOR INVOICES',
-  'AGC PROJECT MANAGER', 'AGC PROJECT MANAGER:', 'PM Name', 'PM Direct',
-  'INSTALLER(S)', 'ADDITIONAL INSTALLER(S)', 'INSTALLER', 'NAME (from INSTALLER(S))', 'PHONE'
+  'SHIPMENT CONDITION', 'SHIPMENT NOTES', 'SHIPMENT PHOTOS', ' INVOICE FOR REVIEW',
+  'AGC PROJECT MANAGER', 'AGC PROJECT MANAGER:', 'PM Name', 'PM Direct'
+  // STEP 1: PROJECT STATUS and STATUS (QuickBooks / client invoice states), the other installers (INSTALLER(S),
+  // ADDITIONAL INSTALLER(S), INSTALLER, NAME, PHONE), VENDOR INVOICES and INSTALLER UPDATES are no longer sent.
+  // cleanProject adds INSTALLER(S) = this installer only, AGC SHARED JOB (yes / no) and AGC DELAYED (yes / no).
 ]);
 
 const MASKED_INSTALLER_FIELDS = ['ACCOUNT NUMBER:', 'TRANSIT NUMBER:', 'INSTITUTION NUMBER:', 'ACH ROUTING NUMBER:'];
@@ -175,13 +188,26 @@ function cleanInstaller(fields) {
   for (const k of Object.keys(fields || {})) {
     if (!INSTALLER_READABLE.has(k)) continue;
     out[k] = MASKED_INSTALLER_FIELDS.indexOf(k) >= 0 ? mask(fields[k]) : fields[k];
+    if ((k === 'AGC PROJECTS 3' || k === 'AGC PROJECTS 4') && Array.isArray(out[k])) out[k] = out[k].filter((x) => !HANDS_OFF_IDS.has(typeof x === 'string' ? x : (x && x.id)));   // STEP 1
   }
   return out;
 }
-function cleanProject(rec) {
+// The budget of a job shared by several installers is the whole job's, not this installer's: it is never sent.
+const SHARED_JOB_HIDDEN = ['TOTAL BUDGET', 'BUDGET 1', 'BUDGET 2', 'BUDGET 3', 'BUDGET 4', 'BUDGET 5',
+  'DETAILS 1', 'DETAILS 2', 'DETAILS 3', 'DETAILS 4', 'DETAILS 5', 'BUDGET TYPE', 'BUDGET TYPE 2', 'BUDGET TYPE 3', 'BUDGET TYPE 4', 'BUDGET TYPE 5'];
+const linkIds = (a) => (Array.isArray(a) ? a : []).map((x) => (typeof x === 'string' ? x : (x && x.id) || '')).filter(Boolean);
+const selName = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? String(v.name || '') : String(v == null ? '' : v));
+function cleanProject(rec, inst) {
   const f = (rec && rec.fields) || {};
   const out = {};
   for (const k of Object.keys(f)) if (PROJECT_READABLE.has(k)) out[k] = f[k];
+  const me = inst && inst.id;
+  const all = new Set([...linkIds(f['INSTALLER(S)']), ...linkIds(f['ADDITIONAL INSTALLER(S)'])]);
+  const shared = all.size > 1;
+  out['INSTALLER(S)'] = linkIds(f['INSTALLER(S)']).filter((x) => x === me);     // this installer only, never the others
+  out['AGC SHARED JOB'] = shared;
+  out['AGC DELAYED'] = /delay/i.test(selName(f['PROJECT STATUS']));            // only "delayed or not", never the status itself
+  if (shared) for (const k of SHARED_JOB_HIDDEN) delete out[k];
   return { id: rec.id, createdTime: rec.createdTime, fields: out };
 }
 
@@ -307,8 +333,8 @@ export async function get_getProjects(request) {
     if (!inst) return authJson(request);
     const ids = installerProjectIds(inst);
     if (!ids.length) return okJson({ records: [] }, request);
-    const recs = await fetchByIds(PROJECTS_TABLE, ids);
-    return okJson({ records: recs.map(cleanProject), linkedFieldName: 'AGC PROJECTS' }, request);
+    const recs = await fetchByIds(PROJECTS_TABLE, ids.filter((id) => !HANDS_OFF_IDS.has(id)));
+    return okJson({ records: recs.filter((r) => !isHandsOff(r)).map((r) => cleanProject(r, inst)), linkedFieldName: 'AGC PROJECTS' }, request);
   } catch (e) { console.error('getProjects', e); return serverErrorJson(null, request); }
 }
 
@@ -323,7 +349,8 @@ export async function get_getProject(request) {
     const r = await airtableGET('/' + BASE + '/' + PROJECTS_TABLE + '/' + id);
     if (r.status === 404) return notFoundJson('project not found', request);
     if (!r.ok) return serverErrorJson('airtable read failed', request);
-    return okJson(cleanProject(r.body), request);
+    if (isHandsOff(r.body)) return forbiddenJson(request);
+    return okJson(cleanProject(r.body, inst), request);
   } catch (e) { console.error('getProject', e); return serverErrorJson(null, request); }
 }
 
@@ -339,7 +366,7 @@ export async function post_patchProject(request) {
     if (Object.keys(fields).length === 0) return badRequestJson('no writable fields', request);
     const r = await airtablePATCH('/' + BASE + '/' + PROJECTS_TABLE + '/' + body.id, fields);
     if (!r.ok) { console.warn('patchProject airtable error', r.status); return serverErrorJson('airtable write failed', request); }
-    return okJson(cleanProject(r.body), request);
+    return okJson(cleanProject(r.body, inst), request);
   } catch (e) { console.error('patchProject', e); return serverErrorJson(null, request); }
 }
 
@@ -443,7 +470,7 @@ export async function post_findProjectByAgcNum(request) {
     if (!/^[0-9]{3,7}$/.test(agcNum)) return badRequestJson('invalid agc number', request);
     const mine = installerProjectIds(inst);
     if (!mine.length) return notFoundJson('no project with that AGC #', request);
-    const recs = await fetchByIds(PROJECTS_TABLE, mine);
+    const recs = (await fetchByIds(PROJECTS_TABLE, mine.filter((id) => !HANDS_OFF_IDS.has(id)))).filter((r) => !isHandsOff(r));
     const hit = recs.find((r) => String((r.fields || {})['AGC #'] || '') === agcNum);
     if (!hit) return notFoundJson('no project with that AGC #', request);
     return okJson({ projectId: hit.id }, request);
