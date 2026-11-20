@@ -103,6 +103,10 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   is ..." names it by its short store name), a reply naming several says each by its short store name ("Winners 2 1 6 0",
   "Lindt Halifax"). The budget answer is one line: the amount and how it is paid. Reopening the chat says
   "Hey <name>, have any questions about this project?" like the first welcome.
+  The chat's forecast uses the forecast the job's Weather view already has when that job is open in My Projects;
+  otherwise the map's address lookup, or the job's city (Open-Meteo place search, no key) if that fails. The Weather
+  view uses that city lookup too before falling back to the browser's location. The words of the question's topic
+  (traffic, weather, budget...) no longer pick a job by its name ("traffic bad?" had picked "Install Traffic Signs").
 - ALFRED's welcome (since 6.130) is one line: "Hey <first name>, have any questions about this project?" (the
   project open on screen; otherwise "your projects", or "your profile" while on My Profile).
 - Chat answers (since 6.129):

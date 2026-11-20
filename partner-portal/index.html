@@ -6574,7 +6574,9 @@ window.AGC_ALFRED_PORTAL = (function(){
   function norm(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9#]+/g, ' ').trim(); }
   function words(s){ return norm(s).split(' ').filter(function(w){ return w.length > 2 && !STOP[w]; }); }
   function findProjects(text, ps){
-    var qs = words(text).filter(function(w){ return w.length > 3 && !/^\d+$/.test(w); }); if (!qs.length) return [];
+    /* PORTAL 6.132: the words of the question's topic never pick a job ("traffic bad?" had matched a job called
+       "Install Traffic Signs"): a word that is itself a weather, traffic, budget... word is left out of the match */
+    var qs = words(text).filter(function(w){ return w.length > 3 && !/^\d+$/.test(w) && !Object.keys(I).some(function(k){ return I[k].test(' ' + w + ' '); }); }); if (!qs.length) return [];
     var scored = ps.map(function(p){ var hay = ' ' + norm(p.title + ' ' + p.stores.join(' ') + ' ' + p.addresses.join(' ')) + ' ', n = 0;
       qs.forEach(function(w){ if (hay.indexOf(' ' + w) >= 0) n++; }); return { p: p, n: n }; }).filter(function(x){ return x.n > 0; });
     if (!scored.length) return [];
@@ -6768,7 +6770,7 @@ window.AGC_ALFRED_PORTAL = (function(){
   function aSummary(p){ var out = [head(p) + (p.status ? ' · ' + p.status : '')];
     if (p.date) out.push('Scheduled: ' + day(p.date) + (whenWords(p.date) ? ' (' + whenWords(p.date) + ')' : '') + (p.time ? ', ' + p.time : '') + '.'); else out.push('No install date set yet.');
     if (p.stores.length || p.addresses.length) { var n = Math.max(p.stores.length, p.addresses.length); out.push(n === 1 ? 'Where: ' + [p.stores[0], p.addresses[0]].filter(Boolean).join(', ') + '.' : 'Where: ' + n + ' locations.'); }
-    out.push(aBudget(p)[0]);
+    out.push('Budget: ' + aBudget(p)[0]);
     var pm = S(pick(p.f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')); if (pm) out.push('Project manager: ' + pm + '.');
     return out; }
   /* ── weather: the forecast for the job's address (AGC_ALFRED_WEATHER in look/nav.js: Open-Meteo, as in the project's Weather view).
@@ -6798,7 +6800,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     var addr = p.addresses[0] || '', where = p.stores[0] || clean(addr, 60), more = Math.max(p.stores.length, p.addresses.length) > 1 ? ' (the first of this job’s locations)' : '';
     if (!addr) return Promise.resolve([p.title + ' has no address on it yet, so there is no location to get a forecast for.']);
     if (!window.AGC_ALFRED_WEATHER) return Promise.resolve(['I can’t get the forecast right now. The Weather button on the job in My Projects shows it.']);
-    return window.AGC_ALFRED_WEATHER(addr).then(function(w){
+    return window.AGC_ALFRED_WEATHER(addr, p.title).then(function(w){
       if (!w) return ['I couldn’t get the forecast for ' + p.title + ' just now. Try again in a moment, or use the Weather button on the job in My Projects.'];
       var t = w.daily.time, out = [], at = function(d){ return d ? t.indexOf(ymd(d)) : -1; }, last = toDate(t[t.length - 1]), asked = wxAskedDay(q || ''), today = midnight(new Date());
       var cur = function(){ var c = w.current || {}, b = []; if (WMO[c.weathercode]) b.push(WMO[c.weathercode]); if (num(c.temperature_2m) !== null) b.push(Math.round(c.temperature_2m) + '°C' + (num(c.apparent_temperature) !== null ? ' (feels like ' + Math.round(c.apparent_temperature) + '°C)' : ''));
@@ -20092,6 +20094,31 @@ function calSelectProject(id){
 const WX_ICONS={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'❄️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
 const WX_DESC={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',80:'Showers',81:'Heavy showers',82:'Violent showers',85:'Snow showers',86:'Heavy snow showers',95:'Thunderstorm',96:'Thunderstorm',99:'Heavy thunderstorm'};
 let _wxLoaded=false,_wxData=null,_wxSelDay=null;
+// PORTAL 6.132: ALFRED reads the forecast this Weather view already has (only when it is for the job, not the fallback location)
+window.AGC_WXVIEW=function(){
+ if(!_wxData||!_selected||_wxData._fallback)return null;
+ return {data:_wxData,title:_selected.title||'',address:_selected.address||''};
+};
+// PORTAL 6.132: find a place by its city when Mapbox cannot (no key, or no match): Open-Meteo's place search, no key needed
+const _CA_PROV={AB:'Alberta',BC:'British Columbia',MB:'Manitoba',NB:'New Brunswick',NL:'Newfoundland and Labrador',NS:'Nova Scotia',NT:'Northwest Territories',NU:'Nunavut',ON:'Ontario',PE:'Prince Edward Island',QC:'Quebec',SK:'Saskatchewan',YT:'Yukon'};
+window.AGC_CITYGEO=async function(addr){
+ try{
+   const parts=String(addr||'').split(/\s*[,\n]\s*/).map(x=>x.trim()).filter(Boolean);
+   let city='',prov='',cc='';
+   for(let i=1;i<parts.length;i++){
+     const m=/^([A-Z]{2})\b(?:\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d|\d{5}(?:-\d{4})?))?$/.exec(parts[i]);
+     if(m){prov=m[1];city=parts[i-1];cc=_CA_PROV[prov]?'CA':'US';break;}
+   }
+   if(!city){const c=parts.filter(x=>!/\d/.test(x)&&!/^(canada|usa|united states)$/i.test(x));city=c[c.length-1]||'';}
+   if(!city)return null;
+   const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name='+encodeURIComponent(city));
+   if(!r.ok)return null;
+   const d=await r.json(), L=(d&&d.results)||[];
+   const want=_CA_PROV[prov]||'';
+   const hit=L.find(x=>cc&&x.country_code===cc&&(!want||x.admin1===want))||L.find(x=>cc&&x.country_code===cc)||L.find(x=>x.country_code==='CA'||x.country_code==='US')||null;
+   return hit?[hit.latitude,hit.longitude]:null;
+ }catch(_e){return null;}
+};
 function resetWeather(){_wxLoaded=false;_wxData=null;_wxSelDay=null;}
 
 async function loadWeatherStrip(){
@@ -20121,8 +20148,14 @@ async function loadWeatherStrip(){
    }catch(e){console.warn('Mapbox weather geocode failed:',e);}
  }
 
+ // 2b. PORTAL 6.132: no map match: the job's city (Open-Meteo place search, no key needed)
+ if(!coords&&addr){
+   try{coords=await window.AGC_CITYGEO(addr);if(coords)locName=p.storeName||p.title||'';}catch(e){}
+ }
+ let _wxFallback=false;
  // 3. Fallback to browser geolocation
  if(!coords){
+   _wxFallback=true;
    try{
      const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000}));
      coords=[pos.coords.latitude,pos.coords.longitude];
@@ -20137,6 +20170,7 @@ async function loadWeatherStrip(){
    if(!resp.ok)throw new Error('Weather API '+resp.status);
    _wxData=await resp.json();
    _wxData._locName=locName;
+   _wxData._fallback=_wxFallback;
    console.log('AGC Weather: code='+(_wxData.current?.weathercode),'loc='+locName);
    renderWeatherStrip();
    // Now that forecast data is available, decide whether the Weather nav button
@@ -36500,16 +36534,28 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     p.then(function(v){ if (!v && alfDrive[k] && alfDrive[k].p === p) delete alfDrive[k]; });
     return p;
   };
-  window.AGC_ALFRED_WEATHER = function(address){
+  /* PORTAL 6.132 (Chris): the chat's forecast uses the forecast the job's Weather view already has when that job is the one
+     open in My Projects. Otherwise it finds the address on the map (Mapbox) or, if that fails, by its city (Open-Meteo's
+     place search, no key needed), then asks Open-Meteo, like the Weather view. */
+  function normA(a){ return String(a || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  window.AGC_ALFRED_WEATHER = function(address, title){
     address = String(address || '').replace(/\s+/g, ' ').trim();
     if (!gate.open || !address) return Promise.resolve(null);
     var k = address.toLowerCase(), c = alfWx[k];
     if (c && Date.now() - c.at < 20 * 60000) return c.p;
-    var p = projWin().then(function(w){ return w && typeof w.geocode === 'function' ? w.geocode(address) : null; }).then(function(co){
-      if (!co || co.length < 2 || !isFinite(co[0]) || !isFinite(co[1])) return null;
-      return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + (+co[0]) + '&longitude=' + (+co[1]) +
-        '&current=temperature_2m,apparent_temperature,wind_speed_10m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max,precipitation_sum,wind_speed_10m_max' +
-        '&timezone=auto&forecast_days=7&temperature_unit=celsius', { credentials: 'omit' }).then(function(r){ return r.ok ? r.json() : null; });
+    var p = projWin().then(function(w){
+      try { var v = w && typeof w.AGC_WXVIEW === 'function' ? w.AGC_WXVIEW() : null;
+        if (v && v.data && v.data.daily && Array.isArray(v.data.daily.time) && ((title && v.title === title) || (v.address && normA(v.address) === normA(address)))) return v.data; } catch (e) {}
+      var geo = w && typeof w.geocode === 'function' ? Promise.resolve().then(function(){ return w.geocode(address); }).then(null, function(){ return null; }) : Promise.resolve(null);
+      return geo.then(function(co){
+        if (co && co.length >= 2 && isFinite(co[0]) && isFinite(co[1])) return co;
+        return w && typeof w.AGC_CITYGEO === 'function' ? w.AGC_CITYGEO(address) : null;
+      }).then(function(co){
+        if (!co || co.length < 2 || !isFinite(co[0]) || !isFinite(co[1])) return null;
+        return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + (+co[0]) + '&longitude=' + (+co[1]) +
+          '&current=temperature_2m,apparent_temperature,wind_speed_10m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max,precipitation_sum,wind_speed_10m_max' +
+          '&timezone=auto&forecast_days=7&temperature_unit=celsius', { credentials: 'omit' }).then(function(r){ return r.ok ? r.json() : null; });
+      });
     }).then(function(d){ return d && d.daily && Array.isArray(d.daily.time) ? d : null; }, function(){ return null; });
     alfWx[k] = { at: Date.now(), p: p };
     p.then(function(v){ if (!v && alfWx[k] && alfWx[k].p === p) delete alfWx[k]; });
