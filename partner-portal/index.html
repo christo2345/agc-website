@@ -6166,7 +6166,37 @@ function voEl(){/* an element stays tied to the audio engine it was first routed
   if(vo&&vo.__ctx&&vo.__ctx!==ctx){try{vo.pause()}catch(e){}vo=null}
   if(!vo){vo=new Audio();vo.setAttribute('playsinline','');vo.preload='auto';vo.volume=VOV}
   if(ctx&&!vo.__g){try{var src=ctx.createMediaElementSource(vo),g=ctx.createGain();g.gain.value=VOV;src.connect(g);g.connect(uvol||ctx.destination);vo.__g=g;vo.__ctx=ctx;vo.volume=1}catch(e){vo.__g=null}}return vo}
+/* PORTAL 6.125 (Chris, Nov 20 2026): what ALFRED SAYS is made easy to listen to. The written reply on screen does not change.
+   · a project is said by its number only ("AGC 19046"), never its long name; when the reply is about one job, later mentions are "this job"
+   · CAD, USD and MXN are said as Canadian dollars, US dollars and Mexican pesos; ".00" cents are dropped
+   · no symbols are read out: emoji, the dots and bars between facts, slashes, hashes, stars, arrows, brackets, links */
+function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?2:0;
+  var CUR={CAD:['Canadian dollars','dollars canadiens','dólares canadienses'],USD:['US dollars','dollars américains','dólares estadounidenses'],MXN:['Mexican pesos','pesos mexicains','pesos mexicanos']},
+      DOL=['dollars','dollars','dólares'],LNK=[' the link ',' le lien ',' el enlace '],JOB=['this job','ce projet','este proyecto'],AND=[' and ',' et ',' y '],PCT=[' percent',' pour cent',' por ciento'];
+  var amt=function(n){return String(n).replace(/\.00$/,'')};
+  /* links are not read; an email is read as "name at domain dot com" */
+  t=t.replace(/https?:\/\/[^\s.,;!?)]+(?:[.,;!?)]?[^\s.,;!?)]+)*/g,LNK[k]).replace(/\b([\w.+-]+)@([\w-]+(?:\.[\w-]+)+)\b/g,function(m,a,b){return a+' at '+b.replace(/\./g,' dot ')});
+  /* projects: the long name becomes "AGC <number>" (longest names first, so a name inside another is not cut) */
+  try{(window.AGC_ALFRED_TITLES||[]).slice().sort(function(a,b){return b[0].length-a[0].length}).forEach(function(x){var nm=String(x[0]||'').trim();
+    if(nm.length<4||/^\d+$/.test(nm)||!x[1])return;t=t.replace(new RegExp(nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'AGC '+x[1])})}catch(e){}
+  t=t.replace(/\bAGC\s*#\s*(?=\d)/gi,'AGC ').replace(/(^|[^\w])#\s*(\d{4,6})\b/g,'$1AGC $2').replace(/\b(?:AGC\s+){2,}(?=\d)/gi,'AGC ');
+  /* the same job again in one reply: "this job" */
+  var nums=[],re=/\bAGC (\d{4,6})\b/g,m;while((m=re.exec(t)))if(nums.indexOf(m[1])<0)nums.push(m[1]);
+  if(nums.length===1){var seen=0;t=t.replace(/\bAGC (\d{4,6})\b/g,function(x,n,at){if(!seen++)return x;var start=/(^|[.!?:]\s*)$/.test(t.slice(0,at));return start?JOB[k].charAt(0).toUpperCase()+JOB[k].slice(1):JOB[k]})}
+  /* money */
+  t=t.replace(/(?:(?:US|CA|C|MX)?\$\s?)?(\d[\d,]*(?:\.\d+)?)\s*(CAD|USD|MXN)\b/g,function(x,n,c){return amt(n)+' '+CUR[c][k]})
+   .replace(/(?:US|CA|C)?\$\s?(\d[\d,]*(?:\.\d+)?)/g,function(x,n){return amt(n)+' '+DOL[k]})
+   .replace(/\b(CAD|USD|MXN)\b/g,function(x,c){return CUR[c][k]});
+  /* symbols */
+  t=t.replace(/\s&\s/g,AND[k]).replace(/(\d)\s?%/g,'$1'+PCT[k]+' ')
+   .replace(/\p{Extended_Pictographic}|[️‍⃣]/gu,' ')
+   .replace(/\s*[·•|▸►◆■●→←↑↓⇒»«]\s*/g,', ').replace(/\s+[-–—]\s+|[–—]/g,', ').replace(/…/g,'.')
+   .replace(/([^\d\s])\s*\/\s*|\s*\/\s*(?=[^\d\s])/g,'$1, ').replace(/[()\[\]{}]/g,', ')
+   .replace(/[#*_~`^<>="“”«»+$\\]/g,' ');
+  /* tidy the pauses left behind */
+  return t.replace(/\s+/g,' ').replace(/\s+([,.!?;:])/g,'$1').replace(/,(\s*,)+/g,',').replace(/,\s*([.!?;:])/g,'$1').replace(/([.!?:])\s*,/g,'$1').replace(/^\s*,\s*/,'').trim()}
 window.AGC_say=function(text,lang){var cc=chatEl();if(!on||voOff||!text||(cc&&!cc.classList.contains('open')))return;
+  text=forVoice(text,(lang||'en').slice(0,2));if(!text)return;
   var wait=1300-(performance.now()-openedAt);if(wait>0){clearTimeout(window.__sayT);window.__sayT=setTimeout(function(){window.AGC_say(text,lang)},wait);return}
   lang=(lang||'en').slice(0,2);if(!TTS)return sayBrowser(text,lang);
   hush();var id=++speaking,c=chatEl(),a=voEl(),done=false;voCtl=window.AbortController?new AbortController():null;
@@ -6490,6 +6520,8 @@ window.AGC_ALFRED_PORTAL = (function(){
     contact: 'Who are the contacts for', weather: 'What is the weather for', status: 'What is the status of', notes: 'What are the notes for', ppe: 'What PPE is needed for', crew: 'How many workers for', files: 'What files are on',
     invoice: 'Is there an invoice on', closeout: 'Where is the closeout for' };
   function nameOf(p){ return p.num ? 'AGC #' + p.num : p.title; }
+  /* PORTAL 6.125: the job names and numbers of this installer, so his voice can say a job by its number only (forVoice) */
+  function keepTitles(ps){ try { window.AGC_ALFRED_TITLES = ps.filter(function(p){ return p.num && p.title; }).map(function(p){ return [p.title, p.num]; }); } catch (e) {} }
   function askFor(p, kind){ kind = QT[kind] ? kind : ''; return 'ask:' + QT[kind] + ' ' + nameOf(p).replace(/\|/g, ' ') + '?|' + p.id + '|' + kind; }
   function follow(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
     .filter(function(a){ return a[1] !== skip; }).slice(0, 4).map(function(a){ return [a[0], askFor(p, a[1])]; }); }
@@ -6795,7 +6827,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     return window.AGC_ALFRED_DATA().then(function(data){
       if (!data) return { paras: ['I can’t see your portal data right now. Please sign in again.'], acts: [] };
       var inst = (data.installer && data.installer.fields) || {}, cur = currencyOf(inst);
-      var ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); });
+      var ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); }); keepTitles(ps);
       var one = null, many = [], scr = onScreen(ps, data), screen = data.screen || {}, hereAsk = !hintId && HERE.test(q), thisAsk = THIS.test(q) || (hereAsk && !!scr);
       var onStep = screen.view === 'profile' && screen.step >= 1 && screen.step <= 5 ? screen.step : 0, key = ctxKey(scr, screen);
       function keep(p){ lastId = p.id; lastScr = scr ? scr.id : ''; lastCtx = key; }
@@ -6917,7 +6949,7 @@ window.AGC_ALFRED_PORTAL = (function(){
   function back(){
     if (!window.AGC_ALFRED_DATA) return Promise.resolve(null);
     return window.AGC_ALFRED_DATA().then(function(data){ if (!data) return null;
-      var cur = currencyOf((data.installer && data.installer.fields) || {}), ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); });
+      var cur = currencyOf((data.installer && data.installer.fields) || {}), ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); }); keepTitles(ps);
       var scr = onScreen(ps, data), st = !scr && data.screen && data.screen.view === 'profile' ? data.screen.step : 0, n = nextLine(ps), out = ['Welcome back' + (S(data.name) ? ', ' + S(data.name) : '') + '. ' + (scr ? 'On your screen: ' + line(scr) + '. Ask me anything about it.' : st ? 'On your screen: My Profile, step ' + st + ' of 5, ' + NAMES5[st - 1] + '. Ask me anything about it.' : n.text)], NAMES = ['Basic Info', 'Contract', 'Banking', 'Insurance', 'US Tax Forms'];
       if (data.steps && Array.isArray(data.steps.done)) { var miss = [1, 2, 3, 4, 5].filter(function(x){ return data.steps.done.map(Number).indexOf(x) < 0; });
         if (miss.length) out.push('Your profile still needs: ' + miss.map(function(x){ return NAMES[x - 1]; }).join(', ') + '.'); }
@@ -12401,7 +12433,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.124</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.125</span>
  </div>
 
  <div class="hero">
