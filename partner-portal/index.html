@@ -12630,7 +12630,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.132</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.133</span>
  </div>
 
  <div class="hero">
@@ -36220,6 +36220,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
   function gateSky(on){ try { if (window.__agcSpaceOn) window.__agcSpaceOn(on); } catch (e) {} }     /* the stars behind the pop-up */
   function gateUnlock(r){
     gate.open = true; gate.rid = r || null; gateActive();
+    setTimeout(function(){ try { if (window.AGC_ALFRED_DATA) window.AGC_ALFRED_DATA(); } catch (e) {} }, 300);   /* 6.133: learns Mr / Miss before the chat opens */
     var box = document.getElementById('agc-lock');
     document.documentElement.classList.remove('agc-locked');
     document.documentElement.classList.add('agc-in');                     /* signed in: ALFRED's bubble appears in the corner */
@@ -36512,10 +36513,16 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
       if (s && Array.isArray(s.incompleteSteps)) steps = { done: [1, 2, 3, 4, 5].filter(function(n){ return s.incompleteSteps.indexOf(n) < 0; }),
         insuranceRejected: !!s.insuranceRejected, agentMessage: String(s.agentMessage || '').slice(0, 600) };
       var on = window.AGC_ALFRED_ONSCREEN();
-      return { installer: d.installer, projects: d.projects, steps: steps, open: on ? on.title : '', openId: on ? on.id : '', screen: on || {}, name: gate.name || '' };
+      salFrom(d.installer);
+      return { installer: d.installer, projects: d.projects, steps: steps, open: on ? on.title : '', openId: on ? on.id : '', screen: on || {}, name: addressed() };
     });
   };
-  window.AGC_ALFRED_NAME = function(){ return gate.open ? (gate.name || '') : ''; };
+  /* PORTAL 6.133 (Chris): every ALFRED says Mr or Miss + first name ("Mr Patrick", "Miss Stacey"), from the installer's
+     SALUTATION in AGC INSTALLERS. Not set (or CHECK): the first name alone. */
+  var alfSal = '';
+  function salFrom(inst){ try { var v = inst && inst.fields ? inst.fields['SALUTATION'] : ''; v = v && typeof v === 'object' ? v.name : v; alfSal = /^(Mr|Miss)$/.test(String(v || '')) ? String(v) : ''; } catch (e) {} }
+  function addressed(){ var n = gate.name || ''; return n ? (alfSal ? alfSal + ' ' : '') + n : ''; }
+  window.AGC_ALFRED_NAME = function(){ return gate.open ? addressed() : ''; };
   /* WHAT IS ON SCREEN, in every view (ALFRED answers about it by default, names it in his welcome, and offers its chips
      first). null when signed out; otherwise:
        view     'home' | 'projects' | 'profile'
@@ -36827,7 +36834,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6132;
+  var AGC_BUILD = 6133;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){

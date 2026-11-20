@@ -155,6 +155,7 @@ const CLOSEOUT_WRITABLE = new Set(['RELATED PROJECT', 'STORE', 'INSTALLER', 'CLO
 const INSTALLER_READABLE = new Set([...INSTALLER_WRITABLE,
   'SHIPPING TO:', 'STATE / PROVINCE', 'Country', 'SERVICE AREAS',
   'Added AGC to Insurance Policy', 'CONTRACT 2.0', 'VENDOR PORTAL URL',   // STEP 1: no partner STATUS, no INSURANCE AGENT AI text
+  'SALUTATION',   // Mr / Miss for ALFRED (Nov 20 2026)
   'AGC PROJECTS 3', 'AGC PROJECTS 4'
 ]);
 // Project: what the installer needs for the job. Never prices, profit, margins, client details,
