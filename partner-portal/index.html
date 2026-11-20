@@ -6249,10 +6249,13 @@ function sayInFull(t,k){
   /* units and sizes */
   t=t.replace(/(\d(?:\.\d+)?\s*(?:"|”|″|'|′)?)\s*[x×]\s*(?=\d)/g,'$1 by ').replace(/(\d)\s*(?:km\/h|kmh|kph)\b/gi,'$1 kilometres an hour').replace(/(\d)\s*km\b/gi,'$1 kilometres').replace(/(\d)\s*mm\b/g,'$1 millimetres').replace(/(\d)\s*cm\b/g,'$1 centimetres')
    .replace(/(\d)\s*°\s*C\b/g,'$1 degrees Celsius').replace(/(\d)\s*°\s*F\b/g,'$1 degrees Fahrenheit').replace(/(\d)\s*°/g,'$1 degrees')
-   .replace(/(\d)\s*(?:sq\.?\s*\/?\s*ft|sqft|ft2|ft²)\b/gi,'$1 square feet').replace(/(\d)\s*ft\b(?=\s+(?:ladder|step|extension|long|wide|high|tall)\b)/gi,'$1 foot').replace(/(\d)\s*ft\b/gi,'$1 feet').replace(/(\d)\s*(?:lbs?)\b/gi,'$1 pounds').replace(/(\d)\s*kg\b/gi,'$1 kilograms')
+   .replace(/\bper\s+(?:sq\.?\s*\/?\s*ft|sqft|ft2|ft²|SF)\b/gi,'per square foot').replace(/(\d)?\s*(?:sq\.?\s*\/?\s*ft|sqft|ft2|ft²)\b/gi,function(x,d){return (d?d+' ':' ')+'square feet'})
+   .replace(/(\d)\s*SF\b/g,'$1 square feet').replace(/(\d)?\s*(?:m2|m²)\b/g,function(x,d){return (d?d+' ':' ')+'square metres'}).replace(/(\d)\s*(?:lin\.?\s*ft|LF)\b/gi,'$1 linear feet')
+   .replace(/(\d)\s*in\.(?=\s|$)/g,'$1 inches').replace(/\bea\.(?=\s|$)/gi,'each').replace(/\bpcs\b\.?/gi,'pieces').replace(/(\d)\s*@\s*(?=\d)/g,'$1 at ').replace(/(\d)\s*ft\b(?=\s+(?:ladder|step|extension|long|wide|high|tall)\b)/gi,'$1 foot').replace(/(\d)\s*ft\b/gi,'$1 feet').replace(/(\d)\s*(?:lbs?)\b/gi,'$1 pounds').replace(/(\d)\s*kg\b/gi,'$1 kilograms')
    .replace(/(\d)\s*hrs?\b/gi,function(x,d){return d+' hours'}).replace(/(\d)\s*mins?\b/gi,'$1 minutes')
    .replace(/(\d(?:\.\d+)?)\s*(?:"|”|″)/g,'$1 inches').replace(/(\d)\s*(?:'|′)(?=\s|$|[,.;])/g,'$1 feet')
    ;
+  t=t.replace(/\b(the|a|per|each|one)\s+square feet\b/gi,'$1 square foot').replace(/\b(the|a|per|each|one)\s+square metres\b/gi,'$1 square metre');
   /* short forms */
   t=t.replace(/\be\.g\.,?/gi,'for example').replace(/\bi\.e\.,?/gi,'that is').replace(/\betc\b\.?/gi,'et cetera').replace(/\bvs\b\.?/gi,'versus').replace(/\bw\/\s*/gi,'with ')
    .replace(/\bapprox\b\.?/gi,'approximately').replace(/\bqty\b\.?/gi,'quantity').replace(/\bpkgs\b\.?/gi,'packages').replace(/\bpkg\b\.?/gi,'package').replace(/\bdept\b\.?/gi,'department')
@@ -6268,19 +6271,30 @@ function digitsAGC(t){return t.replace(/\bAGC\s+(\d{3,7})\b/g,function(x,n){retu
    · no symbols are read out: emoji, the dots and bars between facts, slashes, hashes, stars, arrows, brackets, links */
 function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?2:0;
   var CUR={CAD:['Canadian dollars','dollars canadiens','dólares canadienses'],USD:['US dollars','dollars américains','dólares estadounidenses'],MXN:['Mexican pesos','pesos mexicains','pesos mexicanos']},
-      DOL=['dollars','dollars','dólares'],LNK=[' the link ',' le lien ',' el enlace '],JOB=['this job','ce projet','este proyecto'],AND=[' and ',' et ',' y '],PCT=[' percent',' pour cent',' por ciento'];
+      DOL=['dollars','dollars','dólares'],LNK=[' the link ',' le lien ',' el enlace '],JOB=['this project','ce projet','este proyecto'],AND=[' and ',' et ',' y '],PCT=[' percent',' pour cent',' por ciento'];
   var amt=function(n){return String(n).replace(/\.00$/,'')};
   /* links are not read; an email is read as "name at domain dot com" */
   t=t.replace(/https?:\/\/[^\s.,;!?)]+(?:[.,;!?)]?[^\s.,;!?)]+)*/g,LNK[k]).replace(/\b([\w.+-]+)@([\w-]+(?:\.[\w-]+)+)\b/g,function(m,a,b){return a+' at '+b.replace(/\./g,' dot ')});
+  /* PORTAL 6.129: a tracking number is said by its last 4 digits ("tracking ending in 6 7 8 4"); a date is said without its year */
+  t=t.replace(/\b(1Z[0-9A-Z]{16}|[A-Z]{2}\d{9}[A-Z]{2}|\d{10,22})\b/gi,function(x,n){var l=n.replace(/\D/g,'').slice(-4)||n.slice(-4);return ['number ending in ','numéro se terminant par ','número que termina en '][k]+l.split('').join(' ')})
+   .replace(/\b((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}),?\s+(?:19|20)\d{2}\b/g,'$1').replace(/\b(\d{1,2}\s+(?:janv|févr|mars|avr|mai|juin|juil|août|sept|oct|nov|déc|ene|feb|abr|may|jun|jul|ago|sep|oct|nov|dic)[a-zé]*\.?)\s+(?:de\s+)?(?:19|20)\d{2}\b/gi,'$1');
   /* projects: the long name becomes "AGC <number>" (longest names first, so a name inside another is not cut) */
   try{(window.AGC_ALFRED_TITLES||[]).slice().sort(function(a,b){return b[0].length-a[0].length}).forEach(function(x){var nm=String(x[0]||'').trim();
     if(nm.length<4||/^\d+$/.test(nm)||!x[1])return;t=t.replace(new RegExp(nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'AGC '+x[1])})}catch(e){}
   t=shortStores(t);
   t=cityOnly(t);
-  t=t.replace(/\bAGC\s*#\s*(?=\d)/gi,'AGC ').replace(/(^|[^\w])#\s*(\d{4,6})\b/g,'$1AGC $2').replace(/\b(?:AGC\s+){2,}(?=\d)/gi,'AGC ');
-  /* the same job again in one reply: "this job" */
+  /* "#" is never said (Chris): "AGC #19161" = "AGC 1 9 1 6 1"; any other "#2160" (a store, a unit) = its digits one at a time;
+     a project number written first ("19161 / TJX ...", "19161 - ...") = "AGC 1 9 1 6 1" */
+  t=t.replace(/\bAGC\s*#\s*(?=\d)/gi,'AGC ').replace(/(^|[.!?:]\s+|\b(?:for|on|of|job|project)\s+)(\d{5})\s*(?:\/|[-–]\s)/g,'$1AGC $2, ')
+   .replace(/#\s*(\d{1,7})\b/g,function(x,n){return n.split('').join(' ')}).replace(/#/g,' ').replace(/\b(?:AGC\s+){2,}(?=\d)/gi,'AGC ');
+  /* phone numbers: digit by digit, in their three groups */
+  t=t.replace(/(?:\+?1[\s.-]?)?\(?\b(\d{3})\)?[\s.-]?(\d{3})[\s.-](\d{4})\b/g,function(x,a,b,c){return [a,b,c].map(function(g){return g.split('').join(' ')}).join(', ')});
   var nums=[],re=/\bAGC (\d{4,6})\b/g,m;while((m=re.exec(t)))if(nums.indexOf(m[1])<0)nums.push(m[1]);
-  if(nums.length===1){var seen=0;t=t.replace(/\bAGC (\d{4,6})\b/g,function(x,n,at){if(!seen++)return x;var start=/(^|[.!?:]\s*)$/.test(t.slice(0,at));return start?JOB[k].charAt(0).toUpperCase()+JOB[k].slice(1):JOB[k]})}
+  /* Chris: the AGC number is said the first time a project comes up, then "this project", in this reply and the next ones,
+     until the talk moves to another project: its number once, then "this project" again. A list of several projects keeps the numbers. */
+  if(nums.length===1){var said=window.AGC_VOICE_LAST===nums[0]?1:0;window.AGC_VOICE_LAST=nums[0];
+    t=t.replace(/\bAGC (\d{4,6})\b/g,function(x,n,at){if(!said++)return x;var start=/(^|[.!?]\s*)$/.test(t.slice(0,at));return start?JOB[k].charAt(0).toUpperCase()+JOB[k].slice(1):JOB[k]})}
+  else if(nums.length>1)window.AGC_VOICE_LAST='';
   /* money */
   t=t.replace(/(?:(?:US|CA|C|MX)?\$\s?)?(\d[\d,]*(?:\.\d+)?)\s*(CAD|USD|MXN)\b/g,function(x,n,c){return moneyWords(n,CUR[c][k],k)})
    .replace(/(?:US|CA|C)?\$\s?(\d[\d,]*(?:\.\d+)?)/g,function(x,n){return moneyWords(n,DOL[k],k)})
@@ -6503,15 +6517,21 @@ window.AGC_ALFRED_PORTAL = (function(){
     var m = s.match(/([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})/); if (m) { d = new Date(m[1] + ' ' + m[2] + ', ' + m[3] + ' 12:00'); if (!isNaN(d)) return d; }
     m = s.match(/(\d{1,2})\s+([A-Za-z]+),?\s+(\d{4})/); if (m) { d = new Date(m[2] + ' ' + m[1] + ', ' + m[3] + ' 12:00'); if (!isNaN(d)) return d; }
     return null; }
-  function day(d){ return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }); }
-  function shortDay(d){ return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+  /* PORTAL 6.129 (Chris): dates in the chat have no year */
+  function day(d){ return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); }
+  function shortDay(d){ return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
   function midnight(d){ var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
   function daysFromToday(d){ return Math.round((midnight(d) - midnight(new Date())) / 86400000); }
   function whenWords(d){ var n = daysFromToday(d); return n === 0 ? 'today' : n === 1 ? 'tomorrow' : n === -1 ? 'yesterday' : n > 1 && n < 14 ? 'in ' + n + ' days' : n < -1 && n > -14 ? (-n) + ' days ago' : ''; }
   function money(n, cur){ return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (cur ? ' ' + cur : ''); }
   function currencyOf(inst){ var c = S(pick(inst, 'Country', 'COUNTRY', 'Country:')).toUpperCase();
     return /CANAD/.test(c) ? 'CAD' : /MEX/.test(c) ? 'MXN' : /\bUSA?\b|U\.S|UNITED STATES|AMERICA/.test(c) ? 'USD' : ''; }
-  function clean(s, n){ s = S(s).replace(/\s*\n\s*/g, ' · ').replace(/\s+/g, ' ').trim(); return n && s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…' : s; }
+  /* PORTAL 6.129 (Chris): no stray characters in the chat. A field written with Airtable's formatting (### headings, **bold**,
+     _italic_, ~~struck~~, "\-" escapes, bullets) reads as plain words; struck-through text (cancelled items) is left out. */
+  function plainMd(s){ return S(s).split(/\r?\n/).map(function(l){ return l.replace(/~~[^~]*~~/g, '').replace(/\\\*/g, '').replace(/\\([\\`_{}\[\]()#+\-.!|~>])/g, '$1').replace(/\\(?=\s|$)/g, '')
+      .replace(/^\s*#{1,6}\s*/, '').replace(/^\s*(?:[-*+]|\d+\.)\s+/, '').replace(/\*\*|__|`/g, '').replace(/(^|[\s(])[*_]([^*_\n]+?)[*_](?=[\s).,;:!?]|$)/g, '$1$2')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ').trim(); }).filter(function(l){ return l && !/^[*_~#\s-]+$/.test(l); }).join('\n'); }
+  function clean(s, n){ s = plainMd(s).replace(/\s*\n\s*/g, ' · ').replace(/\s+/g, ' ').trim(); return n && s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…' : s; }
   var AWAITING = { '🕘 TBD 🕘': 1, '⭐ UPCOMING PROJECT ⭐': 1, '📄 NEED QUOTE 📄': 1, '📄 QUOTES RECEIVED 📄': 1 };   /* same list as My Projects */
   function plainStatus(s){ return S(s).replace(/[^\w\s&/().,'-]/g, ' ').replace(/\s+/g, ' ').trim(); }
 
@@ -6561,6 +6581,7 @@ window.AGC_ALFRED_PORTAL = (function(){
   var I = {                                              /* the first that matches wins, so the narrow ones come first */
     weather: /\b(weather|forecast|rain\w*|snow\w*|storm\w*|thunder\w*|wind|winds|windy|temperature|temp|cold|freez\w*|hot|humid\w*|sunny|cloud\w*|precipitation|degrees|umbrella)\b/,
     shipping: /\b(ship\w*|track\w*|deliver\w*|packages?|pkgs?|boxes|freight|courier|arriv\w*|materials?)\b/,
+    updates: /\b(updates?|any news|what'?s new|latest news|anything new|recent (news|changes?)|what changed)\b/,
     invoice: /\b(invoic\w*|billing|bill)\b/,
     closeout: /\b(close ?out|closeouts?|photos?|pictures?|sign ?off)\b/,
     files: /\b(files?|layouts?|plans?|drawings?|pdfs?|artwork|data ?sheet|documents?|attachments?)\b/,
@@ -6639,19 +6660,24 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (p.due) out.push('Due date: ' + day(p.due) + '.');
     if (p.status) out.push('Status: ' + p.status + '.');
     return out; }
+  /* PORTAL 6.129 (Chris): the address answer is just the address(es); each one has a Google Maps link, and a button opens the
+     project's own map in My Projects. (His voice still says the city only.) */
+  function mapsUrl(a){ return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(plainMd(a).replace(/\s*\n\s*/g, ', ')); }
   function aWhere(p){ var out = [];
     if (!p.stores.length && !p.addresses.length) return [head(p) + ' has no store or address on it yet.'];
     var n = Math.max(p.stores.length, p.addresses.length);
-    if (n === 1) out.push(head(p) + ' is at ' + [p.stores[0], p.addresses[0]].filter(Boolean).join(', ') + '.');
-    else { out.push(head(p) + ' has ' + n + ' locations:');
-      for (var i = 0; i < Math.min(n, 6); i++) out.push((i + 1) + '. ' + [p.stores[i], p.addresses[i]].filter(Boolean).join(', '));
-      if (n > 6) out.push('…and ' + (n - 6) + ' more. The full list, with the map, is in My Projects.'); }
+    for (var i = 0; i < Math.min(n, 6); i++) out.push(clean(p.addresses[i] || p.stores[i], 200));
+    if (n > 6) out.push('…and ' + (n - 6) + ' more on the project map.');
     return out; }
+  function whereActs(p){ var n = Math.max(p.stores.length, p.addresses.length), acts = [];
+    for (var i = 0; i < Math.min(n, 6); i++) if (p.addresses[i] || p.stores[i]) acts.push([(n > 1 ? 'Google Maps ' + (i + 1) : 'Open in Google Maps'), mapsUrl(p.addresses[i] || p.stores[i])]);
+    acts.push(['See it on the project map', 'proj:' + p.title + '|map']);
+    return acts; }
   function aBudget(p){ var out = [];
     if (p.awaiting) return [head(p) + ' is not approved by the client yet (status: ' + p.status + '), so there is no budget to show. It appears as soon as the job is confirmed.'];
     if (p.shared) return [head(p) + ' has more than one installer on it, so it is paid hourly plus costs rather than as one total for you.'];
     if (p.total == null || !p.total) return [head(p) + ' has no budget entered yet.'];
-    out.push('The budget for ' + head(p) + ' is ' + money(p.total, p.cur) + (p.billing ? ', ' + p.billing.toLowerCase() : '') + '.');
+    out.push('The budget for ' + head(p) + ' is ' + money(p.total, p.cur) + (p.billing ? ', ' + p.billing.toLowerCase().replace(/\b(?:ft2|ft²|sq\.? ?ft|sqft)\b/g, 'square foot') : '') + '.');
     if (p.lines.length > 1) p.lines.forEach(function(l){ out.push(money(l.amt, p.cur) + (l.type ? ' (' + l.type.toLowerCase() + ')' : '') + (l.what ? ': ' + l.what : '')); });
     else if (p.lines.length === 1 && p.lines[0].what) out.push('For: ' + p.lines[0].what);
     return out; }
@@ -6682,6 +6708,20 @@ window.AGC_ALFRED_PORTAL = (function(){
     return out; }
   function aCrew(p){ var q = S(p.f['QTY WORKERS']); return [q ? head(p) + ' is planned for ' + q + ' worker' + (q === '1' ? '' : 's') + '.' : head(p) + ' has no number of workers set.']
       .concat(p.shared ? ['More than one installer is assigned to this job.'] : []); }
+  /* PORTAL 6.129 (Chris): every tracking number on a job, with a link to track it on the carrier's own site.
+     The carrier is the one named just before the number, else SHIPPING CO., else read from the number's shape. */
+  var CARRIERS = [['UPS', /\bups\b/i, 'https://www.ups.com/track?tracknum='], ['FedEx', /fed\s?ex/i, 'https://www.fedex.com/fedextrack/?trknbr='],
+    ['Purolator', /purolator/i, 'https://www.purolator.com/en/shipping/tracker?pins='], ['Canada Post', /canada\s?post|postes canada/i, 'https://www.canadapost-postescanada.ca/track-reperage/en#/details/'],
+    ['DHL', /\bdhl\b/i, 'https://www.dhl.com/ca-en/home/tracking.html?tracking-id='], ['USPS', /\busps\b/i, 'https://tools.usps.com/go/TrackConfirmAction?tLabels='],
+    ['Canpar', /canpar/i, 'https://www.canpar.com/en/tracking/track.htm?barcode='], ['Loomis', /loomis/i, 'https://www.loomis-express.com/loomship/Track/TrackStatus?wbs=']];
+  function carrierIn(s){ var best = null, at = -1; CARRIERS.forEach(function(c){ var m, re = new RegExp(c[1].source, 'gi'); while ((m = re.exec(s))) if (m.index > at) { at = m.index; best = c; } }); return best; }
+  function tracks(text, co){ var t = plainMd(text), out = [], seen = {}, m, re = /\b(1Z[0-9A-Z]{16}|[A-Z]{2}\d{9}[A-Z]{2}|\d{10,22})\b/gi, coC = carrierIn(S(co));
+    while ((m = re.exec(t))) { var n = m[1].toUpperCase(); if (seen[n]) continue; seen[n] = 1;
+      var c = carrierIn(t.slice(Math.max(0, t.lastIndexOf('\n', m.index) + 1, m.index - 60), m.index)) || coC;
+      if (!c) { var byShape = /^1Z/.test(n) ? 'UPS' : /^[A-Z]{2}\d{9}CA$/.test(n) || /^\d{16}$/.test(n) ? 'Canada Post' : /^[A-Z]{2}\d{9}US$/.test(n) || /^9\d{19,21}$/.test(n) ? 'USPS' : /^(\d{12}|\d{15}|\d{20}|\d{22})$/.test(n) ? 'FedEx' : /^\d{10}$/.test(n) ? 'DHL' : '';
+        c = CARRIERS.filter(function(x){ return x[0] === byShape; })[0] || null; }
+      out.push({ carrier: c ? c[0] : '', num: n, url: c ? c[2] + encodeURIComponent(n) : 'https://parcelsapp.com/en/tracking/' + encodeURIComponent(n) }); }
+    return out; }
   function aShipping(p){ var f = p.f, out = [], to = clean(pick(f, 'SHIPPING TO:', 'SHIPPING TO'), 160), co = S(pick(f, 'SHIPPING CO.', 'SHIPPING COMPANY')), tr = S(pick(f, 'TRACKING NUMBER', 'TRACKING NUMBER(S)')),
         pk = S(pick(f, 'Number of PKGS', 'Number of Pkgs', 'NUMBER OF PKGS')), ad = clean(pick(f, 'SHIPPING ADDRESS:'), 200), ds = toDate(f['DATE SHIPPED']), cond = S(f['SHIPMENT CONDITION']), sn = clean(f['SHIPMENT NOTES'], 300);
     if (!to && !co && !tr && !pk && !ad && !ds) return ['There is no shipping information on ' + head(p) + ' yet.'];
@@ -6691,9 +6731,16 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (co) bits.push('with ' + co);
     if (pk) bits.push(pk + ' package' + (pk === '1' ? '' : 's'));
     if (bits.length) out.push(bits.join(', ').replace(/^./, function(c){ return c.toUpperCase(); }) + '.');
-    if (tr) out.push('Tracking: ' + tr);
+    var tk = tracks(tr, co); if (tk.length) out.push('Tracking: ' + tk.map(function(x){ return (x.carrier ? x.carrier + ' ' : '') + x.num; }).join(', ') + '.'); else if (tr) out.push('Tracking: ' + clean(tr, 200));
     if (to || ad) out.push('Shipping to: ' + [to, ad].filter(Boolean).join(' · '));
     if (cond) out.push('Condition on arrival: ' + cond + (sn ? ' (' + sn + ')' : '') + '.');
+    return out; }
+  /* PORTAL 6.129 (Chris: "any recent updates to this project?" got the whole job summary). Job updates are not in the portal yet,
+     so he says so plainly, gives where it stands, and points to the project manager. */
+  function aUpdates(p){ var f = p.f, pm = S(pick(f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')), pd = S(f['PM Direct']), out = [];
+    out.push('I don’t have job updates for ' + head(p) + ' in the portal yet.');
+    out.push('Where it stands: ' + [p.status, p.date ? day(p.date) + (whenWords(p.date) ? ' (' + whenWords(p.date) + ')' : '') : 'no install date yet'].filter(Boolean).join(', ') + '.');
+    if (pm) out.push('For the latest, ask ' + pm + ', your project manager' + (pd ? ', at ' + pd : '') + '.');
     return out; }
   function aContact(p){ var f = p.f, out = [], on = clean(f['ONSITE CONTACT'], 200), pm = S(pick(f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')), pd = S(f['PM Direct']);
     if (on) out.push('Onsite contact for ' + head(p) + ': ' + on + '.');
@@ -6769,7 +6816,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       ['Today', 'Tomorrow'].forEach(function(lbl, i){ if (t[i]) out.push(lbl + ': ' + wxDay(w, i) + '.'); });
       return out; }, function(){ return ['I couldn’t get the forecast for ' + p.title + ' just now.']; });
   }
-  var ONE = { weather: function(){ return []; }, when: aWhen, where: aWhere, budget: aBudget, status: aStatus, scope: aScope, notes: aNotes, ppe: aPpe, crew: aCrew, shipping: aShipping, contact: aContact, files: aFiles, invoice: aInvoice, closeout: aCloseout };
+  var ONE = { weather: function(){ return []; }, when: aWhen, where: aWhere, budget: aBudget, status: aStatus, scope: aScope, notes: aNotes, ppe: aPpe, crew: aCrew, shipping: aShipping, updates: aUpdates, contact: aContact, files: aFiles, invoice: aInvoice, closeout: aCloseout };
 
   /* ── answers about the list of projects ── */
   function line(p){ return p.title + (p.date ? ' · ' + shortDay(p.date) : ' · no date yet') + (p.status ? ' · ' + p.status : ''); }
@@ -7002,7 +7049,13 @@ window.AGC_ALFRED_PORTAL = (function(){
       keep(one);
       if (fieldAsk === 'weather') return weather(one, q).then(function(paras){ return { paras: paras, acts: follow(one, 'weather') }; });
       var fn = fieldAsk ? ONE[fieldAsk] : aSummary;
-      return { paras: fn(one), acts: (fieldAsk === 'files' || fieldAsk === 'closeout' ? [open()] : fieldAsk === 'invoice' ? [INVOICE] : []).concat(follow(one, fieldAsk)).slice(0, 4) };
+      /* PORTAL 6.129: the address answer has a Google Maps link per address and a button for the project map */
+      if (fieldAsk === 'where') return { paras: aWhere(one), acts: whereActs(one).concat(follow(one, 'where').slice(0, 2)) };
+      /* PORTAL 6.129: "any updates?" points to the project manager, with a button to call */
+      if (fieldAsk === 'updates') { var upd = S(one.f['PM Direct']).replace(/[^\d+]/g, ''); return { paras: aUpdates(one), acts: (upd.length >= 10 ? [['Call your project manager', 'tel:' + upd]] : [CALL]).concat(follow(one, 'updates')).slice(0, 4) }; }
+      /* PORTAL 6.129: a shipping answer has a link to track each shipment, then the usual buttons */
+      var trk = fieldAsk === 'shipping' ? tracks(S(pick(one.f, 'TRACKING NUMBER', 'TRACKING NUMBER(S)')), S(pick(one.f, 'SHIPPING CO.', 'SHIPPING COMPANY'))).slice(0, 6).map(function(x){ return ['Track ' + (x.carrier ? x.carrier + ' ' : '') + x.num, x.url]; }) : [];
+      return { paras: fn(one), acts: trk.concat((fieldAsk === 'files' || fieldAsk === 'closeout' ? [open()] : fieldAsk === 'invoice' ? [INVOICE] : []).concat(follow(one, fieldAsk)).slice(0, 4)) };
     }, function(){ return { paras: ['I couldn’t reach your portal data just now. Please try again in a moment.'], acts: [] }; });
   }
 
@@ -7295,6 +7348,8 @@ function act(t){
   if(t.indexOf('sel:')===0){var q=t.slice(4),el=document.querySelector(q);
     if(!el){shut();tab(/ctThird|privacy/.test(q)?'contact':/cs-open/.test(q)?'proof':/open-tool/.test(q)?'services':'');return}
     close(true);setTimeout(function(){el.click()},420);return}
+  /* PORTAL 6.129: a button that opens one project in My Projects, on one of its tabs ("proj:<project name>|map") */
+  if(t.indexOf('proj:')===0){var pq=t.slice(5).split('|');close(true);setTimeout(function(){if(window.AGC_ALFRED_OPENPROJECT)AGC_ALFRED_OPENPROJECT(pq[0],pq[1]||'')},420);return}
   if(t.indexOf('go:')===0){shut();tab(t.slice(3));return}}
 
 function begin(){if(started)return;started=true;var h=document.createElement('div');h.className='alfc-hero';h.innerHTML='<img alt="A.L.F.R.E.D." src="'+AV+'" width="150" height="155">';log.appendChild(h);holdTop=true;addBot(helloP());chips.innerHTML='';log.scrollTop=0;
@@ -12530,7 +12585,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.128</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.129</span>
  </div>
 
  <div class="hero">
@@ -18693,7 +18748,7 @@ let _installerAddr='', _installerName='', _installerPhotoUrl='', _installerCoord
    return hit||null;
  }
 
- function focusProjectByName(name){
+ function focusProjectByName(name,tab){
    const now=Date.now();
    // Idempotence: drop dupes of the same name within 1s.
    if(_lastFocusName===name && (now-_lastFocusAt)<1000){
@@ -18713,6 +18768,8 @@ let _installerAddr='', _installerName='', _installerPhotoUrl='', _installerCoord
        if(_pendingRetry){clearInterval(_pendingRetry);_pendingRetry=null;}
        try{
          selectProject(proj.id);
+         /* PORTAL 6.129: ALFRED can ask for a tab too (the Map) */
+         if(tab&&/^(details|map|photos)$/.test(tab)&&typeof showTab==='function')setTimeout(function(){try{showTab(tab);}catch(e){}},350);
          console.log('AGC: focus_project matched and opened:',proj.title,'(id:'+proj.id+')');
        }catch(e){
          console.warn('AGC: focus_project selectProject threw:',e);
@@ -18735,7 +18792,7 @@ let _installerAddr='', _installerName='', _installerPhotoUrl='', _installerCoord
    if(!data||typeof data!=='object')return;
    if(data.type!=='agc_focus_project')return;
    if(typeof data.name!=='string'||!data.name.trim())return;
-   focusProjectByName(data.name);
+   focusProjectByName(data.name,data.tab);
  });
  // Diagnostic hook so the parent can verify the listener is alive.
  window._agcFocusProjectListenerInstalled=true;
@@ -26862,20 +26919,31 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 // Handles: # ## ### headings, **bold**, *italic*, _italic_, `code`,
 // [link](url), - / * bullet lists, 1. numbered lists, blank-line spacing.
 function mdInline(s){
+  /* PORTAL 6.129 (Chris): no stray characters in Scope of Work and Important Notes. Airtable's escapes ("\-", "\*", "\_", "\." and a lone "\") are taken out,
+     ~~struck~~ text shows struck through, and a ** or ~~ left without its pair is dropped. */
+  s=s.replace(/\\\*/g,'').replace(/\\([\\`_{}\[\]()#+\-.!|~]|&gt;|&lt;|&amp;)/g,function(x,c){return c.length>1?c:'&#'+c.charCodeAt(0)+';'}).replace(/\\(?=\s|$)/g,'');
+  s=s.replace(/~~([^~\n]+?)~~/g,'<s style="opacity:.6;">$1</s>');
+  s=s.replace(/\*\*\*([^*\n]+?)\*\*\*/g,'<strong><em>$1</em></strong>');
   s=s.replace(/\*\*([^*\n]+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/__([^_\n]+?)__/g,'<strong>$1</strong>');
   s=s.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g,'$1<em>$2</em>');
-  s=s.replace(/(^|[^_])_([^_\n]+?)_(?!_)/g,'$1<em>$2</em>');
+  s=s.replace(/(^|[^_\w])_([^_\n]+?)_(?![_\w])/g,'$1<em>$2</em>');
   s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" style="color:#92C64B;text-decoration:underline;">$1</a>');
   s=s.replace(/`([^`\n]+)`/g,'<code style="background:rgba(255,255,255,0.08);padding:2px 5px;border-radius:3px;font-family:Menlo,Monaco,monospace;font-size:0.92em;">$1</code>');
+  /* left over markers with no pair */
+  s=s.replace(/\*{2,}|~~|(^|\s)_(?=\s|$)/g,'$1');
   return s;
 }
 function mdToHtml(s){
   if(!s)return '';
   const escaped=String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const lines=escaped.split(/\r?\n/);
+  const lines=escaped.split(/\r?\n/).map(function(l){return l.replace(/^(\s*)\\([-+])\s/,'$1- ');});
+  /* a line that only holds markers ("### ", "**", "~~", "_ _", "\") shows as a blank line, not as stray characters */
+  const empty=function(l){return !l.replace(/^\s*(#{1,6}|[-*]|\d+\.)\s*/,'').replace(/\\/g,'').replace(/[*_~#\s]/g,'');};
   let out=''; let i=0;
   while(i<lines.length){
     const line=lines[i];
+    if(empty(line)){out+='<div style="height:10px;"></div>';i++;while(i<lines.length&&empty(lines[i]))i++;continue;}
     const hm=line.match(/^\s*(#{1,6})\s+(.*)$/);
     if(hm){
       const lvl=hm[1].length;
@@ -26885,23 +26953,22 @@ function mdToHtml(s){
     }
     if(/^\s*[-*]\s+/.test(line)){
       let items='';
-      while(i<lines.length&&/^\s*[-*]\s+/.test(lines[i])){
+      while(i<lines.length&&/^\s*[-*]\s+/.test(lines[i])&&!empty(lines[i])){
         items+='<li style="margin:3px 0;">'+mdInline(lines[i].replace(/^\s*[-*]\s+/,''))+'</li>';
         i++;
       }
       out+='<ul style="margin:6px 0;padding-left:24px;">'+items+'</ul>';
       continue;
     }
-    if(/^\s*\d+\.\s+/.test(line)){
+    if(/^\s*\d+\\?\.\s+/.test(line)){
       let items='';
-      while(i<lines.length&&/^\s*\d+\.\s+/.test(lines[i])){
-        items+='<li style="margin:3px 0;">'+mdInline(lines[i].replace(/^\s*\d+\.\s+/,''))+'</li>';
+      while(i<lines.length&&/^\s*\d+\\?\.\s+/.test(lines[i])&&!empty(lines[i])){
+        items+='<li style="margin:3px 0;">'+mdInline(lines[i].replace(/^\s*\d+\\?\.\s+/,''))+'</li>';
         i++;
       }
       out+='<ol style="margin:6px 0;padding-left:24px;">'+items+'</ol>';
       continue;
     }
-    if(!line.trim()){out+='<div style="height:10px;"></div>';i++;continue;}
     out+='<div style="margin:2px 0;">'+mdInline(line)+'</div>';
     i++;
   }
@@ -36390,6 +36457,8 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
   };
 
 
+  /* PORTAL 6.129: ALFRED's 'See it on the project map' button: My Projects, that project, its Map tab */
+  window.AGC_ALFRED_OPENPROJECT = function(name, tab){ if (!name) return; show('projects'); post('projects', { type: 'agc_focus_project', name: name, tab: tab || '' }); };
   function show(name){
     if (NAMES.indexOf(name) < 0) return;
     start(name);

@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.128 = 6128). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.129 = 6129). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -86,6 +86,19 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   city that can be read from it and is still said in full.
   Money is said in words (since 6.128): "$170,144.20 CAD" = "one hundred and seventy thousand, one hundred and
   forty four Canadian dollars and twenty cents" (English; in French and Spanish the voice reads the figure).
+  Since 6.129: a project's AGC number is said the first time it comes up, then "this project", in that
+  reply and the next ones, until the talk turns to another project (its number once, then "this project"
+  again). A list of several projects keeps the numbers. "#" is never said: a store or unit number after it
+  is read digit by digit. "ft2" and the like are "square foot". Years are left out of dates. Phone numbers
+  are read digit by digit in their groups. A tracking number is "number ending in" its last four digits.
+- Chat answers (since 6.129):
+  - Text in the chat, Scope and Important Installer Notes is shown clean: no stray markdown signs or escapes.
+  - Dates in the chat have no year.
+  - Shipping shows each tracking number with a button that opens that carrier's tracking page.
+  - "Where is it?" answers with the address only, a Google Maps button per address, and "See it on the
+    project map", which opens the project in My Projects on its Map tab.
+  - "Any updates?" says plainly that job updates are not in the portal yet, where the job stands, and who
+    the project manager is, with a button to call them. (It used to dump the whole job summary.)
 - His total earnings (since 6.128) are exactly the Total AGC Earnings box on Home and its project count, nothing
   more (no breakdown). Before the box has painted he makes the same sum the box makes.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
