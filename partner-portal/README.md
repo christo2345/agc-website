@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.130 = 6130). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.131 = 6131). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -91,6 +91,14 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   again). A list of several projects keeps the numbers. "#" is never said: a store or unit number after it
   is read digit by digit. "ft2" and the like are "square foot". Years are left out of dates. Phone numbers
   are read digit by digit in their groups. A tracking number is "number ending in" its last four digits.
+- Maps, forecast and drive time (6.131 fix): AGC_BUILD in index.html must equal version.json. It had stayed
+  at 6124, so from 6.125 on every new version reloaded the page once after the Wix page had already handed
+  over the Mapbox key (it sends it only once): no maps, no forecast. Now the build number matches, and the
+  public Mapbox key (pk.) is kept for the browser tab so a reload cannot lose it. ALFRED's forecast and drive
+  time start My Projects out of sight when it has not been opened yet.
+- ALFRED answers drive time with traffic (since 6.131): "how long is the drive", "traffic", "how far",
+  from the installer's own address to the job (Mapbox driving-traffic vs usual), with a Directions button
+  that opens Google Maps with live traffic, and the project map button.
 - ALFRED's welcome (since 6.130) is one line: "Hey <first name>, have any questions about this project?" (the
   project open on screen; otherwise "your projects", or "your profile" while on My Profile).
 - Chat answers (since 6.129):

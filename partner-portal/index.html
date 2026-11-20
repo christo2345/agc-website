@@ -6579,6 +6579,7 @@ window.AGC_ALFRED_PORTAL = (function(){
 
   /* ── what is being asked? ── */
   var I = {                                              /* the first that matches wins, so the narrow ones come first */
+    traffic: /\b(traffic|commute|drive|driving|drive time|travel time|how long (will it take|does it take|to get|is the drive|of a drive)|how far|get there|road conditions?|rush hour)\b/,
     weather: /\b(weather|forecast|rain\w*|snow\w*|storm\w*|thunder\w*|wind|winds|windy|temperature|temp|cold|freez\w*|hot|humid\w*|sunny|cloud\w*|precipitation|degrees|umbrella)\b/,
     shipping: /\b(ship\w*|track\w*|deliver\w*|packages?|pkgs?|boxes|freight|courier|arriv\w*|materials?)\b/,
     updates: /\b(updates?|any news|what'?s new|latest news|anything new|recent (news|changes?)|what changed)\b/,
@@ -6649,7 +6650,7 @@ window.AGC_ALFRED_PORTAL = (function(){
   /* PORTAL 6.125: the job names and numbers of this installer, their store names and addresses, so his voice can say a job by its number, a store by its chain and number and an address by its city only (forVoice, 6.125 to 6.127) */
   function keepTitles(ps){ try { window.AGC_ALFRED_TITLES = ps.filter(function(p){ return p.num && p.title; }).map(function(p){ return [p.title, p.num]; }); var st = []; ps.forEach(function(p){ (p.stores || []).forEach(function(x){ if (x && st.indexOf(x) < 0) st.push(x); }); }); window.AGC_ALFRED_STORES = st; var ad = []; ps.forEach(function(p){ (p.addresses || []).forEach(function(x){ if (x && ad.indexOf(x) < 0) ad.push(x); }); }); window.AGC_ALFRED_ADDRS = ad; } catch (e) {} }
   function askFor(p, kind){ kind = QT[kind] ? kind : ''; return 'ask:' + QT[kind] + ' ' + nameOf(p).replace(/\|/g, ' ') + '?|' + p.id + '|' + kind; }
-  function follow(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
+  function follow(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Drive time', 'traffic'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
     .filter(function(a){ return a[1] !== skip; }).slice(0, 4).map(function(a){ return [a[0], askFor(p, a[1])]; }); }
   function open(){ return ['Open My Projects', 'sel:#links [data-nav=projects]']; }
   function head(p){ return p.title; }
@@ -6816,7 +6817,22 @@ window.AGC_ALFRED_PORTAL = (function(){
       ['Today', 'Tomorrow'].forEach(function(lbl, i){ if (t[i]) out.push(lbl + ': ' + wxDay(w, i) + '.'); });
       return out; }, function(){ return ['I couldn’t get the forecast for ' + p.title + ' just now.']; });
   }
-  var ONE = { weather: function(){ return []; }, when: aWhen, where: aWhere, budget: aBudget, status: aStatus, scope: aScope, notes: aNotes, ppe: aPpe, crew: aCrew, shipping: aShipping, updates: aUpdates, contact: aContact, files: aFiles, invoice: aInvoice, closeout: aCloseout };
+  /* PORTAL 6.131 (Chris): drive time with traffic, from the installer's own address to the job */
+  function hm(m){ var h = Math.floor(m / 60), r = m % 60; return h ? h + (h === 1 ? ' hour' : ' hours') + (r ? ' ' + r + ' minutes' : '') : m + ' minutes'; }
+  function dirUrl(a){ return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(plainMd(a).replace(/\s*\n\s*/g, ', ')); }
+  function drive(p){
+    var addr = p.addresses[0] || p.stores[0] || '', where = p.stores[0] ? clean(p.stores[0], 60) : clean(addr, 60);
+    if (!addr) return Promise.resolve([head(p) + ' has no address on it yet, so I can’t time the drive.']);
+    if (!window.AGC_ALFRED_DRIVE) return Promise.resolve(['I can’t time the drive right now. The Directions button opens it in Google Maps with live traffic.']);
+    return window.AGC_ALFRED_DRIVE(addr).then(function(r){
+      if (!r || r.noKey) return ['I couldn’t get the drive time for ' + head(p) + ' just now. The Directions button opens it in Google Maps with live traffic.'];
+      if (r.noHome) return ['I don’t have your address on your profile, so I can’t time the drive from home. The Directions button opens it in Google Maps from where you are.'];
+      var out = ['From your address to ' + where + ': about ' + hm(r.min) + ' right now' + (r.km ? ', ' + r.km + ' km' : '') + '.'];
+      if (r.traffic) out.push(r.traffic.charAt(0).toUpperCase() + r.traffic.slice(1) + ' traffic' + (r.delayMin >= 2 ? ', about ' + r.delayMin + ' minutes slower than usual.' : '.'));
+      if (p.date && midnight(p.date) > midnight(new Date())) out.push('That is traffic right now. Install day is ' + day(p.date) + (whenWords(p.date) ? ' (' + whenWords(p.date) + ')' : '') + ', so check again that morning.');
+      return out; }, function(){ return ['I couldn’t get the drive time for ' + head(p) + ' just now.']; });
+  }
+  var ONE = { weather: function(){ return []; }, traffic: function(){ return []; }, when: aWhen, where: aWhere, budget: aBudget, status: aStatus, scope: aScope, notes: aNotes, ppe: aPpe, crew: aCrew, shipping: aShipping, updates: aUpdates, contact: aContact, files: aFiles, invoice: aInvoice, closeout: aCloseout };
 
   /* ── answers about the list of projects ── */
   function line(p){ return p.title + (p.date ? ' · ' + shortDay(p.date) : ' · no date yet') + (p.status ? ' · ' + p.status : ''); }
@@ -6973,8 +6989,8 @@ window.AGC_ALFRED_PORTAL = (function(){
     else if (LISTS.next.test(q) && (aboutJobs || /\b(schedul\w*|calendar|booked|working|what do i have|what s next|whats next|what is next|anything)\b/.test(q)) && !howto) listAsk = 'next';
     else if ((/\b(list|show)\b.*\b(projects?|jobs?|installs?)\b/.test(q) || (mine && /\b(what are|which|all|see)\b.*\b(projects?|jobs?|installs?)\b/.test(q)) || /^ (my )?(projects|jobs) $/.test(q))) listAsk = 'list';
     if (hintId) { fieldAsk = ONE[hintKind] ? hintKind : null; profAsk = listAsk = null; nums = []; }
-    var wxNext = fieldAsk === 'weather' && listAsk === 'next';                        /* "weather for my next job": the next job's forecast, not the schedule */
-    if (fieldAsk === 'weather' && (listAsk === 'next' || listAsk === 'list')) listAsk = null;
+    var wxNext = (fieldAsk === 'weather' || fieldAsk === 'traffic') && listAsk === 'next';                        /* "weather for my next job": the next job's forecast, not the schedule */
+    if ((fieldAsk === 'weather' || fieldAsk === 'traffic') && (listAsk === 'next' || listAsk === 'list')) listAsk = null;
     var aboutAgc = !hintId && !nums.length && !mine && ABOUT_AGC.test(q);         /* a question about AGC itself: not in the portal's data */
     return window.AGC_ALFRED_DATA().then(function(data){
       if (!data) return { paras: ['I can’t see your portal data right now. Please sign in again.'], acts: [] };
@@ -7035,9 +7051,9 @@ window.AGC_ALFRED_PORTAL = (function(){
       var byId = function(id){ return ps.filter(function(p){ return p.id === id; })[0] || null; }, shortQ = q.trim().split(' ').length <= 6 || /\b(it|that|there|same)\b/.test(q);
       if (!one && fieldAsk && !howto) {
         var named = lastId && shortQ && lastId !== (scr && scr.id) && lastCtx === key ? byId(lastId) : null;
-        if (!named && !scr && onStep && !aboutJobs && fieldAsk !== 'weather') return step();                                 /* on My Profile, "status" or "when does it expire" is about the step that is open */
+        if (!named && !scr && onStep && !aboutJobs && fieldAsk !== 'weather' && fieldAsk !== 'traffic') return step();                                 /* on My Profile, "status" or "when does it expire" is about the step that is open */
         one = named || scr || (lastId && shortQ ? byId(lastId) : null);
-        if (fieldAsk === 'weather' && (wxNext || !one)) { var tdy = midnight(new Date()), nx = ps.filter(function(p){ return p.date && midnight(p.date) >= tdy; })[0]; if (nx && (wxNext || !one)) one = nx; }   /* no job named or on screen: their next job */
+        if ((fieldAsk === 'weather' || fieldAsk === 'traffic') && (wxNext || !one)) { var tdy = midnight(new Date()), nx = ps.filter(function(p){ return p.date && midnight(p.date) >= tdy; })[0]; if (nx && (wxNext || !one)) one = nx; }   /* no job named or on screen: their next job */
         if (!one && (aboutJobs || mine || shortQ)) {
           if (!ps.length) return { paras: ['You have no projects with AGC yet, so there is nothing for me to look that up on.'], acts: [] };
           if (ps.length === 1) one = ps[0];
@@ -7048,6 +7064,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       if (!one) return other(q, ps, data, aboutJobs, false, scr, onStep ? step : null);
       keep(one);
       if (fieldAsk === 'weather') return weather(one, q).then(function(paras){ return { paras: paras, acts: follow(one, 'weather') }; });
+      if (fieldAsk === 'traffic') return drive(one).then(function(paras){ var ad = one.addresses[0] || one.stores[0]; return { paras: paras, acts: (ad ? [['Directions in Google Maps', dirUrl(ad)], ['See it on the project map', 'proj:' + one.title + '|map']] : []).concat(follow(one, 'traffic').slice(0, 2)) }; });
       var fn = fieldAsk ? ONE[fieldAsk] : aSummary;
       /* PORTAL 6.129: the address answer has a Google Maps link per address and a button for the project map */
       if (fieldAsk === 'where') return { paras: aWhere(one), acts: whereActs(one).concat(follow(one, 'where').slice(0, 2)) };
@@ -12587,7 +12604,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.130</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.131</span>
  </div>
 
  <div class="hero">
@@ -22953,6 +22970,27 @@ async function fetchTrafficSummary(lat1,lon1,lat2,lon2,freeFlowSec){
    return {label,color,delayMin};
  }catch(_e){console.warn('Traffic fetch failed:',_e);return null;}
 }
+
+// PORTAL 6.131: ALFRED's drive time. From the installer's own address to a job address: the drive right now with traffic
+// (Mapbox driving-traffic), the usual drive (driving), the distance and a traffic word, same buckets as the map's traffic label.
+window.AGC_DRIVE=async function(addr){
+ try{
+   if(!addr)return null;
+   if(!MBTOKEN)return {noKey:true};
+   if(!_installerAddr&&typeof fetchInstallerInfo==='function'){try{await fetchInstallerInfo();}catch(_e){}}
+   if(!_installerAddr)return {noHome:true};
+   const a=await geocode(_installerAddr), b=await geocode(addr);
+   if(!a||!b)return null;
+   const tail=a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=false&access_token='+MBTOKEN;
+   const get=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+   const [dt,df]=await Promise.all([get('https://api.mapbox.com/directions/v5/mapbox/driving-traffic/'+tail),get('https://api.mapbox.com/directions/v5/mapbox/driving/'+tail)]);
+   const t=dt&&dt.routes&&dt.routes[0], f=df&&df.routes&&df.routes[0], r=t||f;
+   if(!r)return null;
+   const sec=r.duration, free=f?f.duration:sec, ratio=free>0?sec/free:1, delay=Math.max(0,Math.round((sec-free)/60));
+   const traffic=!t?'':(ratio<1.08||delay<2)?'light':ratio<1.25?'moderate':ratio<1.5?'heavy':'severe';
+   return {min:Math.round(sec/60),km:Math.round((r.distance||0)/1000),delayMin:t?delay:0,traffic:traffic};
+ }catch(_e){return null;}
+};
 
 function focusMarker(idx, silent=false){
  if(idx<0||!_projMarkers[idx])return;
@@ -35957,6 +35995,9 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     ['airtable', 'invoice', 'imgbb', 'mapbox', 'foursquare'].forEach(function(n){ if (typeof k[n] === 'string' && k[n]) { out[n] = k[n]; any = true; } });
     if (!any) return;
     keys = Object.assign({}, keys || {}, out);      /* keys from Wix add to the ones already here */
+    /* PORTAL 6.131: the public Mapbox key (pk., public by design) is kept for this tab, so the one-time reload to a new
+       version cannot lose it (the Wix page sends it only once). No other key is kept. */
+    if (out.mapbox) { try { sessionStorage.setItem('agc-mb', out.mapbox); } catch (e) {} }
     ['home', 'projects'].forEach(function(n){
       if (!started[n]) return;
       if (ridSent[n]) restart(n); else post(n, { type: 'agc_keys', keys: keys });
@@ -36440,14 +36481,29 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      (that page's own geocoder, then Open-Meteo: free, no key, Celsius, km/h, mm). Kept for 20 minutes per address.
      Resolves to Open-Meteo's answer ({current, daily}) or null when there is no address or it cannot be had. */
   var alfWx = {};
+  /* PORTAL 6.131: ALFRED's forecast and drive time use My Projects' map tools; if My Projects has not been opened yet, it is
+     started (out of sight) and he waits for it, up to 10 seconds, instead of giving up. */
+  function projWin(){ return new Promise(function(res){ start('projects'); var n = 0;
+    (function chk(){ var w = null; try { w = frames.projects && frames.projects.contentWindow; } catch (e) {}
+      if (w && ready.projects && typeof w.geocode === 'function' && typeof w.AGC_DRIVE === 'function') return res(w);
+      if (++n > 40) return res(w && typeof w.geocode === 'function' ? w : null); setTimeout(chk, 250); })(); }); }
+  var alfDrive = {};
+  window.AGC_ALFRED_DRIVE = function(address){
+    address = String(address || '').replace(/\s+/g, ' ').trim();
+    if (!gate.open || !address) return Promise.resolve(null);
+    var k = address.toLowerCase(), c = alfDrive[k];
+    if (c && Date.now() - c.at < 5 * 60000) return c.p;
+    var p = projWin().then(function(w){ return w && typeof w.AGC_DRIVE === 'function' ? w.AGC_DRIVE(address) : null; }).then(null, function(){ return null; });
+    alfDrive[k] = { at: Date.now(), p: p };
+    p.then(function(v){ if (!v && alfDrive[k] && alfDrive[k].p === p) delete alfDrive[k]; });
+    return p;
+  };
   window.AGC_ALFRED_WEATHER = function(address){
     address = String(address || '').replace(/\s+/g, ' ').trim();
     if (!gate.open || !address) return Promise.resolve(null);
     var k = address.toLowerCase(), c = alfWx[k];
     if (c && Date.now() - c.at < 20 * 60000) return c.p;
-    var w = null; try { w = frames.projects && frames.projects.contentWindow; } catch (e) {}
-    if (!w || typeof w.geocode !== 'function') return Promise.resolve(null);
-    var p = Promise.resolve().then(function(){ return w.geocode(address); }).then(function(co){
+    var p = projWin().then(function(w){ return w && typeof w.geocode === 'function' ? w.geocode(address) : null; }).then(function(co){
       if (!co || co.length < 2 || !isFinite(co[0]) || !isFinite(co[1])) return null;
       return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + (+co[0]) + '&longitude=' + (+co[1]) +
         '&current=temperature_2m,apparent_temperature,wind_speed_10m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max,precipitation_sum,wind_speed_10m_max' +
@@ -36682,6 +36738,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
   /* Home first so it paints straight away; the other two load right behind it. */
   var first = (location.hash || '').replace('#', '');
   try { if (window.AGC_KEYS) setKeys(window.AGC_KEYS); } catch (e) {}
+  try { var mbk = sessionStorage.getItem('agc-mb'); if (mbk && /^pk\./.test(mbk) && !(keys && keys.mapbox)) setKeys({ mapbox: mbk }); } catch (e) {}
   gateStart();
   askHost();
 
@@ -36690,7 +36747,9 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6124;
+  /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
+     once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
+  var AGC_BUILD = 6131;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
