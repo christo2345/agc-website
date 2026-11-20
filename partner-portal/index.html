@@ -6270,6 +6270,8 @@ function digitsAGC(t){return t.replace(/\bAGC\s+(\d{3,7})\b/g,function(x,n){retu
    · CAD, USD and MXN are said as Canadian dollars, US dollars and Mexican pesos; ".00" cents are dropped
    · no symbols are read out: emoji, the dots and bars between facts, slashes, hashes, stars, arrows, brackets, links */
 function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?2:0;
+  /* "...is listed below.": what is listed (addresses) is read on screen, not aloud */
+  t=t.replace(/((?:is|are) listed below\.)[\s\S]*$/i,'$1');
   var CUR={CAD:['Canadian dollars','dollars canadiens','dólares canadienses'],USD:['US dollars','dollars américains','dólares estadounidenses'],MXN:['Mexican pesos','pesos mexicains','pesos mexicanos']},
       DOL=['dollars','dollars','dólares'],LNK=[' the link ',' le lien ',' el enlace '],JOB=['this project','ce projet','este proyecto'],OTH=['another project','un autre projet','otro proyecto'],AND=[' and ',' et ',' y '],PCT=[' percent',' pour cent',' por ciento'];
   var amt=function(n){return String(n).replace(/\.00$/,'')};
@@ -6314,6 +6316,7 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
    .replace(/[#*_~`^<>="“”«»+$\\]/g,' ');
   /* tidy the pauses left behind */
   return digitsAGC(t).replace(/\s+/g,' ').replace(/\s+([,.!?;:])/g,'$1').replace(/,(\s*,)+/g,',').replace(/,\s*([.!?;:])/g,'$1').replace(/([.!?:])\s*,/g,'$1').replace(/^\s*,\s*/,'').trim()}
+try{window.AGC_cityOf=cityOf}catch(e){}
 window.AGC_say=function(text,lang){var cc=chatEl();if(!on||voOff||!text||(cc&&!cc.classList.contains('open')))return;
   text=forVoice(text,(lang||'en').slice(0,2));if(!text)return;
   var wait=1300-(performance.now()-openedAt);if(wait>0){clearTimeout(window.__sayT);window.__sayT=setTimeout(function(){window.AGC_say(text,lang)},wait);return}
@@ -6674,6 +6677,10 @@ window.AGC_ALFRED_PORTAL = (function(){
   function aWhere(p){ var out = [];
     if (!p.stores.length && !p.addresses.length) return [head(p) + ' has no store or address on it yet.'];
     var n = Math.max(p.stores.length, p.addresses.length);
+    /* PORTAL 6.132 (Chris): a first line, "The address for your project in Calgary is listed below." (the voice says only that) */
+    var cs = []; for (var c = 0; c < Math.min(n, 6); c++) { var ct = ''; try { ct = window.AGC_cityOf ? window.AGC_cityOf(S(p.addresses[c] || p.stores[c])) : ''; } catch (e) {} if (ct && cs.indexOf(ct) < 0) cs.push(ct); }
+    var inC = cs.length ? ' in ' + (cs.length > 2 ? cs.slice(0, -1).join(', ') + ' and ' + cs[cs.length - 1] : cs.join(' and ')) : '';
+    out.push(n > 1 ? 'The addresses for your project' + inC + ' are listed below.' : 'The address for your project' + inC + ' is listed below.');
     for (var i = 0; i < Math.min(n, 6); i++) out.push(clean(p.addresses[i] || p.stores[i], 200));
     if (n > 6) out.push('…and ' + (n - 6) + ' more on the project map.');
     return out; }
