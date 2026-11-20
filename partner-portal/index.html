@@ -6271,7 +6271,7 @@ function digitsAGC(t){return t.replace(/\bAGC\s+(\d{3,7})\b/g,function(x,n){retu
    · no symbols are read out: emoji, the dots and bars between facts, slashes, hashes, stars, arrows, brackets, links */
 function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?2:0;
   var CUR={CAD:['Canadian dollars','dollars canadiens','dólares canadienses'],USD:['US dollars','dollars américains','dólares estadounidenses'],MXN:['Mexican pesos','pesos mexicains','pesos mexicanos']},
-      DOL=['dollars','dollars','dólares'],LNK=[' the link ',' le lien ',' el enlace '],JOB=['this project','ce projet','este proyecto'],AND=[' and ',' et ',' y '],PCT=[' percent',' pour cent',' por ciento'];
+      DOL=['dollars','dollars','dólares'],LNK=[' the link ',' le lien ',' el enlace '],JOB=['this project','ce projet','este proyecto'],OTH=['another project','un autre projet','otro proyecto'],AND=[' and ',' et ',' y '],PCT=[' percent',' pour cent',' por ciento'];
   var amt=function(n){return String(n).replace(/\.00$/,'')};
   /* links are not read; an email is read as "name at domain dot com" */
   t=t.replace(/https?:\/\/[^\s.,;!?)]+(?:[.,;!?)]?[^\s.,;!?)]+)*/g,LNK[k]).replace(/\b([\w.+-]+)@([\w-]+(?:\.[\w-]+)+)\b/g,function(m,a,b){return a+' at '+b.replace(/\./g,' dot ')});
@@ -6285,16 +6285,21 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
   t=cityOnly(t);
   /* "#" is never said (Chris): "AGC #19161" = "AGC 1 9 1 6 1"; any other "#2160" (a store, a unit) = its digits one at a time;
      a project number written first ("19161 / TJX ...", "19161 - ...") = "AGC 1 9 1 6 1" */
+  t=t.replace(/\b(project|projet|proyecto|job)\s+#?\s*(\d{5})\b/gi,'$1 AGC $2');
   t=t.replace(/\bAGC\s*#\s*(?=\d)/gi,'AGC ').replace(/(^|[.!?:]\s+|\b(?:for|on|of|job|project)\s+)(\d{5})\s*(?:\/|[-–]\s)/g,'$1AGC $2, ')
    .replace(/#\s*(\d{1,7})\b/g,function(x,n){return n.split('').join(' ')}).replace(/#/g,' ').replace(/\b(?:AGC\s+){2,}(?=\d)/gi,'AGC ');
   /* phone numbers: digit by digit, in their three groups */
   t=t.replace(/(?:\+?1[\s.-]?)?\(?\b(\d{3})\)?[\s.-]?(\d{3})[\s.-](\d{4})\b/g,function(x,a,b,c){return [a,b,c].map(function(g){return g.split('').join(' ')}).join(', ')});
   var nums=[],re=/\bAGC (\d{4,6})\b/g,m;while((m=re.exec(t)))if(nums.indexOf(m[1])<0)nums.push(m[1]);
-  /* Chris: the AGC number is said the first time a project comes up, then "this project", in this reply and the next ones,
-     until the talk moves to another project: its number once, then "this project" again. A list of several projects keeps the numbers. */
-  if(nums.length===1){var said=window.AGC_VOICE_LAST===nums[0]?1:0;window.AGC_VOICE_LAST=nums[0];
-    t=t.replace(/\bAGC (\d{4,6})\b/g,function(x,n,at){if(!said++)return x;var start=/(^|[.!?]\s*)$/.test(t.slice(0,at));return start?JOB[k].charAt(0).toUpperCase()+JOB[k].slice(1):JOB[k]})}
-  else if(nums.length>1)window.AGC_VOICE_LAST='';
+  /* Chris (6.132): the AGC number is never said. A reply about one project says "this project"; a reply that names
+     several projects says each one by its short store name ("Winners 2 1 6 0", "Lindt Halifax"). */
+  var cap=function(s,at){return /(^|[.!?]\s*)$/.test(t.slice(0,at))?s.charAt(0).toUpperCase()+s.slice(1):s};
+  var SH={};try{(window.AGC_ALFRED_TITLES||[]).forEach(function(x){if(x&&x[1]&&!SH[x[1]])SH[x[1]]=shortStore(String(x[0]||'').replace(/^\s*\d{4,6}\s*(?:[\/\-–:·|]\s*)?/,''))})}catch(e){}
+  /* "Your next job is <it>" has to name it: there, the store name */
+  var NAMEIT=/\b(?:next|first|last|other|only) (?:job|install|project|one) (?:is|will be)\s*$|\b(?:prochain|premier) (?:projet|chantier) est\s*$|\b(?:próximo|primer) (?:trabajo|proyecto) es\s*$/i;
+  if(nums.length===1)t=t.replace(/\bAGC (\d{4,6})\b/g,function(x,n,at){return SH[n]&&NAMEIT.test(t.slice(0,at))?SH[n]:cap(JOB[k],at)});
+  else if(nums.length>1)t=t.replace(/\bAGC (\d{4,6})\b/g,function(x,n,at){return cap(SH[n]||OTH[k],at)});
+  t=t.replace(/\b(?:the |le |el )?(?:project|projet|proyecto|job)\s+(this project|ce projet|este proyecto)\b/gi,function(x,j,at){return cap(j.toLowerCase(),at)});
   /* money */
   t=t.replace(/(?:(?:US|CA|C|MX)?\$\s?)?(\d[\d,]*(?:\.\d+)?)\s*(CAD|USD|MXN)\b/g,function(x,n,c){return moneyWords(n,CUR[c][k],k)})
    .replace(/(?:US|CA|C)?\$\s?(\d[\d,]*(?:\.\d+)?)/g,function(x,n){return moneyWords(n,DOL[k],k)})
@@ -6674,14 +6679,12 @@ window.AGC_ALFRED_PORTAL = (function(){
     for (var i = 0; i < Math.min(n, 6); i++) if (p.addresses[i] || p.stores[i]) acts.push([(n > 1 ? 'Google Maps ' + (i + 1) : 'Open in Google Maps'), mapsUrl(p.addresses[i] || p.stores[i])]);
     acts.push(['See it on the project map', 'proj:' + p.title + '|map']);
     return acts; }
-  function aBudget(p){ var out = [];
-    if (p.awaiting) return [head(p) + ' is not approved by the client yet (status: ' + p.status + '), so there is no budget to show. It appears as soon as the job is confirmed.'];
-    if (p.shared) return [head(p) + ' has more than one installer on it, so it is paid hourly plus costs rather than as one total for you.'];
-    if (p.total == null || !p.total) return [head(p) + ' has no budget entered yet.'];
-    out.push('The budget for ' + head(p) + ' is ' + money(p.total, p.cur) + (p.billing ? ', ' + p.billing.toLowerCase().replace(/\b(?:ft2|ft²|sq\.? ?ft|sqft)\b/g, 'square foot') : '') + '.');
-    if (p.lines.length > 1) p.lines.forEach(function(l){ out.push(money(l.amt, p.cur) + (l.type ? ' (' + l.type.toLowerCase() + ')' : '') + (l.what ? ': ' + l.what : '')); });
-    else if (p.lines.length === 1 && p.lines[0].what) out.push('For: ' + p.lines[0].what);
-    return out; }
+  /* PORTAL 6.132 (Chris: much shorter and direct): the amount and how it is paid, nothing else */
+  function aBudget(p){
+    if (p.awaiting) return ['No budget yet: the client hasn’t approved this job.'];
+    if (p.shared) return ['Shared job: paid hourly plus costs, no single total.'];
+    if (p.total == null || !p.total) return ['No budget entered yet.'];
+    return [money(p.total, p.cur) + (p.billing ? ', ' + p.billing.toLowerCase().replace(/\b(?:ft2|ft²|sq\.? ?ft|sqft)\b/g, 'square foot') : '') + '.']; }
   function aStatus(p){ var out = [head(p) + (p.status ? ' is at: ' + p.status + '.' : ' has no installer status set.')];
     if (p.projectStatus && p.projectStatus !== p.status) out.push('Project status: ' + p.projectStatus + '.');
     if (p.date) out.push('Scheduled for ' + day(p.date) + '.');
@@ -7117,10 +7120,9 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (!window.AGC_ALFRED_DATA) return Promise.resolve(null);
     return window.AGC_ALFRED_DATA().then(function(data){ if (!data) return null;
       var cur = currencyOf((data.installer && data.installer.fields) || {}), ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); }); keepTitles(ps);
-      var scr = onScreen(ps, data), st = !scr && data.screen && data.screen.view === 'profile' ? data.screen.step : 0, n = nextLine(ps), out = ['Welcome back' + (S(data.name) ? ', ' + S(data.name) : '') + '. ' + (scr ? 'On your screen: ' + line(scr) + '. Ask me anything about it.' : st ? 'On your screen: My Profile, step ' + st + ' of 5, ' + NAMES5[st - 1] + '. Ask me anything about it.' : n.text)], NAMES = ['Basic Info', 'Contract', 'Banking', 'Insurance', 'US Tax Forms'];
-      if (data.steps && Array.isArray(data.steps.done)) { var miss = [1, 2, 3, 4, 5].filter(function(x){ return data.steps.done.map(Number).indexOf(x) < 0; });
-        if (miss.length) out.push('Your profile still needs: ' + miss.map(function(x){ return NAMES[x - 1]; }).join(', ') + '.'); }
-      if ((scr || st) && n.p && n.p !== scr) out.push(n.text);
+      /* PORTAL 6.132 (Chris: too long): opened again = one line, like the first welcome */
+      var scr = onScreen(ps, data), st = !scr && data.screen && data.screen.view === 'profile' ? data.screen.step : 0, n = nextLine(ps),
+          out = ['Hey ' + (S(data.name) || 'there') + ', have any questions about ' + (scr ? 'this project' : st ? 'your profile' : 'your projects') + '?'];
       return { paras: out, acts: scr ? follow(scr) : st ? [['This step', 'ask:What is on file for this step?'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']] : n.p ? [['Next job details', askFor(n.p, '')]] : [] }; }, function(){ return null; });
   }
   return { answer: answer, back: back };
@@ -12604,7 +12606,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.131</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.132</span>
  </div>
 
  <div class="hero">
@@ -36749,7 +36751,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6131;
+  var AGC_BUILD = 6132;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){

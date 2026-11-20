@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.131 = 6131). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.132 = 6132). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -99,6 +99,10 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 - ALFRED answers drive time with traffic (since 6.131): "how long is the drive", "traffic", "how far",
   from the installer's own address to the job (Mapbox driving-traffic vs usual), with a Directions button
   that opens Google Maps with live traffic, and the project map button.
+- Since 6.132 the voice never says an AGC number: a reply about one project says "this project" (but "your next job
+  is ..." names it by its short store name), a reply naming several says each by its short store name ("Winners 2 1 6 0",
+  "Lindt Halifax"). The budget answer is one line: the amount and how it is paid. Reopening the chat says
+  "Hey <name>, have any questions about this project?" like the first welcome.
 - ALFRED's welcome (since 6.130) is one line: "Hey <first name>, have any questions about this project?" (the
   project open on screen; otherwise "your projects", or "your profile" while on My Profile).
 - Chat answers (since 6.129):
