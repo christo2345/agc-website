@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.133 = 6133). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.134 = 6134). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -118,6 +118,8 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   count only jobs budgeted for this installer alone and approved by the client.
 - Since 6.133 ALFRED calls the installer Mr or Miss + first name ("Hey Mr Patrick"), from SALUTATION on AGC INSTALLERS
   (sent by the backend). Blank or CHECK: the first name alone.
+- Contacts (since 6.134): "Onsite contact: Store manager." and "Your project manager is Randall Moffatt, (917) 410-0970."
+  The phone is said once (the PM field already holds it), no dash, plus a Call your project manager button.
 - ALFRED's welcome (since 6.130) is one line: "Hey <first name>, have any questions about this project?" (the
   project open on screen; otherwise "your projects", or "your profile" while on My Profile).
 - Chat answers (since 6.129):

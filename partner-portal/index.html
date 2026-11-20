@@ -6743,14 +6743,21 @@ window.AGC_ALFRED_PORTAL = (function(){
     return out; }
   /* PORTAL 6.129 (Chris: "any recent updates to this project?" got the whole job summary). Job updates are not in the portal yet,
      so he says so plainly, gives where it stands, and points to the project manager. */
-  function aUpdates(p){ var f = p.f, pm = S(pick(f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')), pd = S(f['PM Direct']), out = [];
+  function aUpdates(p){ var f = p.f, pmx = pmOf(f), pm = pmx.name, pd = pmx.phone, out = [];
     out.push('I don’t have job updates for ' + head(p) + ' in the portal yet.');
     out.push('Where it stands: ' + [p.status, p.date ? day(p.date) + (whenWords(p.date) ? ' (' + whenWords(p.date) + ')' : '') : 'no install date yet'].filter(Boolean).join(', ') + '.');
     if (pm) out.push('For the latest, ask ' + pm + ', your project manager' + (pd ? ', at ' + pd : '') + '.');
     return out; }
-  function aContact(p){ var f = p.f, out = [], on = clean(f['ONSITE CONTACT'], 200), pm = S(pick(f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')), pd = S(f['PM Direct']);
-    if (on) out.push('Onsite contact for ' + head(p) + ': ' + on + '.');
-    if (pm) out.push('Your AGC project manager is ' + pm + (pd ? ' (' + pd + ')' : '') + '.');
+  /* PORTAL 6.134 (Chris: "you are repeating yourself"): the PM field already holds "Name — phone", so the name and the
+     phone are split once and the phone is given once, with no dash. ALL CAPS contacts are written in normal case. */
+  function pmOf(f){ var raw = S(pick(f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')), pd = S(f['PM Direct']), ph = '';
+    var m = raw.match(/\(?\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\)?/); if (m) { ph = m[0].replace(/^\(+(?=\()/, ''); raw = raw.replace(m[0], ''); }
+    var name = raw.replace(/[\s—–|,:;-]+$/, '').replace(/^[\s—–|,:;-]+/, '').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
+    return { name: name, phone: (pd || ph).replace(/^\((\(.*\))\)$/, '$1').trim() }; }
+  function normalCase(t){ return t && t === t.toUpperCase() && /[A-Z]{3}/.test(t) ? t.charAt(0) + t.slice(1).toLowerCase() : t; }
+  function aContact(p){ var f = p.f, out = [], on = normalCase(clean(f['ONSITE CONTACT'], 200)), pmx = pmOf(f), pm = pmx.name, pd = pmx.phone;
+    if (on) out.push('Onsite contact: ' + on + '.');
+    if (pm) out.push('Your project manager is ' + pm + (pd ? ', ' + pd : '') + '.');
     if (!on && !pm) out.push(head(p) + ' has no onsite contact or project manager listed. Call AGC at 1 (877) 395-7435.');
     return out; }
   function aFiles(p){ var f = p.f, lay = files(f['LAYOUTS & PLANS']).length, pf = files(f['PROJECT FILES - INSTALLER']).length, ds = files(f['DATA SHEET']).length, out = [];
@@ -6771,7 +6778,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (p.date) out.push('Scheduled: ' + day(p.date) + (whenWords(p.date) ? ' (' + whenWords(p.date) + ')' : '') + (p.time ? ', ' + p.time : '') + '.'); else out.push('No install date set yet.');
     if (p.stores.length || p.addresses.length) { var n = Math.max(p.stores.length, p.addresses.length); out.push(n === 1 ? 'Where: ' + [p.stores[0], p.addresses[0]].filter(Boolean).join(', ') + '.' : 'Where: ' + n + ' locations.'); }
     out.push(aBudget(p)[0]);
-    var pm = S(pick(p.f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')); if (pm) out.push('Project manager: ' + pm + '.');
+    var pm = pmOf(p.f).name; if (pm) out.push('Project manager: ' + pm + '.');
     return out; }
   /* ── weather: the forecast for the job's address (AGC_ALFRED_WEATHER in look/nav.js: Open-Meteo, as in the project's Weather view).
         By default the install day; "today", "tomorrow" or a weekday asks for that day instead. Only what the forecast says. ── */
@@ -7096,7 +7103,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       /* PORTAL 6.129: the address answer has a Google Maps link per address and a button for the project map */
       if (fieldAsk === 'where') return { paras: aWhere(one), acts: whereActs(one).concat(follow(one, 'where').slice(0, 2)) };
       /* PORTAL 6.129: "any updates?" points to the project manager, with a button to call */
-      if (fieldAsk === 'updates') { var upd = S(one.f['PM Direct']).replace(/[^\d+]/g, ''); return { paras: aUpdates(one), acts: (upd.length >= 10 ? [['Call your project manager', 'tel:' + upd]] : [CALL]).concat(follow(one, 'updates')).slice(0, 4) }; }
+      if (fieldAsk === 'updates' || fieldAsk === 'contact') { var upd = pmOf(one.f).phone.replace(/[^\d+]/g, ''); return { paras: ONE[fieldAsk](one), acts: (upd.length >= 10 ? [['Call your project manager', 'tel:' + upd]] : [CALL]).concat(follow(one, fieldAsk)).slice(0, 4) }; }
       /* PORTAL 6.129: a shipping answer has a link to track each shipment, then the usual buttons */
       var trk = fieldAsk === 'shipping' ? tracks(S(pick(one.f, 'TRACKING NUMBER', 'TRACKING NUMBER(S)')), S(pick(one.f, 'SHIPPING CO.', 'SHIPPING COMPANY'))).slice(0, 6).map(function(x){ return ['Track ' + (x.carrier ? x.carrier + ' ' : '') + x.num, x.url]; }) : [];
       return { paras: fn(one), acts: trk.concat((fieldAsk === 'files' || fieldAsk === 'closeout' ? [open()] : fieldAsk === 'invoice' ? [INVOICE] : []).concat(follow(one, fieldAsk)).slice(0, 4)) };
@@ -7118,7 +7125,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (/\bsite ?monkey\b|\bsite survey\b/.test(q)) return { paras: ['Site Monkey is in the menu at the top of the portal. It opens in a new tab.'], acts: [] };
     if (/\b(close ?out|closeouts?|photos?|pictures?)\b/.test(q) && doing) return { paras: ['Close-out is done inside the job: open it in My Projects.', 'Ask me with the AGC number to see how many close-out photos are already uploaded.'], acts: [open()] };
     if (/\b(human|person|someone|somebody|representative|real person|talk to|speak (to|with)|call (agc|you|someone|somebody)|phone number|contact agc|email agc|reach (agc|you|someone))\b/.test(q)) {
-      var lp = ps.filter(function(p){ return p.id === lastId; })[0], pm = lp ? S(pick(lp.f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')) : '';
+      var lp = ps.filter(function(p){ return p.id === lastId; })[0], pm = lp ? pmOf(lp.f).name : '';
       return { paras: ['Call or email AGC and the team will pick it up.'].concat(pm ? ['Your project manager on ' + lp.title + ' is ' + pm + '.'] : []), acts: [CALL, MAIL] }; }
     return null; }
   function other(q, ps, data, aboutJobs, aboutAgc, scr, onStepAnswer){
@@ -12630,7 +12637,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.133</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.134</span>
  </div>
 
  <div class="hero">
@@ -36834,7 +36841,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6133;
+  var AGC_BUILD = 6134;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
