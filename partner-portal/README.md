@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.125 = 6125). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.126 = 6126). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -78,6 +78,9 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   weekdays, street types and NW / NE / SW / SE, provinces and states after a city, units (km/h, mm, °C,
   ft, sq ft, ", hrs), sizes (34" x 72" = 34 inches by 72 inches) and short forms (PO, COI, TBD, ETA,
   approx, e.g.). A dollar sign is said as dollars ($100 = 100 dollars).
+  A store is said short (since 6.126): its chain and store number only ("SDM 2 2 1", "Walmart 3 1 4 8",
+  "RBC 6 8 0 0"), without the mall, street or city after it; a store with no number is said by the part
+  before its location ("Scotiabank").
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 

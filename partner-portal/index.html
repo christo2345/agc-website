@@ -6166,6 +6166,25 @@ function voEl(){/* an element stays tied to the audio engine it was first routed
   if(vo&&vo.__ctx&&vo.__ctx!==ctx){try{vo.pause()}catch(e){}vo=null}
   if(!vo){vo=new Audio();vo.setAttribute('playsinline','');vo.preload='auto';vo.volume=VOV}
   if(ctx&&!vo.__g){try{var src=ctx.createMediaElementSource(vo),g=ctx.createGain();g.gain.value=VOV;src.connect(g);g.connect(uvol||ctx.destination);vo.__g=g;vo.__ctx=ctx;vo.volume=1}catch(e){vo.__g=null}}return vo}
+/* PORTAL 6.126 (Chris, Nov 20 2026): a store is said short: its chain and store number only ("SDM 2 2 1"), without the
+   mall, street or city after it; a store with no number is said by the part before its location ("Scotiabank") */
+var STORE_CHAINS=[[/^(?:SDM|Shoppers Drug Mart|Shoppers)\b/i,'SDM'],[/^(?:HBC|Hudson'?’?s Bay|The Bay)\b/i,'HBC'],[/^TD\b/i,'TD'],[/^(?:BMO|Bank of Montreal)\b/i,'BMO'],
+  [/^RBC\b/i,'RBC'],[/^CIBC\b/i,'CIBC'],[/^TJX\s+/i,''],[/^Garage Store\b/i,'Garage'],[/^NSLC Store\b/i,'NSLC'],[/^Costco Wholesale\b/i,'Costco']];
+function shortStore(name){var n=String(name||'').split(/\s*\n\s*/)[0].trim(),chain='',num='',m;if(!n)return '';
+  if((m=n.match(/^#?\s*(\d{2,6})\s*[-–]?\s+([A-Za-z].+)$/))&&!/^\d+\s*(?:FT|ft)\b/.test(n)){num=m[1];n=m[2]}   /* "2476 - TBS STOUFFVILLE", "#71 Holt Renfrew" */
+  for(var i=0;i<STORE_CHAINS.length;i++)if(STORE_CHAINS[i][0].test(n)){if(STORE_CHAINS[i][1])chain=STORE_CHAINS[i][1];else n=n.replace(STORE_CHAINS[i][0],'');break}
+  if(!num&&(m=n.match(/[#\/]\s*(\d{1,7})\b|\b(?:Transit|Store|Branch|No\.?)\s*#?\s*(\d{1,7})\b/i)))num=m[1]||m[2];
+  if(!num&&(m=n.match(/^[A-Za-z][\w'’&. ]*?\s(\d{2,7})\b/)))num=m[1];                 /* "SDM 221 Douglas" */
+  if(!chain&&(m=n.match(/^([A-Z]{2,4})\s+[A-Za-z]/)))chain=m[1];                            /* an acronym first: "TBS STOUFFVILLE" = TBS */
+  if(!chain)chain=n.split(/\s*(?:[-–—,(@|\/]|#|\s\d)\s*/)[0].trim();
+  if(!chain)return '';
+  if(chain.length>4&&chain===chain.toUpperCase())chain=chain.toLowerCase().replace(/(^|[\s'’-])([a-z])/g,function(x,p,c){return p+c.toUpperCase()});
+  return chain+(num?' '+num.split('').join(' '):'')}
+function shortStores(t){try{var L=(window.AGC_ALFRED_STORES||[]).filter(function(s){return String(s||'').trim().length>=4}).slice().sort(function(a,b){return String(b).length-String(a).length});
+  L.forEach(function(s){var full=String(s).split(/\s*\n\s*/)[0].trim(),sh=shortStore(full);if(!sh||sh===full)return;
+    t=t.replace(new RegExp(full.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),sh)})}catch(e){}
+  /* stores written another way: "SDM #221" */
+  return t.replace(/\b(SDM|HBC|TBS)\s*[-–]?\s*#?\s*(\d{1,7})\b|\b(Walmart|WALMART)\s*[-–]?\s*#\s*(\d{1,7})\b/g,function(x,c,n,w,wn){return (c||'Walmart')+' '+(n||wn).split('').join(' ')})}
 /* PORTAL 6.125 (Chris, Nov 20 2026): abbreviations are said in full (months, weekdays, street types, provinces and states,
    units, and the short forms the portal uses), and an AGC number is read one digit at a time ("AGC 1 9 0 4 6") */
 function sayInFull(t,k){
@@ -6216,6 +6235,7 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
   /* projects: the long name becomes "AGC <number>" (longest names first, so a name inside another is not cut) */
   try{(window.AGC_ALFRED_TITLES||[]).slice().sort(function(a,b){return b[0].length-a[0].length}).forEach(function(x){var nm=String(x[0]||'').trim();
     if(nm.length<4||/^\d+$/.test(nm)||!x[1])return;t=t.replace(new RegExp(nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'AGC '+x[1])})}catch(e){}
+  t=shortStores(t);
   t=t.replace(/\bAGC\s*#\s*(?=\d)/gi,'AGC ').replace(/(^|[^\w])#\s*(\d{4,6})\b/g,'$1AGC $2').replace(/\b(?:AGC\s+){2,}(?=\d)/gi,'AGC ');
   /* the same job again in one reply: "this job" */
   var nums=[],re=/\bAGC (\d{4,6})\b/g,m;while((m=re.exec(t)))if(nums.indexOf(m[1])<0)nums.push(m[1]);
@@ -6559,8 +6579,8 @@ window.AGC_ALFRED_PORTAL = (function(){
     contact: 'Who are the contacts for', weather: 'What is the weather for', status: 'What is the status of', notes: 'What are the notes for', ppe: 'What PPE is needed for', crew: 'How many workers for', files: 'What files are on',
     invoice: 'Is there an invoice on', closeout: 'Where is the closeout for' };
   function nameOf(p){ return p.num ? 'AGC #' + p.num : p.title; }
-  /* PORTAL 6.125: the job names and numbers of this installer, so his voice can say a job by its number only (forVoice) */
-  function keepTitles(ps){ try { window.AGC_ALFRED_TITLES = ps.filter(function(p){ return p.num && p.title; }).map(function(p){ return [p.title, p.num]; }); } catch (e) {} }
+  /* PORTAL 6.125: the job names and numbers of this installer, and their store names, so his voice can say a job by its number and a store by its chain and number only (forVoice, 6.125 / 6.126) */
+  function keepTitles(ps){ try { window.AGC_ALFRED_TITLES = ps.filter(function(p){ return p.num && p.title; }).map(function(p){ return [p.title, p.num]; }); var st = []; ps.forEach(function(p){ (p.stores || []).forEach(function(x){ if (x && st.indexOf(x) < 0) st.push(x); }); }); window.AGC_ALFRED_STORES = st; } catch (e) {} }
   function askFor(p, kind){ kind = QT[kind] ? kind : ''; return 'ask:' + QT[kind] + ' ' + nameOf(p).replace(/\|/g, ' ') + '?|' + p.id + '|' + kind; }
   function follow(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
     .filter(function(a){ return a[1] !== skip; }).slice(0, 4).map(function(a){ return [a[0], askFor(p, a[1])]; }); }
@@ -12472,7 +12492,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.125</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.126</span>
  </div>
 
  <div class="hero">
