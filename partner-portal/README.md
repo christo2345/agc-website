@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.120 = 6120). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.121 = 6121). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -46,7 +46,11 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   figure, date and name in an answer comes from a field; an empty field is reported as empty, and a
   question the portal's data does not answer gets "I can't find that in your portal" with Call and
   Email. None of the website's written answers (its knowledge base, jokes, welcome-back lines) are
-  carried into the portal, and the live answer service is not called from it.
+  carried into the portal, and the live answer service is not called from it. He recognizes
+  questions by their wording (a list of patterns in `look/alfred.portal.js`), not with an AI model.
+  Since 6.121 that list also covers onboarding ("am I fully onboarded", "what's missing"), single
+  facts from the installer's record (website, emails, company, country…), and a question he cannot
+  place gets an overview of what is on file instead of a dead end.
 - With sound on he reads his replies aloud (since 6.120), which sends the reply text to the voice
   service, the same one the website uses.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file

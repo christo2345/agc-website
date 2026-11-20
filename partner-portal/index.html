@@ -6431,23 +6431,41 @@ window.AGC_ALFRED_PORTAL = (function(){
     notes: /\b(notes?|instructions?|directives?|requirements?|important|rules)\b/,
     scope: /\b(scope|what is the (job|work)|whats the (job|work)|what am i (doing|installing)|what do i (need|have) to (do|install)|details?|description|brief|products?|service type|square f(ee|oo)t|sq ?ft|ft2|how big|size)\b/
   };
-  var PROFILE = {
-    complete: /\b(profile|onboarding|steps?|sign ?up)\b.*\b(complete\w*|done|finished|missing|left|status|progress|percent\w*|ready)\b|\bwhat (is|am i|s) (still )?missing\b|\b(complete\w*|finish\w*) my profile\b/,
-    rates: /\b(hourly|my rates?|min(imum)? charge|cancellation fee|prorated|what do i charge|my pricing)\b/,
-    insurance: /\b(insur\w*|liability|coi|certificate)\b/,
-    contract: /\b(contract|agreement)\b/,
-    banking: /\b(bank\w*|direct deposit|eft|ach|account number|void che\w+|payment details|how do i get paid|where do you pay)\b/,
+  var PROFILE = {                                        /* the first that matches wins */
+    complete: /\b(onboard\w*|on board\w*|signed up|sign ?up|set ?up|all set|good to go|ready to (work|start|go)|ready for (work|jobs)|verified|activated?|fully (approved|done|complete\w*)|am i (approved|active|ready|done|complete\w*|compliant|good)|compliant|compliance|outstanding|incomplete|next steps?|to ?do list)\b|\b(profile|steps?|account|paperwork|documents?|docs)\b.*\b(complete\w*|done|finished|missing|left|status|progress|percent\w*|ready|approved|active|valid|good|fine|ok|okay|in order|up to date)\b|\b(what|anything)( else)? (is|am i|s|do i|do you) (still )?(missing|need\w*|left|outstanding|required)\b|\bwhat (do you|does agc) (still )?need from me\b|\b(complete\w*|finish\w*) my profile\b|\bmissing (anything|something|from my)\b/,
+    rates: /\b(hourly|rates?|min(imum)? charge|cancellation fee|prorated|pro rated|what do i charge|my pricing|my prices?)\b/,
+    insurance: /\b(insur\w*|liability|coi|certificate|coverage amount|policy|additional insured)\b/,
+    contract: /\b(contract|agreement|signature|signed)\b/,
+    banking: /\b(bank\w*|direct deposit|deposit|eft|ach|account (number|name|type)|transit|institution|routing|void che\w+|payment (details|info\w*)|where do you pay)\b/,
     tax: /\b(tax\w*|w ?9|w ?8\w*|t4a?)\b/,
-    skills: /\b(skills?|services)\b/,
+    skills: /\b(skills?|services|capabilit\w*|speciali\w*)\b/,
     availability: /\b(availab\w*|union\w*)\b/,
-    area: /\b(service area|coverage|territory|areas? (do )?i (cover|service|work))\b/,
-    info: /\bmy (email|e mail|phone|phone number|number|address|company|website|name)\b/,
-    all: /\bmy profile\b|\babout me\b|\bwhat do you (have|know) (on|about) me\b/
+    area: /\b(service areas?|coverage|territory|region|areas? (do )?i (cover|service|work)|where do i (work|cover|service))\b/,
+    all: /\bmy (profile|account|info\w*|details|record|file)\b|\babout me\b|\bwhat do you (have|know|see) (on|about|for) me\b|\bwho am i\b/
   };
+  /* One fact from their record, asked for by name ("what's my website", "accounting email", "which country").
+     [pattern, how it is said, field name(s), how the value is shown]. The first rows win over the later ones. */
+  var FIELDS = [
+    [/\baccounting (e ?mail|contact)\b/, 'accounting email', ['ACCOUNTING EMAIL:']],
+    [/\bbilling address\b/, 'billing address', ['BILLING ADDRESS:']],
+    [/\b(e ?mail)\b/, 'email', ['EMAIL 1']],
+    [/\b(phone|cell|mobile|telephone)\b|\bmy number\b/, 'phone number', ['PHONE']],
+    [/\bweb ?site\b|\burl\b/, 'website', ['WEBSITE']],
+    [/\bfacebook\b/, 'Facebook', ['FACEBOOK']], [/\binstagram\b/, 'Instagram', ['INSTAGRAM']], [/\blinked ?in\b/, 'LinkedIn', ['LINKED IN']],
+    [/\b(company|business)( name)?\b/, 'company', ['COMPANY']],
+    [/\b(province|state)\b/, 'state or province', ['STATE / PROVINCE']],
+    [/\bcountry\b/, 'country', ['Country', 'COUNTRY']],
+    [/\baddress\b/, 'address', ['ADDRESS']],
+    [/\bcurrency\b/, 'payment currency', ['CURRENCY:']],
+    [/\binsurance (agent|broker)\b/, 'insurance agent', ['INSURANCE AGENT']],
+    [/\b(profile )?(photo|picture)\b/, 'profile photo', ['PROFILE PHOTO'], 'file'],
+    [/\bmy (full |first |last )?name\b|\bwho am i\b/, 'name', ['FIRST NAME', 'LAST NAME'], 'join'],
+    [/\b(portal )?notes?\b/, 'profile notes', ['PORTAL NOTES']]
+  ];
   var LISTS = {
     count: /\bhow many (projects?|jobs?|installs?)\b/,
     list: /\b(list|show|what are|which|all|see)\b.*\b(my |the )?(projects?|jobs?|installs?)\b|^(my )?(projects|jobs)$/,
-    next: /\b(next|upcoming|coming up|this week|next week|today|tomorrow|tonight|soonest|what do i have)\b/,
+    next: /\b(next|upcoming|coming up|this week|next week|today|tomorrow|tonight|soonest|what do i have|schedule|agenda|booked)\b/,
     earnings: /\b(earnings?|earned|income|made so far|how much (have i|did i|will i|do i) (made?|earn\w*|get))\b/
   };
   var MINE = /\b(my|our|i|me|mine)\b/;
@@ -6565,16 +6583,47 @@ window.AGC_ALFRED_PORTAL = (function(){
   /* ── answers about the profile ── */
   function mask(v){ var s = S(v); if (!s) return ''; var d = s.replace(/[^0-9]/g, ''); return d.length >= 4 ? 'ending ' + d.slice(-4) : 'on file'; }
   function yes(v){ return v === true || /^(yes|true|y|1|signed|complete\w*|done)$/i.test(S(v)); }
+  /* "Am I fully onboarded?": the five steps as the portal ticks them, each with what is on file for it */
+  function onboard(inst, steps){
+    var f = inst, NAMES = ['Basic Info', 'Contract', 'Banking', 'Insurance', 'US Tax Forms'], done = steps && Array.isArray(steps.done) ? steps.done.map(Number) : null, out = [];
+    var on = {
+      1: function(){ var nm = [S(f['FIRST NAME']), S(f['LAST NAME'])].filter(Boolean).join(' '), c = S(f['COMPANY']); return [nm, c].filter(Boolean).join(', '); },
+      2: function(){ var d = toDate(pick(f, 'DATE SIGNED', 'Contract Date')); return d ? 'signed ' + shortDay(d) : (yes(f['I AGREE']) || S(f['SIGNATURE'])) ? 'signed' : 'not signed yet'; },
+      3: function(){ var b = S(f['NAME OF BANK:']), a = mask(f['ACCOUNT NUMBER:']); return b || a ? [b, a && 'account ' + a].filter(Boolean).join(', ') : 'no banking details yet'; },
+      4: function(){ var st = plainStatus(f['INSURANCE STATUS']), d = toDate(f['Liability Insurance Expiry Date']), bits = [];
+        if (st) bits.push(st.toLowerCase()); if (d) bits.push((daysFromToday(d) < 0 ? 'expired ' : 'expires ') + shortDay(d));
+        if (!bits.length) bits.push(files(f['Insurance Document PDF']).length ? 'certificate on file' : 'no certificate yet'); return bits.join(', '); },
+      5: function(){ var n = files(f['US TAX FORMS']).length; return n ? n + ' form' + (n === 1 ? '' : 's') + ' on file' : 'no tax forms on file'; }
+    };
+    if (done) { var miss = [1, 2, 3, 4, 5].filter(function(n){ return done.indexOf(n) < 0; });
+      out.push(miss.length ? 'Not yet: ' + (5 - miss.length) + ' of the 5 steps on your profile ' + (5 - miss.length === 1 ? 'is' : 'are') + ' done. Still to do: ' + miss.map(function(n){ return NAMES[n - 1]; }).join(', ') + '.' : 'Yes. All five steps of your profile are complete.'); }
+    else out.push('I can’t see the step ticks from your profile page right now, so here is what is on file for each step:');
+    /* a step the portal has not ticked is never described with a reassuring detail ("still to do, signed…"): only with what is missing */
+    var NEG = /^(not |no |expired )|, expired /;
+    [1, 2, 3, 4, 5].forEach(function(n){ var d = on[n](), ok = !done || done.indexOf(n) >= 0;
+      out.push(NAMES[n - 1] + ': ' + (!done ? (d || 'nothing on file') : ok ? 'done' + (d ? ', ' + d : '') : 'still to do' + (d && NEG.test(d) ? ', ' + d : ', some details are missing (My Profile shows which)')) + '.'); });
+    if (steps && steps.insuranceRejected && steps.agentMessage) out.push('AGC’s insurance check flagged your certificate: ' + clean(steps.agentMessage, 400));
+    return out; }
+  /* one fact from their record, asked for by name */
+  function facts(q, inst){ var f = inst, out = [], seen = {};
+    FIELDS.forEach(function(r){ if (!r[0].test(q) || seen[r[2][0]]) return; r[2].forEach(function(k){ seen[k] = 1; });
+      var v = r[3] === 'file' ? (files(f[r[2][0]]).length ? 'on file' : '') : r[3] === 'join' ? r[2].map(function(k){ return S(f[k]); }).filter(Boolean).join(' ') : clean(pick.apply(null, [f].concat(r[2])), 300);
+      if (r[1] === 'address' && seen['BILLING ADDRESS:'] && !/\b(my|home|street|mailing) address\b/.test(q)) return;
+      if (r[1] === 'email' && seen['ACCOUNTING EMAIL:']) return;
+      out.push(v ? 'Your ' + r[1] + (r[3] === 'file' ? ' is ' : ' on file: ') + v + (/[.!?]$/.test(v) ? '' : '.') : 'There is no ' + r[1] + ' on your profile yet.'); });
+    return out.length ? { paras: out, acts: [['Open My Profile', 'sel:#links [data-nav=profile]']] } : null; }
+  /* not sure what was asked: show what is on file, so there is always something true to act on */
+  function overview(ps, data){
+    var inst = (data.installer && data.installer.fields) || {}, n = nextLine(ps), ob = onboard(inst, data.steps)[0];
+    return { paras: ['I’m not sure which part of your data that is about. Here is what I have on file for you:', 'Profile: ' + ob.replace(/^(Not yet: |Yes\. )/, '').replace(/^./, function(c){ return c.toUpperCase(); }),
+        'Projects: ' + ps.length + ' with AGC. ' + n.text, 'Ask about a job by its AGC number or name, or about any part of your profile.'],
+      acts: [['My projects', 'ask:List my projects'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']].concat(n.p ? [['Next job details', askFor(n.p, '')]] : []) }; }
   function profile(kind, inst, steps){ var f = inst, out = [], cur = currencyOf(inst), goto = ['Open My Profile', 'sel:#links [data-nav=profile]'];
     var done = steps && Array.isArray(steps.done) ? steps.done.map(Number) : null, NAMES = ['Basic Info', 'Contract', 'Banking', 'Insurance', 'US Tax Forms'];
     function expiry(){ var d = toDate(f['Liability Insurance Expiry Date']); if (!d) return ''; var n = daysFromToday(d);
       return shortDay(d) + (n < 0 ? ' (expired ' + (-n) + ' day' + (n === -1 ? '' : 's') + ' ago)' : n <= 45 ? ' (in ' + n + ' day' + (n === 1 ? '' : 's') + ')' : ''); }
     switch (kind) {
-      case 'complete':
-        if (done) { var miss = [1, 2, 3, 4, 5].filter(function(n){ return done.indexOf(n) < 0; });
-          out.push(miss.length ? 'Your profile has ' + (5 - miss.length) + ' of 5 steps done. Still to do: ' + miss.map(function(n){ return NAMES[n - 1]; }).join(', ') + '.' : 'Your profile is complete: all five steps are done.'); }
-        else out.push('Open My Profile to see which steps are done: Basic Info, Contract, Banking, Insurance and US Tax Forms.');
-        return { paras: out, acts: [goto] };
+      case 'complete': return { paras: onboard(inst, steps), acts: [goto] };
       case 'rates':
         var amt = function(v){ return typeof v === 'number' ? money(v, cur) : S(v); }, r = [];
         if (S(f['HOURLY'])) r.push('hourly ' + amt(f['HOURLY'])); if (S(f['MIN CHARGE'])) r.push('minimum charge ' + amt(f['MIN CHARGE'])); if (S(f['PRORATED'])) r.push('prorated ' + amt(f['PRORATED'])); if (S(f['CANCELLATION FEE'])) r.push('cancellation fee ' + amt(f['CANCELLATION FEE']));
@@ -6584,6 +6633,8 @@ window.AGC_ALFRED_PORTAL = (function(){
         var st = S(f['INSURANCE STATUS']), ex = expiry(), am = S(f['Amount Covered:']), doc = files(f['Insurance Document PDF']).length;
         if (!st && !ex && !am && !doc) out.push('There is no insurance on your profile yet. Upload your certificate under Insurance in My Profile.');
         else { if (st) out.push('Insurance status: ' + plainStatus(st) + '.'); if (ex) out.push('Your liability insurance expires ' + ex + '.'); if (am) out.push('Amount covered: ' + am + '.'); out.push(doc ? 'Your certificate is on file.' : 'No certificate file is on your profile.'); }
+        if (S(f['INSURANCE AGENT'])) out.push('Insurance agent: ' + clean(f['INSURANCE AGENT'], 200) + '.');
+        if (f['Added AGC to Insurance Policy'] != null && S(f['Added AGC to Insurance Policy']) !== '') out.push('AGC added to your policy: ' + (f['Added AGC to Insurance Policy'] === true ? 'yes' : S(f['Added AGC to Insurance Policy'])) + '.');
         if (steps && steps.insuranceRejected && steps.agentMessage) out.push('AGC’s insurance check flagged your certificate: ' + clean(steps.agentMessage, 400));
         return { paras: out, acts: [goto] };
       case 'contract':
@@ -6611,13 +6662,12 @@ window.AGC_ALFRED_PORTAL = (function(){
         var ar = clean(pick(f, 'SERVICE AREAS', 'SERVICE AREA'), 400);
         out.push(ar && !/^[\[{]/.test(ar) ? 'Your service area: ' + ar + '.' : ar ? 'You have a service area saved. Open Service Area in the menu to see it on the map.' : 'You have not set a service area yet. Open Service Area in the menu to draw it.');
         return { paras: out, acts: [['Open Service Area', 'sel:#links [data-nav=area]']] };
-      case 'info': case 'all':
+      case 'all':
         var nm = [S(f['FIRST NAME']), S(f['LAST NAME'])].filter(Boolean).join(' ');
         if (nm) out.push('Name: ' + nm + (S(f['COMPANY']) ? ' · ' + S(f['COMPANY']) : ''));
         if (S(f['EMAIL 1'])) out.push('Email: ' + S(f['EMAIL 1'])); if (S(f['PHONE'])) out.push('Phone: ' + S(f['PHONE'])); if (S(f['ADDRESS'])) out.push('Address: ' + clean(f['ADDRESS'], 200)); if (S(f['WEBSITE'])) out.push('Website: ' + S(f['WEBSITE']));
         if (!out.length) out.push('Your profile has no contact details yet.');
-        if (kind === 'all' && done) out.push('Profile steps done: ' + done.length + ' of 5.');
-        return { paras: out, acts: [goto] };
+        return { paras: out.concat(['Profile steps: ' + onboard(inst, steps)[0].replace(/^(Not yet: |Yes\. )/, '')]), acts: [goto, ['Am I fully onboarded?', 'ask:Am I fully onboarded?']] };
     }
     return null; }
 
@@ -6637,7 +6687,8 @@ window.AGC_ALFRED_PORTAL = (function(){
     var fieldAsk = null; for (k in I) if (I[k].test(q)) { fieldAsk = k; break; }
     var profAsk = null; for (k in PROFILE) if (PROFILE[k].test(q)) { profAsk = k; break; }
     if (profAsk && !mine && (ABOUT_AGC.test(q) || aboutJobs)) profAsk = null;       /* "what is your service area": about AGC, not their profile */
-    if (profAsk && howto && (profAsk === 'info' || profAsk === 'all')) profAsk = 'complete';   /* "how do I update my profile": what is done and what is missing */
+    if (profAsk && howto && profAsk === 'all') profAsk = 'complete';
+    if (profAsk && aboutJobs && !/\b(profile|onboard\w*|account)\b/.test(q)) profAsk = null;                /* "is my job approved": about a job */   /* "how do I update my profile": what is done and what is missing */
     var listAsk = null;
     if (LISTS.earnings.test(q)) listAsk = 'earnings';
     else if (LISTS.count.test(q)) listAsk = 'count';
@@ -6650,7 +6701,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       var inst = (data.installer && data.installer.fields) || {}, cur = currencyOf(inst);
       var ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); });
       var one = null, many = [];
-      if (aboutAgc) return other(q, ps, data, false);
+      if (aboutAgc) return other(q, ps, data, false, true);
       if (hintId) { one = ps.filter(function(p){ return p.id === hintId; })[0] || null; if (!one) return { paras: ['I don’t see that project among yours any more.'], acts: [] }; many = [one]; }
       /* an AGC number: theirs, or not one of theirs */
       else if (nums.length) {
@@ -6663,6 +6714,8 @@ window.AGC_ALFRED_PORTAL = (function(){
       if (many.length === 1) one = many[0];
       /* the profile, unless the question names a job */
       if (profAsk && !many.length && !(aboutJobs && fieldAsk)) return profile(profAsk, inst, data.steps);
+      /* one fact from their record ("what's my website") */
+      if (!many.length && !aboutJobs && !listAsk && (mine || q.trim().split(' ').length <= 4) && !(fieldAsk && lastId && !mine)) { var fa = facts(q, inst); if (fa) return fa; }
       /* their list of projects */
       if (!one && listAsk && !many.length) {
         if (!ps.length) return { paras: ['You have no projects with AGC yet. When one is assigned to you it shows up in My Projects.'], acts: [] };
@@ -6686,6 +6739,7 @@ window.AGC_ALFRED_PORTAL = (function(){
           if (/\b(this|next) week\b/.test(q)) { var add = /\bnext week\b/.test(q) ? 7 : 0, start = new Date(today); start.setDate(today.getDate() - today.getDay() + add); var end = new Date(start); end.setDate(start.getDate() + 7);
             sel = ps.filter(function(p){ return p.date && midnight(p.date) >= start && midnight(p.date) < end; });
             return sel.length ? { paras: aList(sel, 'Scheduled ' + (add ? 'next' : 'this') + ' week:'), acts: pickButtons(sel) } : { paras: ['Nothing is scheduled ' + (add ? 'next' : 'this') + ' week.' + (up.length ? ' Your next job is ' + line(up[0]) + '.' : '')], acts: up.length ? pickButtons(up.slice(0, 1)) : [] }; }
+          if (up.length > 1 && /\b(schedule|agenda|upcoming|coming up|booked)\b/.test(q)) return { paras: aList(up, 'Your ' + up.length + ' upcoming jobs:'), acts: pickButtons(up) };
           if (!up.length) return { paras: ['You have no upcoming jobs with a date set.', 'You have ' + ps.length + ' project' + (ps.length === 1 ? '' : 's') + ' in My Projects.'], acts: [open()] };
           one = up[0]; lastId = one.id;
           return { paras: ['Your next job:'].concat(aSummary(one)), acts: follow(one) }; }
@@ -6728,7 +6782,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       var lp = ps.filter(function(p){ return p.id === lastId; })[0], pm = lp ? S(pick(lp.f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')) : '';
       return { paras: ['Call or email AGC and the team will pick it up.'].concat(pm ? ['Your project manager on ' + lp.title + ' is ' + pm + '.'] : []), acts: [CALL, MAIL] }; }
     return null; }
-  function other(q, ps, data, aboutJobs){
+  function other(q, ps, data, aboutJobs, aboutAgc){
     var name = S(data.name), n;
     if (/^ (hi|hello|hey|yo|good (morning|afternoon|evening)|bonjour|hola)\b/.test(q) && q.trim().split(' ').length <= 4) { n = nextLine(ps);
       return { paras: ['Hi' + (name ? ', ' + name : '') + '. ' + n.text, 'Ask me anything about your projects or your profile.'], acts: n.p ? [['Next job details', askFor(n.p, '')]] : [] }; }
@@ -6737,7 +6791,8 @@ window.AGC_ALFRED_PORTAL = (function(){
       return { paras: ['In the portal I answer from what AGC has on file for you.', 'Your projects: schedule, store and address, budget, scope, notes, PPE, crew, shipping and tracking, contacts, files, invoice and close-out. Name the job by its AGC number or its name.', 'Your profile: which steps are done, your rates, insurance, contract, banking, tax forms, services and service area.'],
         acts: [['My next job', 'ask:What is my next job?'], ['My projects', 'ask:List my projects'], ['My profile', 'ask:Is my profile complete?']] };
     if (aboutJobs && ps.length) return { paras: aList(ps, 'I’m not sure which job or what about it. Your ' + ps.length + ' project' + (ps.length === 1 ? '' : 's') + ':'), acts: pickButtons(ps) };
-    return { paras: ['I can’t find that in your portal, and I won’t guess.', 'I answer from what AGC has on file for you: your projects (dates, addresses, budgets, scope, shipping, contacts, files) and your profile.', 'For anything else, call or email AGC.'], acts: [CALL, MAIL] };
+    if (aboutAgc) return { paras: ['That is a question about AGC rather than about your work, and it is not in your portal, so I won’t guess.', 'I answer from what AGC has on file for you: your projects and your profile. For anything else, call or email AGC.'], acts: [CALL, MAIL] };
+    return overview(ps, data);
   }
   /* opened again: what matters now, from their data */
   function back(){
@@ -12214,7 +12269,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.120</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.121</span>
  </div>
 
  <div class="hero">
@@ -36251,7 +36306,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      load, ask for version.json (never saved) and, if it names a newer build than this copy, load
      the fresh copy once. Only ever while the sign-in screen is up: nobody who is signed in and
      working gets the page pulled out from under them; they get the new version next time. */
-  var AGC_BUILD = 6120;
+  var AGC_BUILD = 6121;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
