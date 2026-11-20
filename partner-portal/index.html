@@ -6185,6 +6185,33 @@ function shortStores(t){try{var L=(window.AGC_ALFRED_STORES||[]).filter(function
     t=t.replace(new RegExp(full.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),sh)})}catch(e){}
   /* stores written another way: "SDM #221" */
   return t.replace(/\b(SDM|HBC|TBS)\s*[-–]?\s*#?\s*(\d{1,7})\b|\b(Walmart|WALMART)\s*[-–]?\s*#\s*(\d{1,7})\b/g,function(x,c,n,w,wn){return (c||'Walmart')+' '+(n||wn).split('').join(' ')})}
+/* PORTAL 6.127 (Chris, Nov 20 2026): an address is said by its city only ("1079 Douglas St, Victoria, BC V8W 2C5" = "Victoria") */
+var PROV_RE='Alberta|British Columbia|Manitoba|Saskatchewan|Ontario|Quebec|Québec|New Brunswick|Nova Scotia|Prince Edward Island|Newfoundland(?: and| And|&) Labrador|Newfoundland|Yukon|Northwest Territories|Nunavut|[A-Z]{2}';
+function cityOf(addr){var a=String(addr||'').split(/\s*\n\s*/).filter(Boolean).join(', ').trim(),m;if(!a)return '';
+  a=a.replace(/[,\s]+(?:Canada|Canadá|USA|U\.S\.A\.|United States(?: of America)?)\.?\s*$/i,'')
+     .replace(/[,\s]+(?:[A-Z]\d[A-Z]\s?\d[A-Z]\d|\d{5}(?:-\d{4})?)\s*$/i,'')
+     .replace(new RegExp('[,\\s]+(?:'+PROV_RE+')\\.?\\s*$'),'').replace(/[,\s]+$/,'');
+  var parts=a.split(/\s*,\s*/),last=parts[parts.length-1]||'';
+  var SUF=/^(?:Common|Green|Queensway|Bd|Boul|St|Street|Ave|Avenue|Av|Rd|Road|Dr|Drive|Blvd|Boulevard|Way|Trail|Trl|Cres|Crescent|Lane|Ln|Ct|Court|Pl|Place|Hwy|Highway|Pkwy|Parkway|Terrace|Terr|Sq|Square|Circle|Cir|Gate|Row|Line|Broadway|Plaza|Mall|Centre|Center)\.?$/i,
+      DIR=/^(?:N|S|E|W|NW|NE|SW|SE|North|South|East|West|Northwest|Northeast|Southwest|Southeast)\.?$/i;
+  var w=last.split(/\s+/),cut=-1;
+  if(parts.length===1||/\d/.test(last)){for(var i=0;i<w.length;i++){if(/\d/.test(w[i])||SUF.test(w[i])||(i>0&&DIR.test(w[i])&&(SUF.test(w[i-1])||/\d/.test(w[i-1]))))cut=i}
+    if(/^(?:Unit|Suite|Ste|#)$/i.test(w[cut]||''))cut++;
+    w=w.slice(cut+1)}
+  var c=w.join(' ').replace(/^(?:Unit|Suite|Ste)\s+\S+\s*/i,'').replace(/^(?:S\.?W\.?|N\.?W\.?|S\.?E\.?|N\.?E\.?)\s+/i,'').trim(),cw=c.split(/\s+/);
+  /* still holding part of the street ("Rue Sherbrooke Magog", "Sage Valley Common Nw Calgary"): keep the last word, with the word before it when that starts a town name */
+  if(cw.length>2||/\b(?:Rue|Boul|Bd|Chemin|Building|Common|Green|Queensway|Arr)\b/i.test(c)){var PRE=/^(?:St\.?|Ste\.?|Saint|Sainte|Port|Fort|Mount|Mt\.?|North|South|East|West|New|Grand|Thunder|Prince|Red|Swift|Medicine|Fort|Sault|Niagara|Spruce|Sherwood|Grande|Rocky|Lac|La|Le|Les|Trois|Notre)$/i;
+    var k=cw.length-1;c=(k>0&&PRE.test(cw[k-1])?cw[k-1]+' ':'')+cw[k]}
+  if(c===c.toUpperCase())c=c.toLowerCase().replace(/(^|[\s'’-])([a-zà-ÿ])/g,function(x,q,ch){return q+ch.toUpperCase()});
+  return c&&!/\d/.test(c)?c:''}
+function cityOnly(t){try{var L=(window.AGC_ALFRED_ADDRS||[]).filter(function(s){return String(s||'').trim().length>=8}).slice().sort(function(a,b){return String(b).length-String(a).length});
+  L.forEach(function(s){var lines=String(s).split(/\s*\n\s*/).filter(Boolean),c=cityOf(s);if(!c)return;
+    [lines.join(' · '),lines.join(', '),lines.join(' '),lines[0]].forEach(function(full){if(full&&full.length>=8)t=t.replace(new RegExp(full.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'\u0001'+c+'\u0001')})})}catch(e){}
+  /* an address written out anywhere else: "123 Main St NW, Calgary, AB T3G 5T4, Canada" */
+  var SUFX='St|Street|Ave|Avenue|Av|Rd|Road|Dr|Drive|Blvd|Boulevard|Way|Trail|Trl|Cres|Crescent|Lane|Ln|Ct|Court|Pl|Place|Hwy|Highway|Pkwy|Parkway|Terrace|Sq|Square|Circle|Cir|Gate|Row|Line|Broadway|Common|Green|Queensway|Mall|Plaza|Centre|Center';
+  t=t.replace(new RegExp('\\b\\d+[A-Za-z]?(?:-\\d+)?\\s+(?:(?!(?:is|at|for|on|to|and|the|in|by)\\s)[\\w\'’.-]+\\s+){0,5}?(?:'+SUFX+')\\.?(?:\\s+(?:NW|NE|SW|SE|N|S|E|W|North|South|East|West)\\.?)?(?:\\s*(?:Unit|Suite|Ste|#)\\s*[\\w-]+)?,\\s*(?:(?:Unit|Suite)\\s+\\S+\\s*,?\\s*)?([A-Z][A-Za-zÀ-ÿ\'’. -]{1,40}?),\\s*(?:'+PROV_RE+')\\b(?:,?\\s*(?:[A-Z]\\d[A-Z]\\s?\\d[A-Z]\\d|\\d{5}(?:-\\d{4})?))?(?:,\\s*(?:Canada|USA))?','g'),'\u0001$1\u0001');
+  /* "is at Calgary" = "is in Calgary"; "the address for this job is in Calgary" */
+  return t.replace(/\bat \u0001/g,'in \u0001').replace(/(\baddress(?:es)?\b[^.\u0001]{0,60}\b(?:is|are)) \u0001/gi,'$1 in \u0001').replace(/\u0001/g,'')}
 /* PORTAL 6.125 (Chris, Nov 20 2026): abbreviations are said in full (months, weekdays, street types, provinces and states,
    units, and the short forms the portal uses), and an AGC number is read one digit at a time ("AGC 1 9 0 4 6") */
 function sayInFull(t,k){
@@ -6236,6 +6263,7 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
   try{(window.AGC_ALFRED_TITLES||[]).slice().sort(function(a,b){return b[0].length-a[0].length}).forEach(function(x){var nm=String(x[0]||'').trim();
     if(nm.length<4||/^\d+$/.test(nm)||!x[1])return;t=t.replace(new RegExp(nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'AGC '+x[1])})}catch(e){}
   t=shortStores(t);
+  t=cityOnly(t);
   t=t.replace(/\bAGC\s*#\s*(?=\d)/gi,'AGC ').replace(/(^|[^\w])#\s*(\d{4,6})\b/g,'$1AGC $2').replace(/\b(?:AGC\s+){2,}(?=\d)/gi,'AGC ');
   /* the same job again in one reply: "this job" */
   var nums=[],re=/\bAGC (\d{4,6})\b/g,m;while((m=re.exec(t)))if(nums.indexOf(m[1])<0)nums.push(m[1]);
@@ -6579,8 +6607,8 @@ window.AGC_ALFRED_PORTAL = (function(){
     contact: 'Who are the contacts for', weather: 'What is the weather for', status: 'What is the status of', notes: 'What are the notes for', ppe: 'What PPE is needed for', crew: 'How many workers for', files: 'What files are on',
     invoice: 'Is there an invoice on', closeout: 'Where is the closeout for' };
   function nameOf(p){ return p.num ? 'AGC #' + p.num : p.title; }
-  /* PORTAL 6.125: the job names and numbers of this installer, and their store names, so his voice can say a job by its number and a store by its chain and number only (forVoice, 6.125 / 6.126) */
-  function keepTitles(ps){ try { window.AGC_ALFRED_TITLES = ps.filter(function(p){ return p.num && p.title; }).map(function(p){ return [p.title, p.num]; }); var st = []; ps.forEach(function(p){ (p.stores || []).forEach(function(x){ if (x && st.indexOf(x) < 0) st.push(x); }); }); window.AGC_ALFRED_STORES = st; } catch (e) {} }
+  /* PORTAL 6.125: the job names and numbers of this installer, their store names and addresses, so his voice can say a job by its number, a store by its chain and number and an address by its city only (forVoice, 6.125 to 6.127) */
+  function keepTitles(ps){ try { window.AGC_ALFRED_TITLES = ps.filter(function(p){ return p.num && p.title; }).map(function(p){ return [p.title, p.num]; }); var st = []; ps.forEach(function(p){ (p.stores || []).forEach(function(x){ if (x && st.indexOf(x) < 0) st.push(x); }); }); window.AGC_ALFRED_STORES = st; var ad = []; ps.forEach(function(p){ (p.addresses || []).forEach(function(x){ if (x && ad.indexOf(x) < 0) ad.push(x); }); }); window.AGC_ALFRED_ADDRS = ad; } catch (e) {} }
   function askFor(p, kind){ kind = QT[kind] ? kind : ''; return 'ask:' + QT[kind] + ' ' + nameOf(p).replace(/\|/g, ' ') + '?|' + p.id + '|' + kind; }
   function follow(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
     .filter(function(a){ return a[1] !== skip; }).slice(0, 4).map(function(a){ return [a[0], askFor(p, a[1])]; }); }
@@ -12492,7 +12520,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.126</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.127</span>
  </div>
 
  <div class="hero">

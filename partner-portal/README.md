@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.126 = 6126). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.127 = 6127). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -81,6 +81,9 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   A store is said short (since 6.126): its chain and store number only ("SDM 2 2 1", "Walmart 3 1 4 8",
   "RBC 6 8 0 0"), without the mall, street or city after it; a store with no number is said by the part
   before its location ("Scotiabank").
+  An address is said by its city only (since 6.127): "1079 Douglas St, Victoria, BC V8W 2C5" = "Victoria",
+  and "is at" a city becomes "is in". It uses the installer's own store addresses; about 1 in 100 has no
+  city that can be read from it and is still said in full.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 
