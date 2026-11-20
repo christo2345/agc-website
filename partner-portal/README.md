@@ -86,6 +86,8 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   city that can be read from it and is still said in full.
   Money is said in words (since 6.128): "$170,144.20 CAD" = "one hundred and seventy thousand, one hundred and
   forty four Canadian dollars and twenty cents" (English; in French and Spanish the voice reads the figure).
+- His total earnings (since 6.128) are exactly the Total AGC Earnings box on Home and its project count, nothing
+  more (no breakdown). Before the box has painted he makes the same sum the box makes.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 

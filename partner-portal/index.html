@@ -6620,6 +6620,11 @@ window.AGC_ALFRED_PORTAL = (function(){
     contact: 'Who are the contacts for', weather: 'What is the weather for', status: 'What is the status of', notes: 'What are the notes for', ppe: 'What PPE is needed for', crew: 'How many workers for', files: 'What files are on',
     invoice: 'Is there an invoice on', closeout: 'Where is the closeout for' };
   function nameOf(p){ return p.num ? 'AGC #' + p.num : p.title; }
+  /* PORTAL 6.128 (Chris): total earnings = the Total AGC Earnings box on Home, nothing more. The box's own figure when it has
+     painted; before that, the same sum the box makes (TOTAL BUDGET of every job, masters and cancelled jobs left out). */
+  function earnings(ps){ var e = window.AGC_EARNINGS; if (e && typeof e.total === 'number') return e;
+    var mine = ps.filter(function(p){ return !/master/i.test(p.title) && !/cancel|void/i.test(p.statusRaw || p.status || ''); });
+    return { total: mine.reduce(function(s, p){ return s + (p.total || 0); }, 0), count: mine.length }; }
   /* PORTAL 6.125: the job names and numbers of this installer, their store names and addresses, so his voice can say a job by its number, a store by its chain and number and an address by its city only (forVoice, 6.125 to 6.127) */
   function keepTitles(ps){ try { window.AGC_ALFRED_TITLES = ps.filter(function(p){ return p.num && p.title; }).map(function(p){ return [p.title, p.num]; }); var st = []; ps.forEach(function(p){ (p.stores || []).forEach(function(x){ if (x && st.indexOf(x) < 0) st.push(x); }); }); window.AGC_ALFRED_STORES = st; var ad = []; ps.forEach(function(p){ (p.addresses || []).forEach(function(x){ if (x && ad.indexOf(x) < 0) ad.push(x); }); }); window.AGC_ALFRED_ADDRS = ad; } catch (e) {} }
   function askFor(p, kind){ kind = QT[kind] ? kind : ''; return 'ask:' + QT[kind] + ' ' + nameOf(p).replace(/\|/g, ' ') + '?|' + p.id + '|' + kind; }
@@ -6823,8 +6828,8 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (screen.popup === 'calendar') { var today = midnight(new Date()), up = ps.filter(function(p){ return p.date && midnight(p.date) >= today; });
       return up.length ? { paras: aList(up, 'On your screen: My Calendar. Your ' + up.length + ' upcoming job' + (up.length === 1 ? '' : 's') + ':'), acts: pickButtons(up) } : { paras: ['On your screen: My Calendar.', n.text], acts: [] }; }
     if (screen.view === 'profile') return { paras: ['On your screen: My Profile.'].concat(onboard(inst, data.steps)), acts: [] };
-    var withB = ps.filter(function(p){ return p.total; }), all = withB.reduce(function(s, p){ return s + p.total; }, 0);
-    return { paras: ['On your screen: your Home page.', 'My Projects: ' + ps.length + ' project' + (ps.length === 1 ? '' : 's') + (withB.length ? ', total AGC earnings ' + money(all, cur) : '') + '. ' + n.text,
+    var E = earnings(ps);
+    return { paras: ['On your screen: your Home page.', 'My Projects: ' + E.count + ' project' + (E.count === 1 ? '' : 's') + ', total AGC earnings ' + money(E.total, cur) + '. ' + n.text,
         'My Profile: ' + onboard(inst, data.steps)[0].replace(/^(Not yet: |Yes\. )/, '').replace(/^./, function(c){ return c.toUpperCase(); })],
       acts: (n.p ? [['Next job details', askFor(n.p, '')]] : []).concat([['My projects', 'ask:List my projects'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?'], ['My earnings', 'ask:What are my total earnings?']]) }; }
   /* one fact from their record, asked for by name */
@@ -6960,17 +6965,9 @@ window.AGC_ALFRED_PORTAL = (function(){
         if (!ps.length) return { paras: ['You have no projects with AGC yet. When one is assigned to you it shows up in My Projects.'], acts: [] };
         var today = midnight(new Date()), up = ps.filter(function(p){ return p.date && midnight(p.date) >= today; }), sel;
         if (listAsk === 'earnings') {
-          /* Every project budget added up, the way the "Total AGC earnings" box on Home adds them, then what the total is made of. */
-          var withB = ps.filter(function(p){ return p.total; }), all = withB.reduce(function(s, p){ return s + p.total; }, 0),
-              fixed = withB.filter(function(p){ return !p.shared && !p.awaiting; }), sum = fixed.reduce(function(s, p){ return s + p.total; }, 0),
-              sh = withB.filter(function(p){ return p.shared; }).length, aw = withB.filter(function(p){ return p.awaiting && !p.shared; }).length, o = [];
-          if (!withB.length) return { paras: ['None of your ' + ps.length + ' project' + (ps.length === 1 ? ' has' : 's have') + ' a budget entered yet.'], acts: [open()] };
-          o.push('Total AGC earnings: ' + money(all, cur) + ' across ' + withB.length + ' project' + (withB.length === 1 ? '' : 's') + '.');
-          if (sh || aw) { o.push(money(sum, cur) + ' of it is from ' + fixed.length + ' job' + (fixed.length === 1 ? '' : 's') + ' with a budget set for you alone.');
-            if (sh) o.push(sh + ' job' + (sh === 1 ? ' is' : 's are') + ' shared with other installers and paid hourly plus costs, so your part of ' + (sh === 1 ? 'that budget' : 'those budgets') + ' can differ.');
-            if (aw) o.push(aw + ' job' + (aw === 1 ? ' is' : 's are') + ' still waiting for client approval, so ' + (aw === 1 ? 'that budget is' : 'those budgets are') + ' not confirmed.'); }
-          o.push('This is the total of the budgets on your jobs, not a record of what has been paid.');
-          return { paras: o, acts: [open()] }; }
+          /* PORTAL 6.128 (Chris): only the figure the Total AGC Earnings box on Home shows, nothing more */
+          var E = earnings(ps);
+          return { paras: ['Total AGC earnings: ' + money(E.total, cur) + ' across ' + E.count + ' project' + (E.count === 1 ? '' : 's') + '.'], acts: [open()] }; }
         if (listAsk === 'next') {
           var w = /\b(today|tonight)\b/.test(q) ? 0 : /\btomorrow\b/.test(q) ? 1 : null;
           if (w !== null) { sel = ps.filter(function(p){ return p.date && daysFromToday(p.date) === w; });
@@ -13441,6 +13438,8 @@ function renderBudget(total,count){
   const loadEl=document.getElementById('projects-budget-loading');
   if(amtEl){
     _budgetShown=formatBudget(total);
+    /* PORTAL 6.128: ALFRED's earnings answer is this exact figure (Chris: 'only what is in the partner portal, nothing more') */
+    try{window.AGC_EARNINGS={total:Number(total)||0,count:count||0};}catch(e){}
     paintBudgetAmount();
     amtEl.classList.remove('loading');
   }
