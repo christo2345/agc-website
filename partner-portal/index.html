@@ -6166,13 +6166,15 @@ function voEl(){/* an element stays tied to the audio engine it was first routed
   if(vo&&vo.__ctx&&vo.__ctx!==ctx){try{vo.pause()}catch(e){}vo=null}
   if(!vo){vo=new Audio();vo.setAttribute('playsinline','');vo.preload='auto';vo.volume=VOV}
   if(ctx&&!vo.__g){try{var src=ctx.createMediaElementSource(vo),g=ctx.createGain();g.gain.value=VOV;src.connect(g);g.connect(uvol||ctx.destination);vo.__g=g;vo.__ctx=ctx;vo.volume=1}catch(e){vo.__g=null}}return vo}
-/* PORTAL 6.128 (Chris, Nov 20 2026): money is said in words ("$1,800.50" = "one thousand eight hundred dollars and fifty cents") */
+/* PORTAL 6.128 (Chris, Nov 20 2026): money is said in words ("$170,144.20" = "one hundred and seventy thousand, one hundred and forty-four dollars and twenty cents") */
 function numWords(n){n=Math.floor(Number(n));if(!isFinite(n))return '';if(n===0)return 'zero';
   var O=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'],
       T=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'],
-      h=function(x){var s=[];if(x>=100){s.push(O[Math.floor(x/100)]+' hundred');x%=100}if(x>=20){s.push(T[Math.floor(x/10)]+(x%10?'-'+O[x%10]:''));}else if(x>0)s.push(O[x]);return s.join(' ')},
+      h=function(x){var hu=x>=100?O[Math.floor(x/100)]+' hundred':'',r=x%100,rw=r>=20?T[Math.floor(r/10)]+(r%10?' '+O[r%10]:''):O[r];return hu&&rw?hu+' and '+rw:hu||rw},
       G=[[1e9,'billion'],[1e6,'million'],[1e3,'thousand']],out=[];
-  G.forEach(function(g){if(n>=g[0]){out.push(h(Math.floor(n/g[0]))+' '+g[1]);n%=g[0]}});if(n)out.push(h(n));return out.join(' ')}
+  G.forEach(function(g){if(n>=g[0]){out.push(h(Math.floor(n/g[0]))+' '+g[1]);n%=g[0]}});
+  /* the way Chris says it: "one hundred and seventy thousand, one hundred and forty four"; "one thousand and five" */
+  if(n)out.push((out.length&&n<100?'and ':'')+h(n));return out.join(', ').replace(/, and /g,' and ')}
 function moneyWords(n,unit,k){var s=String(n).replace(/,/g,''),m=s.match(/^(\d+)(?:\.(\d{1,2}))?$/);if(!m)return String(n).replace(/\.00$/,'')+' '+unit;
   if(k)return String(n).replace(/\.00$/,'')+' '+unit;                                   /* French and Spanish: the voice reads the figure */
   var d=Number(m[1]),c=m[2]?Number((m[2]+'0').slice(0,2)):0;
