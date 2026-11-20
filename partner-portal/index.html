@@ -7140,9 +7140,11 @@ var JOBCHIPS=['j_this','j_when','j_where','j_wx','j_budget','j_scope','j_ship','
 function onScreen(){try{return (window.AGC_ALFRED_ONSCREEN&&AGC_ALFRED_ONSCREEN())||{}}catch(e){return {}}}
 /* the chips offered by default start with what is on screen: the open project, or the profile step */
 function chipIds(){var on=onScreen(),first=on.id||on.title?JOBCHIPS:on.view==='profile'&&on.step?STEPCHIPS:[];return first.concat(START.filter(function(id){return first.indexOf(id)<0}))}
-function helloP(){var n='',a=BY.hello.a.slice(),on=onScreen();try{n=window.AGC_ALFRED_NAME?String(AGC_ALFRED_NAME()||''):''}catch(e){}if(n)a[0]='Welcome in, '+n+'. You’ve just unlocked the full ALFRED.';
-  if(on.title)a.splice(1,0,'You have '+on.title+' open on your screen, so that is the job I’ll answer about unless you name another.');
-  else if(on.view==='profile'&&on.step>=1&&on.step<=5)a.splice(1,0,'You’re on My Profile, step '+on.step+' of 5, '+STEPS[on.step-1]+', so that is what I’ll answer about unless you ask for something else.');return a}
+/* PORTAL 6.130 (Chris, Nov 20 2026): the welcome is one short line: "Hey <first name>, have any questions about this project?"
+   (about the project open on screen; otherwise about their projects, or their profile while they are on it) */
+function helloP(){var n='',on=onScreen();try{n=window.AGC_ALFRED_NAME?String(AGC_ALFRED_NAME()||''):''}catch(e){}
+  var what=on.title?'this project':(on.view==='profile'?'your profile':'your projects');
+  return ['Hey '+(n||'there')+', have any questions about '+what+'?']}
 function L(){return root.getAttribute('data-lang')||'en'}
 function tr(s){try{return window.AGC_T?window.AGC_T(s):s}catch(e){return s}}
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘`]/g,"'").replace(/[^a-z0-9'\s]/g,' ').replace(/\s+/g,' ').trim()}
@@ -12585,7 +12587,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.129</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.130</span>
  </div>
 
  <div class="hero">
