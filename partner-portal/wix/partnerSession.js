@@ -28,7 +28,8 @@ export const IF = {
   passwordSetOn: 'fldQJhr3FWg9RDsqT',  // PORTAL PASSWORD SET ON
   projects: 'fldOwk1SeW6c3SNTQ',       // AGC PROJECTS (installer = INSTALLER(S) on the project)
   extraProjects: 'fldQLlvtjUIBKvRnN',  // projects where they are an ADDITIONAL INSTALLER
-  tempPassword: 'fldSkkuV12oeX0xBe'    // PORTAL TEMP PASSWORD (one-time code from AGC, Nov 20 2026)
+  tempPassword: 'fldSkkuV12oeX0xBe',   // PORTAL TEMP PASSWORD (one-time code from AGC, Nov 20 2026)
+  tempRequested: 'fldZNyv4DwBaImmpW'   // TEMP PASSWORD REQUESTED (stamped by 'Email me my temporary password'; an Airtable automation emails the code, Nov 21 2026)
 };
 
 const AT = 'https://api.airtable.com/v0/';

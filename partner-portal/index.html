@@ -12637,7 +12637,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.135</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.136</span>
  </div>
 
  <div class="hero">
@@ -36143,9 +36143,9 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      answers with the installer's id and a session token. The token goes to the three pages,
      which send it with every data call; the backend only answers with that installer's own data.
        portal → Wix:  agc_partner_ready, agc_partner_login {password | email+password},
-                      agc_partner_check_temp {temp}, agc_partner_create_password {password, temp}, agc_partner_forgot_password {email},
+                      agc_partner_check_temp {temp}, agc_partner_send_temp, agc_partner_create_password {password, temp}, agc_partner_forgot_password {email},
                       agc_partner_logout
-       Wix → portal:  agc_partner_login_required {linked, firstName, emailHint, needsSetup, needsTemp, message}, agc_partner_temp_ok,
+       Wix → portal:  agc_partner_login_required {linked, firstName, emailHint, needsSetup, needsTemp, message}, agc_partner_temp_ok, agc_partner_temp_sent {message, error},
                       agc_partner_init {recordId, firstName, notice, token},
                       agc_partner_login_failed {error}, agc_partner_forgot_sent, agc_partner_error {error}
      Clearing PORTAL PASSWORD (ENCRYPTED) in Airtable resets the password (and ends any session). */
@@ -36181,10 +36181,11 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     gate.create = create; if (gate.armed) gel('pw').setAttribute('autocomplete', create ? 'new-password' : 'current-password');
     gel('go').textContent = go;
     gel('go').hidden = !(form || mode === 'offline');
-    gel('forgot').hidden = !form || create || mode === 'temp';
+    gel('forgot').hidden = !form || create;
+    gel('forgot').textContent = mode === 'temp' ? 'Email me my temporary password' : 'Forgotten your password?';   /* 6.136: the code comes by email */
     gel('flip').hidden = true;
     gel('dev').hidden = true;
-    gel('hint').textContent = (form && message) ? message : ((mode === 'enter' && gate.emailHint) ? 'Signing in as ' + gate.emailHint : (mode === 'temp' ? 'No temporary password? Ask your AGC project manager or call 1 (877) 395-7435.' : ''));
+    gel('hint').textContent = (form && message) ? message : ((mode === 'enter' && gate.emailHint) ? 'Signing in as ' + gate.emailHint : (mode === 'temp' ? 'No temporary password? Press "Email me my temporary password" below, or call AGC at 1 (877) 395-7435.' : ''));
     gel('pw').value = ''; gel('pw2').value = '';
     gateErr(''); gateBusy(false);
     clearTimeout(gate.hideT);
@@ -36296,6 +36297,11 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
         gateBusy(false); gateErr(m.error || "That didn't work. Please try again.");
         try { gel('pw').select(); } catch (e) {}
         return true;
+      case 'agc_partner_temp_sent':   /* 6.136: "Email me my temporary password" answered */
+        gateBusy(false);
+        if (m.error) { gel('hint').textContent = ''; gateErr(m.error); } else { gateErr(''); gel('hint').textContent = m.message || 'We emailed your temporary password. It can take a minute or two.'; }
+        try { gel('pw').focus(); } catch (e) {}
+        return true;
       case 'agc_partner_forgot_sent':
         gateBusy(false);
         gel('hint').textContent = m.error ? m.error : "AGC has been told. Once your password is reset, open the portal from your AGC link to create a new one.";
@@ -36340,6 +36346,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     });
     gel('forgot').addEventListener('click', function(){
       gateErr('');
+      if (gate.mode === 'temp') { if (gate.busy) return; gel('hint').textContent = 'Sending…'; gateBusy(true); up({ type: 'agc_partner_send_temp' }); return; }
       var mail = (gel('email').value || '').trim();
       if (gate.mode === 'email' && !mail) { gateErr('Enter your email first, then press "Forgotten your password?" again.'); gel('email').focus(); return; }
       gel('hint').textContent = 'Sending…';
@@ -36848,7 +36855,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6135;
+  var AGC_BUILD = 6136;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){

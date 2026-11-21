@@ -54,14 +54,41 @@ async function pwOk(password, stored) { return isHashed(stored) ? passwordMatche
  ['rec.fields[PASSWORD_FIELD] = password;', 'rec.fields[PASSWORD_FIELD] = stored;'],
  ['return { token: await makeToken(rec.id, fingerprint(password)), ...initData(rec) };', 'return { token: await makeToken(rec.id, fingerprint(stored)), ...initData(rec) };'],
  ["Clear PASSWORD on their AGC CLIENTS record; they'll create a new one from their CLIENT PORTAL URL.",
-  "Clear PASSWORD on their AGC CLIENTS record, put a new PORTAL TEMP PASSWORD and send it to them with their CLIENT PORTAL URL; they enter it, then create a new password."],
+  "Clear PASSWORD on their AGC CLIENTS record. A new PORTAL TEMP PASSWORD is made automatically; they open their CLIENT PORTAL URL, press Forgotten your password? to get it by email, enter it, then create a new password."],
+ ["// The signed-in client's details (session check on page load).",
+`// First visit: email me my temporary password (Chris, Nov 21 2026). Stamps TEMP PASSWORD REQUESTED on this link's own
+// record; the Airtable automation "Email client their temp password" emails the code to the address on file only.
+// Never shows the code or the full address. At most once every 10 minutes. { notTemp: true } = they have a password.
+const TEMP_ASKED_FIELD = 'TEMP PASSWORD REQUESTED';
+export const clientSendTemp = webMethod(Permissions.Anyone, async (opts = {}) => {
+  try {
+    const link = isRecId(opts.client) ? opts.client : '';
+    if (!link) return { notTemp: true };
+    const rec = await getClientRecord(link, true);
+    if (!rec || pwOf(rec)) return { notTemp: true };
+    const mail = String(rec.fields['EMAIL ADDRESS'] || '').trim();
+    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(mail)) return { error: "We don't have an email address for you yet. Call AGC at 1 (877) 395-7435 and we'll set you up." };
+    if (!tempOf(rec)) return { error: 'Your temporary password is being made. Try again in a minute.' };
+    const sent = 'We emailed your temporary password to ' + maskEmail(mail) + '. It can take a minute or two, so check your junk folder too. Enter it above as your password.';
+    const last = Date.parse(rec.fields[TEMP_ASKED_FIELD] || '');
+    if (last && Date.now() - last < 10 * 60 * 1000) return { ok: true, message: sent };
+    await airtable(\`\${BASE}/\${CLIENTS}/\${rec.id}\`, { method: 'PATCH', body: { fields: { [TEMP_ASKED_FIELD]: new Date().toISOString() } } });
+    clientById.delete(rec.id);
+    return { ok: true, message: sent };
+  } catch (e) { return { error: explain(e) }; }
+});
+
+// The signed-in client's details (session check on page load).`],
 ];
 const pe = [
  ['async function askToSignIn(message) {', "let pendingTemp = '';   // the temporary password they just entered (first visit, Nov 21 2026)\n  async function askToSignIn(message, setupReady) {"],
  ['needsSetup: who.hasPassword === false,', 'needsSetup: who.hasPassword === false && (who.needsTemp !== true || !!setupReady),'],
- [": (message || who.error || '') });", ": (message || who.error || (who.hasPassword === false && who.needsTemp === true && !setupReady ? 'First visit? Enter the temporary password AGC sent you as your password.' : '')) });"],
+ [": (message || who.error || '') });", ": (message || who.error || (who.hasPassword === false && who.needsTemp === true && !setupReady ? 'First visit? Enter the temporary password AGC sent you as your password. No code? Press Forgotten your password? and we will email it to you.' : '')) });"],
  ['else if (r.needsSetup && LINK) await askToSignIn();', "else if (r.tempOk && LINK) { pendingTemp = m.password || ''; await askToSignIn('Thank you. Now create your own password.', true); }\n          else if (r.needsSetup && LINK) await askToSignIn();"],
  ['confirmEmail: m.confirmEmail === true });', 'confirmEmail: m.confirmEmail === true, temp: pendingTemp });'],
+ ["import { clientLookup, clientLogin, clientCreatePassword, clientForgotPassword,", "import { clientLookup, clientLogin, clientCreatePassword, clientForgotPassword, clientSendTemp,"],
+ ["const r = await clientForgotPassword({ client: LINK, email: m.email || '' });",
+  "const t = LINK ? await clientSendTemp({ client: LINK }) : { notTemp: true };   // first visit: email the temporary password\n          if (!t.notTemp) { send({ type: 'agc_client_forgot_sent', error: t.message || t.error || 'Please try again.' }); break; }\n          const r = await clientForgotPassword({ client: LINK, email: m.email || '' });"],
 ];
 const run = (src, list) => { let t = src, counts = []; for (const [a, b] of list) { const c = t.split(a).length - 1; counts.push(c); if (c !== 1) return { error: 'anchor ' + counts.length + ' found ' + c, counts }; t = t.split(a).join(b); } return { text: t, counts }; };
 const rb = run(B.getValue(), be), rp = run(P.getValue(), pe);

@@ -12,7 +12,7 @@
 //  page's memory only: a refresh or a new visit asks for the password again.
 //  (Nov 13 2026, security rebuild.)
 // ─────────────────────────────────────────────────────────────────────────
-import { partnerLookup, partnerLogin, partnerCheckTemp, partnerCreatePassword, partnerForgotPassword, partnerInit } from 'backend/partnerPortal.web';
+import { partnerLookup, partnerLogin, partnerCheckTemp, partnerSendTemp, partnerCreatePassword, partnerForgotPassword, partnerInit } from 'backend/partnerPortal.web';
 import wixLocation from 'wix-location-frontend';
 import wixWindowFrontend from 'wix-window-frontend';
 
@@ -101,6 +101,14 @@ $w.onReady(() => {
           if (r.ok) send({ type: 'agc_partner_temp_ok' });
           else send({ type: 'agc_partner_login_failed', error: r.error || "That temporary password isn't right." });
         } catch (e) { send({ type: 'agc_partner_login_failed', error: friendly(e) }); }
+        break;
+      }
+      // First visit: "Email me my temporary password" (Nov 21 2026). Only for this link's own record; the address is masked.
+      case 'agc_partner_send_temp': {
+        try {
+          const r = LINK ? await partnerSendTemp({ partner: LINK }) : { error: 'Open the personal portal link AGC sent you.' };
+          send({ type: 'agc_partner_temp_sent', message: r.message || '', error: r.error || '' });
+        } catch (e) { send({ type: 'agc_partner_temp_sent', error: friendly(e) }); }
         break;
       }
       case 'agc_partner_create_password': {

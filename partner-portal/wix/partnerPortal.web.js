@@ -160,6 +160,28 @@ export const partnerCheckTemp = webMethod(Permissions.Anyone, async ({ partner, 
   } catch (e) { return { error: explain(e) }; }
 });
 
+// First visit: "Email me my temporary password". Stamps TEMP PASSWORD REQUESTED on this installer's own record;
+// the Airtable automation "Email installer their temp password" then emails the code to the address on file only.
+// Never shows the code or the full address. At most once every 10 minutes (Nov 21 2026).
+const SEND_GAP_MS = 10 * 60 * 1000;
+export const partnerSendTemp = webMethod(Permissions.Anyone, async ({ partner } = {}) => {
+  try {
+    if (!isRecId(partner)) return { error: 'Open the personal portal link AGC sent you.' };
+    const rec = await getInstallerRecord(partner, true);
+    if (!rec) return { error: 'This link does not match an AGC partner account.' };
+    if (pwOf(rec)) return { error: 'A password is already set for this account. Sign in instead, or use "Forgotten your password?".' };
+    const mail = emailOf(rec);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return { error: "We don't have an email address for you yet. Call AGC at 1 (877) 395-7435 and we'll set you up." };
+    if (!tempOf(rec)) return { error: 'Your temporary password is being made. Try again in a minute.' };
+    const sent = 'We emailed your temporary password to ' + maskEmail(mail) + '. It can take a minute or two, so check your junk folder too.';
+    const last = Date.parse((rec.fields && rec.fields[IF.tempRequested]) || '');
+    if (last && Date.now() - last < SEND_GAP_MS) return { ok: true, message: sent };
+    await airtable(`${BASE}/${INSTALLERS}/${rec.id}`, { method: 'PATCH', body: { fields: { [IF.tempRequested]: new Date().toISOString() } } });
+    forgetInstaller(rec.id);
+    return { ok: true, message: sent };
+  } catch (e) { return { error: explain(e) }; }
+});
+
 // First visit, step 2: create a password (only from the personal link, only when none is set, only with AGC's temporary password).
 export const partnerCreatePassword = webMethod(Permissions.Anyone, async ({ partner, password, temp } = {}) => {
   try {
@@ -194,7 +216,7 @@ export const partnerForgotPassword = webMethod(Permissions.Anyone, async ({ part
     if (!rec && mail) rec = (await installersByEmail(mail))[0] || null;
     if (!rec) return { ok: true };
     const who = firstNameOf(rec) || 'Installer';
-    const text = `[Password reset request] ${who} (${emailOf(rec) || 'no email'}) asked to reset their partner portal password. Clear PORTAL PASSWORD (ENCRYPTED) on their AGC INSTALLERS record, put a new PORTAL TEMP PASSWORD and send it to them with their VENDOR PORTAL URL; they enter it, then create a new password.`;
+    const text = `[Password reset request] ${who} (${emailOf(rec) || 'no email'}) asked to reset their partner portal password. Clear PORTAL PASSWORD (ENCRYPTED) on their AGC INSTALLERS record. A new PORTAL TEMP PASSWORD is made automatically; they open their VENDOR PORTAL URL, press \"Email me my temporary password\", enter it, then create a new password.`;
     try { await airtable(`${BASE}/${UPDATES}`, { method: 'POST', body: { records: [{ fields: { [U.text]: text, [U.installer]: [rec.id] } }] } }); }
     catch (e) { await airtable(`${BASE}/${UPDATES}`, { method: 'POST', body: { records: [{ fields: { [U.text]: text } }] } }); }
     return { ok: true };
