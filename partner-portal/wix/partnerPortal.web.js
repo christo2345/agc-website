@@ -162,8 +162,14 @@ export const partnerCheckTemp = webMethod(Permissions.Anyone, async ({ partner, 
 
 // First visit: "Email me my temporary password". Stamps TEMP PASSWORD REQUESTED on this installer's own record;
 // the Airtable automation "Email installer their temp password" then emails the code to the address on file only.
-// Never shows the code or the full address. At most once every 10 minutes (Nov 21 2026).
-const SEND_GAP_MS = 10 * 60 * 1000;
+// Never shows the code or the full address. At most once every 2 minutes (Nov 21 2026; was 10). Pressing again inside
+// the 2 minutes sends nothing and says so, with how long until they can ask again.
+const SEND_GAP_MS = 2 * 60 * 1000;
+function waitText(ms) {
+  const s = Math.max(1, Math.ceil(ms / 1000)), m = Math.floor(s / 60), r = s % 60;
+  const part = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+  return m ? part(m, 'minute') + (r ? ' ' + part(r, 'second') : '') : part(r, 'second');
+}
 export const partnerSendTemp = webMethod(Permissions.Anyone, async ({ partner } = {}) => {
   try {
     if (!isRecId(partner)) return { error: 'Open the personal portal link AGC sent you.' };
@@ -175,7 +181,9 @@ export const partnerSendTemp = webMethod(Permissions.Anyone, async ({ partner } 
     if (!tempOf(rec)) return { error: 'Your temporary password is being made. Try again in a minute.' };
     const sent = 'We emailed your temporary password to ' + maskEmail(mail) + '. It can take a minute or two, so check your junk folder too.';
     const last = Date.parse((rec.fields && rec.fields[IF.tempRequested]) || '');
-    if (last && Date.now() - last < SEND_GAP_MS) return { ok: true, message: sent };
+    if (last && Date.now() - last < SEND_GAP_MS) {   // inside the limit: nothing is sent this time
+      return { ok: true, already: true, message: 'We already emailed your temporary password to ' + maskEmail(mail) + '. Check your inbox and junk folder. You can ask for another email in ' + waitText(SEND_GAP_MS - (Date.now() - last)) + '.' };
+    }
     await airtable(`${BASE}/${INSTALLERS}/${rec.id}`, { method: 'PATCH', body: { fields: { [IF.tempRequested]: new Date().toISOString() } } });
     forgetInstaller(rec.id);
     return { ok: true, message: sent };
