@@ -12,9 +12,14 @@
 //      fingerprint, never readable text, with the date in PORTAL PASSWORD SET ON.
 //      The password is checked HERE, on the server. The browser never sees the
 //      stored fingerprint.
+//    • TEMPORARY PASSWORD (Chris, Nov 20 2026): the link alone is not enough to
+//      create a password. The installer first enters the one-time code AGC sent
+//      them (PORTAL TEMP PASSWORD), then creates their own; the code is cleared
+//      then. Only a profile created in the last 2 hours (a brand-new partner who
+//      just signed up on this page) skips it.
 //    • Forgotten password: a row lands in PORTAL UPDATES; AGC clears
-//      PORTAL PASSWORD (ENCRYPTED) and the installer creates a new one from
-//      their link.
+//      PORTAL PASSWORD (ENCRYPTED), puts a new PORTAL TEMP PASSWORD and sends it;
+//      the installer creates a new password from their link.
 //    • Signed in = a session token (backend/partnerSession.js) that the portal
 //      sends with every data call (backend/http-functions.js). It lasts at most
 //      1 day; clearing or changing the password ends it.
@@ -26,7 +31,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import crypto from 'crypto';
 import {
-  AIRTABLE_SECRET_NAME, BASE, INSTALLERS, IF, airtable, isRecId, pwOf, firstNameOf, emailOf,
+  AIRTABLE_SECRET_NAME, BASE, INSTALLERS, IF, airtable, isRecId, pwOf, tempOf, firstNameOf, emailOf,
   getInstallerRecord, forgetInstaller, makeToken, fingerprint, staffPassword, sessionInstaller
 } from 'backend/partnerSession';
 
@@ -89,6 +94,13 @@ function initData(rec) {
   if (rec.__staff) out.notice = 'AGC staff access: you are viewing ' + (firstNameOf(rec) || 'this installer') + "'s portal.";
   return out;
 }
+// A profile made in the last 2 hours is a brand-new partner who just signed up here: no code to enter.
+function brandNew(rec) { const t = Date.parse((rec && rec.createdTime) || ''); return !!t && Date.now() - t < 2 * 3600 * 1000; }
+function needsTemp(rec) { return !pwOf(rec) && !brandNew(rec); }
+// Is this the code AGC sent? (No code on file = cannot set up yet.)
+function tempOk(rec, temp) { const want = tempOf(rec), got = String(temp || '').trim(); return !!want && !!got && got.length <= MAX_PASSWORD && sameText(got.toUpperCase(), want.toUpperCase()); }
+const NO_TEMP = "Your portal isn't ready yet. Ask your AGC project manager for your temporary password, or call 1 (877) 395-7435.";
+const BAD_TEMP = "That temporary password isn't right. Check the email from AGC and try again.";
 function maskEmail(e) {
   const [u, d] = String(e || '').split('@'); if (!d) return '';
   return (u.length <= 2 ? u[0] + '•' : u.slice(0, 2) + '•'.repeat(Math.min(6, u.length - 2))) + '@' + d;
@@ -100,7 +112,7 @@ export const partnerLookup = webMethod(Permissions.Anyone, async ({ partner } = 
     if (!isRecId(partner)) return {};
     const rec = await getInstallerRecord(partner, true);
     if (!rec) return {};
-    return { firstName: firstNameOf(rec), emailHint: maskEmail(emailOf(rec)), hasPassword: !!pwOf(rec) };
+    return { firstName: firstNameOf(rec), emailHint: maskEmail(emailOf(rec)), hasPassword: !!pwOf(rec), needsTemp: needsTemp(rec) };
   } catch (e) { return { error: explain(e) }; }
 });
 
@@ -132,8 +144,46 @@ export const partnerLogin = webMethod(Permissions.Anyone, async ({ partner, emai
   } catch (e) { return { error: explain(e) }; }
 });
 
-// First visit: create a password (only from the personal link, only when none is set).
-export const partnerCreatePassword = webMethod(Permissions.Anyone, async ({ partner, password } = {}) => {
+// First visit, step 1: the temporary password from AGC (only from the personal link, only when no password is set).
+export const partnerCheckTemp = webMethod(Permissions.Anyone, async ({ partner, temp } = {}) => {
+  try {
+    if (!isRecId(partner)) return { error: 'Open the personal portal link AGC sent you.' };
+    const key = 'link|' + partner;
+    if (locked(key)) return { error: 'Too many attempts. Please wait 15 minutes and try again.' };
+    const rec = await getInstallerRecord(partner, true);
+    if (!rec) return { error: 'This link does not match an AGC partner account.' };
+    if (pwOf(rec)) return { error: 'A password is already set for this account. Sign in instead, or use "Forgotten your password?".' };
+    if (!needsTemp(rec)) return { ok: true };
+    if (!tempOf(rec)) return { error: NO_TEMP };
+    if (!tempOk(rec, temp)) { failed(key); return { error: BAD_TEMP }; }
+    return { ok: true };
+  } catch (e) { return { error: explain(e) }; }
+});
+
+// First visit: "Email me my temporary password". Stamps TEMP PASSWORD REQUESTED on this installer's own record;
+// the Airtable automation "Email installer their temp password" then emails the code to the address on file only.
+// Never shows the code or the full address. At most once every 10 minutes (Nov 21 2026).
+const SEND_GAP_MS = 10 * 60 * 1000;
+export const partnerSendTemp = webMethod(Permissions.Anyone, async ({ partner } = {}) => {
+  try {
+    if (!isRecId(partner)) return { error: 'Open the personal portal link AGC sent you.' };
+    const rec = await getInstallerRecord(partner, true);
+    if (!rec) return { error: 'This link does not match an AGC partner account.' };
+    if (pwOf(rec)) return { error: 'A password is already set for this account. Sign in instead, or use "Forgotten your password?".' };
+    const mail = emailOf(rec);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return { error: "We don't have an email address for you yet. Call AGC at 1 (877) 395-7435 and we'll set you up." };
+    if (!tempOf(rec)) return { error: 'Your temporary password is being made. Try again in a minute.' };
+    const sent = 'We emailed your temporary password to ' + maskEmail(mail) + '. It can take a minute or two, so check your junk folder too.';
+    const last = Date.parse((rec.fields && rec.fields[IF.tempRequested]) || '');
+    if (last && Date.now() - last < SEND_GAP_MS) return { ok: true, message: sent };
+    await airtable(`${BASE}/${INSTALLERS}/${rec.id}`, { method: 'PATCH', body: { fields: { [IF.tempRequested]: new Date().toISOString() } } });
+    forgetInstaller(rec.id);
+    return { ok: true, message: sent };
+  } catch (e) { return { error: explain(e) }; }
+});
+
+// First visit, step 2: create a password (only from the personal link, only when none is set, only with AGC's temporary password).
+export const partnerCreatePassword = webMethod(Permissions.Anyone, async ({ partner, password, temp } = {}) => {
   try {
     if (!isRecId(partner)) return { error: 'To create your password, open the personal portal link AGC sent you.' };
     const key = 'link|' + partner;
@@ -141,11 +191,15 @@ export const partnerCreatePassword = webMethod(Permissions.Anyone, async ({ part
     const rec = await getInstallerRecord(partner, true);
     if (!rec) return { error: 'This link does not match an AGC partner account.' };
     if (pwOf(rec)) { failed(key); return { error: 'A password is already set for this account. Sign in instead, or use "Forgotten your password?".' }; }
+    if (needsTemp(rec)) {
+      if (!tempOf(rec)) return { error: NO_TEMP };
+      if (!tempOk(rec, temp)) { failed(key); return { error: BAD_TEMP, needsTemp: true }; }
+    }
     const pw = String(password || '');
     if (pw.trim().length < MIN_PASSWORD) return { error: 'Please use at least ' + MIN_PASSWORD + ' characters.' };
     if (pw.length > MAX_PASSWORD) return { error: 'Please use a shorter password.' };
     const stored = await hashPassword(pw);
-    await airtable(`${BASE}/${INSTALLERS}/${rec.id}`, { method: 'PATCH', body: { fields: { [IF.password]: stored, [IF.passwordSetOn]: new Date().toISOString() } } });
+    await airtable(`${BASE}/${INSTALLERS}/${rec.id}`, { method: 'PATCH', body: { fields: { [IF.password]: stored, [IF.passwordSetOn]: new Date().toISOString(), [IF.tempPassword]: '' } } });   // the one-time code is used up
     forgetInstaller(rec.id);
     return { token: await makeToken(rec.id, fingerprint(stored)), ...initData(rec) };
   } catch (e) { return { error: explain(e) }; }
@@ -162,7 +216,7 @@ export const partnerForgotPassword = webMethod(Permissions.Anyone, async ({ part
     if (!rec && mail) rec = (await installersByEmail(mail))[0] || null;
     if (!rec) return { ok: true };
     const who = firstNameOf(rec) || 'Installer';
-    const text = `[Password reset request] ${who} (${emailOf(rec) || 'no email'}) asked to reset their partner portal password. Clear PORTAL PASSWORD (ENCRYPTED) on their AGC INSTALLERS record; they'll create a new one from their VENDOR PORTAL URL.`;
+    const text = `[Password reset request] ${who} (${emailOf(rec) || 'no email'}) asked to reset their partner portal password. Clear PORTAL PASSWORD (ENCRYPTED) on their AGC INSTALLERS record. A new PORTAL TEMP PASSWORD is made automatically; they open their VENDOR PORTAL URL, press \"Email me my temporary password\", enter it, then create a new password.`;
     try { await airtable(`${BASE}/${UPDATES}`, { method: 'POST', body: { records: [{ fields: { [U.text]: text, [U.installer]: [rec.id] } }] } }); }
     catch (e) { await airtable(`${BASE}/${UPDATES}`, { method: 'POST', body: { records: [{ fields: { [U.text]: text } }] } }); }
     return { ok: true };

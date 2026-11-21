@@ -12637,7 +12637,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.134</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.136</span>
  </div>
 
  <div class="hero">
@@ -36143,9 +36143,9 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      answers with the installer's id and a session token. The token goes to the three pages,
      which send it with every data call; the backend only answers with that installer's own data.
        portal → Wix:  agc_partner_ready, agc_partner_login {password | email+password},
-                      agc_partner_create_password {password}, agc_partner_forgot_password {email},
+                      agc_partner_check_temp {temp}, agc_partner_send_temp, agc_partner_create_password {password, temp}, agc_partner_forgot_password {email},
                       agc_partner_logout
-       Wix → portal:  agc_partner_login_required {linked, firstName, emailHint, needsSetup, message},
+       Wix → portal:  agc_partner_login_required {linked, firstName, emailHint, needsSetup, needsTemp, message}, agc_partner_temp_ok, agc_partner_temp_sent {message, error},
                       agc_partner_init {recordId, firstName, notice, token},
                       agc_partner_login_failed {error}, agc_partner_forgot_sent, agc_partner_error {error}
      Clearing PORTAL PASSWORD (ENCRYPTED) in Airtable resets the password (and ends any session). */
@@ -36159,12 +36159,14 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
   function gateErr(t){ gel('msg').textContent = t || ''; }
   function gateShow(mode, message){
     gate.mode = mode;
-    var form = (mode === 'create' || mode === 'enter' || mode === 'email');
+    var form = (mode === 'create' || mode === 'enter' || mode === 'email' || mode === 'temp');
     var create = mode === 'create';
     var hi = gate.name ? ', ' + gate.name : '';
     var title = 'Welcome', sub = 'Checking your account…', go = 'Sign in';
     if (mode === 'offline') { title = "Can't reach the portal"; sub = message || "We couldn't check your account. Check your connection and try again."; go = 'Try again'; }
     else if (mode === 'nohost') { title = 'Open your AGC portal link'; sub = 'The Partner Portal opens from the AGC website. Use the portal link AGC sent you.'; }
+    /* PORTAL 6.135 (Chris): first the temporary password AGC sent, then their own password */
+    else if (mode === 'temp') { title = 'Welcome' + hi; sub = 'Enter the temporary password AGC sent you. Next, you will create your own.'; go = 'Continue'; }
     else if (create) { title = 'Welcome' + hi; sub = "Create a password to protect your Partner Portal. You'll enter it each time you sign in."; go = 'Create password'; }
     else if (mode === 'email') { title = 'Welcome back'; sub = 'Sign in with your email and Partner Portal password.'; }
     else if (form) { title = 'Welcome back' + hi; sub = 'Enter your password to open your Partner Portal.'; }
@@ -36175,14 +36177,15 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     gel('email-row').hidden = mode !== 'email';
     gel('pw-row').hidden = !form;
     gel('pw2-row').hidden = !create;
-    gel('pw-label').textContent = create ? 'Create password (' + PW_MIN + '+ characters)' : 'Password';
+    gel('pw-label').textContent = create ? 'Create password (' + PW_MIN + '+ characters)' : (mode === 'temp' ? 'Temporary password' : 'Password');
     gate.create = create; if (gate.armed) gel('pw').setAttribute('autocomplete', create ? 'new-password' : 'current-password');
     gel('go').textContent = go;
     gel('go').hidden = !(form || mode === 'offline');
     gel('forgot').hidden = !form || create;
+    gel('forgot').textContent = mode === 'temp' ? 'Email me my temporary password' : 'Forgotten your password?';   /* 6.136: the code comes by email */
     gel('flip').hidden = true;
     gel('dev').hidden = true;
-    gel('hint').textContent = (form && message) ? message : ((mode === 'enter' && gate.emailHint) ? 'Signing in as ' + gate.emailHint : '');
+    gel('hint').textContent = (form && message) ? message : ((mode === 'enter' && gate.emailHint) ? 'Signing in as ' + gate.emailHint : (mode === 'temp' ? 'No temporary password? Press "Email me my temporary password" below, or call AGC at 1 (877) 395-7435.' : ''));
     gel('pw').value = ''; gel('pw2').value = '';
     gateErr(''); gateBusy(false);
     clearTimeout(gate.hideT);
@@ -36275,7 +36278,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
         if (gate.open) { gate.open = false; gate.rid = null; }       /* a brand-new partner who just started a profile */
         gate.name = String(m.firstName || '').trim().split(/\s+/)[0] || '';
         gate.linked = !!m.linked; gate.emailHint = String(m.emailHint || '');
-        gateShow(m.needsSetup ? 'create' : (m.linked ? 'enter' : 'email'), m.message || '');
+        gateShow(m.needsSetup ? (m.needsTemp ? 'temp' : 'create') : (m.linked ? 'enter' : 'email'), m.message || '');
         gateSaid();
         return true;
       case 'agc_partner_init':
@@ -36286,10 +36289,18 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
         recordId = m.recordId;
         gateUnlock(recordId);
         return true;
+      case 'agc_partner_temp_ok':
+        gate.temp = gate.tempTry || ''; gateShow('create');
+        return true;
       case 'agc_partner_login_failed':
         gate.answered = true;
         gateBusy(false); gateErr(m.error || "That didn't work. Please try again.");
         try { gel('pw').select(); } catch (e) {}
+        return true;
+      case 'agc_partner_temp_sent':   /* 6.136: "Email me my temporary password" answered */
+        gateBusy(false);
+        if (m.error) { gel('hint').textContent = ''; gateErr(m.error); } else { gateErr(''); gel('hint').textContent = m.message || 'We emailed your temporary password. It can take a minute or two.'; }
+        try { gel('pw').focus(); } catch (e) {}
         return true;
       case 'agc_partner_forgot_sent':
         gateBusy(false);
@@ -36309,13 +36320,15 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     if (gate.busy) return;
     var mode = gate.mode, pw = gel('pw').value, cf = gel('pw2').value, mail = (gel('email').value || '').trim();
     if (mode === 'offline') { gateShow('wait'); askHost(true); return; }
-    if (mode !== 'create' && mode !== 'enter' && mode !== 'email') return;
+    if (mode !== 'create' && mode !== 'enter' && mode !== 'email' && mode !== 'temp') return;
+    if (mode === 'temp') { if (!pw.trim()) { gateErr('Please enter the temporary password from AGC.'); gel('pw').focus(); return; }
+      gateErr(''); gateBusy(true); gate.tempTry = pw.trim(); up({ type: 'agc_partner_check_temp', temp: gate.tempTry }); return; }
     if (mode === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { gateErr('Please enter your email address.'); gel('email').focus(); return; }
     if (!pw) { gateErr('Please enter your password.'); gel('pw').focus(); return; }
     if (mode === 'create' && pw.trim().length < PW_MIN) { gateErr('Please use at least ' + PW_MIN + ' characters.'); gel('pw').focus(); return; }
     if (mode === 'create' && pw !== cf) { gateErr('The two passwords do not match.'); gel('pw2').focus(); return; }
     gateErr(''); gateBusy(true);
-    if (mode === 'create') up({ type: 'agc_partner_create_password', password: pw });
+    if (mode === 'create') up({ type: 'agc_partner_create_password', password: pw, temp: gate.temp || '' });
     else up({ type: 'agc_partner_login', password: pw, email: mode === 'email' ? mail : '' });
   }
   function gateSaid(){
@@ -36333,6 +36346,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     });
     gel('forgot').addEventListener('click', function(){
       gateErr('');
+      if (gate.mode === 'temp') { if (gate.busy) return; gel('hint').textContent = 'Sending…'; gateBusy(true); up({ type: 'agc_partner_send_temp' }); return; }
       var mail = (gel('email').value || '').trim();
       if (gate.mode === 'email' && !mail) { gateErr('Enter your email first, then press "Forgotten your password?" again.'); gel('email').focus(); return; }
       gel('hint').textContent = 'Sending…';
@@ -36841,7 +36855,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6134;
+  var AGC_BUILD = 6136;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){

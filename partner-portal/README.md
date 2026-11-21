@@ -6,7 +6,7 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
 
 - `index.html` is the whole portal. The HTML box on the Wix **Vendor Portal** page loads it by address,
   so every push to `main` updates the live portal within about a minute.
-- `version.json` holds the build number (Version 6.134 = 6134). On load the portal asks for it and, if it
+- `version.json` holds the build number (Version 6.135 = 6135). On load the portal asks for it and, if it
   names a newer build, loads the fresh copy once — only while the sign-in screen is up, never while
   someone is signed in and working.
 - The version tag in the corner of the sign-in card shows which version is live.
@@ -120,6 +120,13 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   (sent by the backend). Blank or CHECK: the first name alone.
 - Contacts (since 6.134): "Onsite contact: Store manager." and "Your project manager is Randall Moffatt, (917) 410-0970."
   The phone is said once (the PM field already holds it), no dash, plus a Call your project manager button.
+- Temporary password (6.135 + Wix, Nov 20 2026): a first visit asks for the one-time code in PORTAL TEMP PASSWORD
+  (AGC INSTALLERS) before the installer can create a password, so the personal link alone is no longer enough.
+  The code is not case sensitive and is cleared when they create their password. No code on file = "ask your AGC
+  project manager". A profile made in the last 2 hours (brand-new partner signing up) skips it. To reset a
+  password: clear PORTAL PASSWORD (ENCRYPTED), put a new PORTAL TEMP PASSWORD and send it with the link.
+  Wix: backend/partnerSession.js (IF.tempPassword), backend/partnerPortal.web.js (partnerCheckTemp), Vendor
+  Portal page code (agc_partner_check_temp). Go live: portal page first (it still works with the old Wix code).
 - ALFRED's welcome (since 6.130) is one line: "Hey <first name>, have any questions about this project?" (the
   project open on screen; otherwise "your projects", or "your profile" while on My Profile).
 - Chat answers (since 6.129):
