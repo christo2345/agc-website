@@ -27,7 +27,8 @@ export const IF = {
   password: 'fldsx2u4ucwBjXC4b',       // PORTAL PASSWORD (ENCRYPTED)
   passwordSetOn: 'fldQJhr3FWg9RDsqT',  // PORTAL PASSWORD SET ON
   projects: 'fldOwk1SeW6c3SNTQ',       // AGC PROJECTS (installer = INSTALLER(S) on the project)
-  extraProjects: 'fldQLlvtjUIBKvRnN'   // projects where they are an ADDITIONAL INSTALLER
+  extraProjects: 'fldQLlvtjUIBKvRnN',  // projects where they are an ADDITIONAL INSTALLER
+  tempPassword: 'fldSkkuV12oeX0xBe'    // PORTAL TEMP PASSWORD (one-time code from AGC, Nov 20 2026)
 };
 
 const AT = 'https://api.airtable.com/v0/';
@@ -61,6 +62,7 @@ async function airtableOnce(path, { method = 'GET', body } = {}) {
 export const isRecId = (v) => /^rec[A-Za-z0-9]{14}$/.test(String(v || ''));
 export const pwOf = (rec) => String((rec && rec.fields && rec.fields[IF.password]) || '').trim();
 export const firstNameOf = (rec) => String((rec && rec.fields && rec.fields[IF.firstName]) || '').trim();
+export const tempOf = (rec) => String((rec && rec.fields && rec.fields[IF.tempPassword]) || '').trim();
 export const emailOf = (rec) => String((rec && rec.fields && rec.fields[IF.email]) || '').trim();
 
 // Installer record by FIELD ID (cached 60 s; sign-in always reads fresh)

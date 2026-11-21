@@ -12,7 +12,7 @@
 //  page's memory only: a refresh or a new visit asks for the password again.
 //  (Nov 13 2026, security rebuild.)
 // ─────────────────────────────────────────────────────────────────────────
-import { partnerLookup, partnerLogin, partnerCreatePassword, partnerForgotPassword, partnerInit } from 'backend/partnerPortal.web';
+import { partnerLookup, partnerLogin, partnerCheckTemp, partnerCreatePassword, partnerForgotPassword, partnerInit } from 'backend/partnerPortal.web';
 import wixLocation from 'wix-location-frontend';
 import wixWindowFrontend from 'wix-window-frontend';
 
@@ -54,7 +54,7 @@ $w.onReady(() => {
     if (LINK) { try { who = await partnerLookup({ partner: LINK }); } catch (e) { who = {}; } }
     const found = !!(LINK && who.firstName !== undefined);
     send({ type: 'agc_partner_login_required', linked: found, firstName: who.firstName || '', emailHint: who.emailHint || '',
-           needsSetup: found && who.hasPassword === false,
+           needsSetup: found && who.hasPassword === false, needsTemp: found && who.needsTemp === true,
            message: (LINK && !found) ? (who.error || "We couldn't find your portal link. Use the latest link from AGC, or sign in with your email.") : (message || who.error || '') });
   }
   function signedIn(r) {
@@ -94,9 +94,18 @@ $w.onReady(() => {
         } catch (e) { send({ type: 'agc_partner_login_failed', error: friendly(e) }); }
         break;
       }
+      // First visit: the temporary password from AGC, before they create their own (Nov 20 2026).
+      case 'agc_partner_check_temp': {
+        try {
+          const r = await partnerCheckTemp({ partner: LINK, temp: m.temp || '' });
+          if (r.ok) send({ type: 'agc_partner_temp_ok' });
+          else send({ type: 'agc_partner_login_failed', error: r.error || "That temporary password isn't right." });
+        } catch (e) { send({ type: 'agc_partner_login_failed', error: friendly(e) }); }
+        break;
+      }
       case 'agc_partner_create_password': {
         try {
-          const r = await partnerCreatePassword({ partner: LINK, password: m.password || '' });
+          const r = await partnerCreatePassword({ partner: LINK, password: m.password || '', temp: m.temp || '' });
           if (r.token) signedIn(r);
           else send({ type: 'agc_partner_login_failed', error: r.error || 'Could not save your password. Please try again.' });
         } catch (e) { send({ type: 'agc_partner_login_failed', error: friendly(e) }); }
