@@ -7376,6 +7376,19 @@ function helloP(){var n='',on=onScreen();try{n=window.AGC_ALFRED_NAME?String(AGC
   /* 6.145 (Chris: breathing room in the intro too): the question, then each sentence of the quip, as separate paragraphs */
   var qp=String(window.AGC_ALFRED_QUIP?AGC_ALFRED_QUIP():'').trim();
   return ['Hey '+(n||'there')+', have any questions about '+what+'?'].concat(qp?qp.split(/(?<=[.!?])\s+(?=[A-Z0-9“"])/):[])}
+/* PORTAL 6.152 (Chris: "where's his introduction for the first chat? he should say something about unlocking the FULL ALFRED"):
+   the first time someone opens ALFRED in the portal on this browser (remembered per name), the unlock welcome; every time after
+   that, the one-line hello above. Said in natural words when his voice is on. */
+function firstP(){var n='';try{n=window.AGC_ALFRED_NAME?String(AGC_ALFRED_NAME()||''):''}catch(e){}
+  var key='agc_alf_unlocked_'+(n||'x').toLowerCase().replace(/[^a-z0-9]+/g,'_'),seen=true;
+  try{seen=!!localStorage.getItem(key);if(!seen)localStorage.setItem(key,'1')}catch(e){seen=true}
+  if(seen)return null;
+  return ['Hey '+(n||'there')+', welcome in. You just unlocked the FULL ALFRED.',
+    'On the website I only know what’s on the page.',
+    'In here I see your own projects and your profile: install dates, store hours, addresses, scope, equipment, shipping, contacts, files, and anything still missing on your profile.',
+    'Type a question, or tap the mic and just say it. Try “What’s my next job?” or “What equipment do I need?”',
+    'I answer from what AGC has on file for you, and I never guess.',
+    'Still want a human? Just say the word. No hard feelings. I know who signs my paychecks.']}
 function L(){return root.getAttribute('data-lang')||'en'}
 function tr(s){try{return window.AGC_T?window.AGC_T(s):s}catch(e){return s}}
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘`]/g,"'").replace(/[^a-z0-9'\s]/g,' ').replace(/\s+/g,' ').trim()}
@@ -7614,7 +7627,7 @@ function act(t){
   if(t.indexOf('proj:')===0){var pq=t.slice(5).split('|');close(true);setTimeout(function(){if(window.AGC_ALFRED_OPENPROJECT)AGC_ALFRED_OPENPROJECT(pq[0],pq[1]||'')},420);return}
   if(t.indexOf('go:')===0){shut();tab(t.slice(3));return}}
 
-function begin(){if(started)return;started=true;var h=document.createElement('div');h.className='alfc-hero';h.innerHTML='<img alt="A.L.F.R.E.D." src="'+AV+'" width="150" height="155">';log.appendChild(h);holdTop=true;addBot(helloP());chips.innerHTML='';log.scrollTop=0;
+function begin(){if(started)return;started=true;var h=document.createElement('div');h.className='alfc-hero';h.innerHTML='<img alt="A.L.F.R.E.D." src="'+AV+'" width="150" height="155">';log.appendChild(h);holdTop=true;var fp=firstP();if(fp)addBot(fp,[],false,{id:'portal',text:fp.join('\n\n'),q:'First time opening ALFRED',speak:true});else addBot(helloP());chips.innerHTML='';log.scrollTop=0;
   /* PORTAL: the chips (My next job, My projects…) appear once the chat has opened */
   setTimeout(function(){if(!busy&&log.querySelectorAll('.alfc-m').length<2)setChips(null)},1000);
   var d=log.querySelector('.alfc-b');if(d){d.classList.add('alfc-clip');var mb=document.createElement('button');mb.type='button';mb.className='alfc-more';mb.textContent='…see more';d.__more=mb;
@@ -12877,7 +12890,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.151</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.152</span>
  </div>
 
  <div class="hero">
@@ -37146,7 +37159,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6151; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6152; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
