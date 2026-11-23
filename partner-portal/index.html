@@ -7465,7 +7465,14 @@ function addBot(paras,acts,noTr,meta){var d=bubble('alfc-b',noTr);
   paras.forEach(function(p){var e=document.createElement('p');e.textContent=p;d.appendChild(e)});
   /* with sound on, ALFRED reads his reply aloud (after the page has translated it) */
   /* PORTAL: read as sentences: each line ends with a stop, and the dots that separate facts in a line ("19501 · Nov 23 · Confirmed") are pauses */
-  setTimeout(function(){if(window.AGC_say&&box.classList.contains('open'))window.AGC_say([].map.call(d.querySelectorAll('p'),function(x){var t=x.textContent.trim();return /[.!?:…]$/.test(t)?t:t+'.'}).join(' \u00b6 ').replace(/\s*·\s*/g,', '),L())},90);   /* 6.144: ¶ = a pause between paragraphs */
+  var sayN=window.__alfSayN=(window.__alfSayN||0)+1;
+  setTimeout(function(){if(!window.AGC_say||!box.classList.contains('open'))return;
+    var ps=[].map.call(d.querySelectorAll('p'),function(x){var t=x.textContent.trim();return /[.!?:…]$/.test(t)?t:t+'.'}),plain=ps.join(' \u00b6 ').replace(/\s*·\s*/g,', ');
+    /* PORTAL 6.148: a portal answer is said in natural words (AGC_ALFRED_SPEAK), only when his voice is on; if that fails, the screen text.
+       A later answer always wins: an older spoken version that arrives late is dropped. */
+    var voice=window.AGC_soundOn&&AGC_soundOn()&&!(window.AGC_voiceMuted&&AGC_voiceMuted());
+    if(meta&&meta.speak&&voice&&window.AGC_ALFRED_SPEAK)AGC_ALFRED_SPEAK(meta.q,ps,L()).then(function(sp){if(sayN===window.__alfSayN&&box.classList.contains('open'))window.AGC_say(sp||plain,L())});
+    else window.AGC_say(plain,L())},90);   /* 6.144: ¶ = a pause between paragraphs */
   if(acts&&acts.length){var w=document.createElement('div');w.className='alfc-acts';
     acts.forEach(function(a){var b;var t=a[1];
       if(/^(mailto:|tel:|https?:)/.test(t)){b=document.createElement('a');b.href=t;if(/^https?:/.test(t)){b.target='_blank';b.rel='noopener'}}
@@ -7558,7 +7565,7 @@ function ask(text,pid,kind){
   busy=true;var pt=typing(),done=false,t0=Date.now();
   function fin(r){if(done)return;done=true;clearTimeout(to);setTimeout(function(){pt.remove();busy=false;r=r||NOPE;
     if(H.length&&H[H.length-1].r==='u')H.pop();
-    addBot(emo(airy(r.paras)),r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text});setChips(r.chips&&r.chips.length?r.chips:null);bottom()}   /* 6.143: the job's topics */,Math.max(0,500-(Date.now()-t0)))}
+    addBot(emo(airy(r.paras)),r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text,speak:true});setChips(r.chips&&r.chips.length?r.chips:null);bottom()}   /* 6.143: the job's topics */,Math.max(0,500-(Date.now()-t0)))}
   var to=setTimeout(function(){fin({paras:['I couldn’t reach your portal data just now. Please try again in a moment.'],acts:[]})},12000);
   try{P.answer(text,pid,kind,pid===undefined?'typed':'chip').then(fin,function(){fin(null)})}catch(e){fin(null)}}
 function askSite(text){
@@ -12818,7 +12825,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.147</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.148</span>
  </div>
 
  <div class="hero">
@@ -36740,6 +36747,16 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
       headers: { Authorization: 'Bearer ' + gate.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ac ? ac.signal : undefined })
       .then(function(r){ if (!r.ok) throw new Error('ai ' + r.status); return r.json(); });
   };
+  /* PORTAL 6.148 · 🔊 (Chris, Nov 23: "the audio is robotic; communicate the main points, don't repeat every word"): the spoken version of
+     an answer already on screen, written by the AI service from that text only. '' on any problem or after 4.5 s (then the screen text is read). */
+  window.AGC_ALFRED_SPEAK = function(question, paras, lang){
+    if (!gate.open || !gate.token || !window.fetch) return Promise.resolve('');
+    var ac = window.AbortController ? new AbortController() : null; if (ac) setTimeout(function(){ ac.abort(); }, 4500);
+    return fetch(window.AGC_FIELDOPS_AI_URL || 'https://field-ops-alfred.empty-truth-ddcb.workers.dev', { method: 'POST', credentials: 'omit',
+      headers: { Authorization: 'Bearer ' + gate.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'speak', question: String(question || '').slice(0, 300), paras: (paras || []).slice(0, 14), lang: lang || 'en' }), signal: ac ? ac.signal : undefined })
+      .then(function(r){ return r.ok ? r.json() : {}; }).then(function(j){ return String((j && j.speak) || ''); }, function(){ return ''; });
+  };
   var alfData = null, alfAt = 0, alfTok = '';
   window.AGC_ALFRED_DATA = function(){
     if (!gate.open || !gate.token) return Promise.resolve(null);
@@ -37077,7 +37094,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6147; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6148; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
