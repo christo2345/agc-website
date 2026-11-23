@@ -6801,6 +6801,13 @@ window.AGC_ALFRED_PORTAL = (function(){
     var name = raw.replace(/[\s—–|,:;-]+$/, '').replace(/^[\s—–|,:;-]+/, '').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
     return { name: name, phone: (pd || ph).replace(/^\((\(.*\))\)$/, '$1').trim() }; }
   function normalCase(t){ return t && t === t.toUpperCase() && /[A-Z]{3}/.test(t) ? t.charAt(0) + t.slice(1).toLowerCase() : t; }
+  /* 6.151: the onsite contact split into a name and a number to dial ("Test Manager, 555-0100" = "Test Manager" / 5550100). The name is
+     kept short for a button (three words at most); no number = no button. */
+  function onsiteOf(f){ var raw = normalCase(clean(f['ONSITE CONTACT'], 200)), m = raw.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}(?:\s*(?:x|ext\.?)\s*\d+)?/i);
+    var phone = m ? m[0].replace(/\s*(?:x|ext\.?)\s*\d+$/i, '').replace(/[^\d+]/g, '') : '';
+    var name = (m ? raw.replace(m[0], '') : raw).replace(/[,;:·|()\-–—]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    if (name.split(' ').length > 3 || name.length > 24) name = '';
+    return { raw: raw, name: name, phone: phone.length >= 7 ? phone : '' }; }
   function aContact(p){ var f = p.f, out = [], on = normalCase(clean(f['ONSITE CONTACT'], 200)), pmx = pmOf(f), pm = pmx.name, pd = pmx.phone;
     if (on) out.push('Onsite contact: ' + on + '.');
     if (pm) out.push('Your project manager is ' + pm + (pd ? ', ' + pd : '') + '.');
@@ -7157,7 +7164,14 @@ window.AGC_ALFRED_PORTAL = (function(){
       /* PORTAL 6.129: the address answer has a Google Maps link per address and a button for the project map */
       if (fieldAsk === 'where') return { paras: aWhere(one), acts: whereActs(one).concat(follow(one, 'where').slice(0, 2)) };
       /* PORTAL 6.129: "any updates?" points to the project manager, with a button to call */
-      if (fieldAsk === 'updates' || fieldAsk === 'contact') { var upd = pmOf(one.f).phone.replace(/[^\d+]/g, ''); return { paras: ONE[fieldAsk](one), acts: (upd.length >= 10 ? [['Call your project manager', 'tel:' + upd]] : [CALL]).concat(follow(one, fieldAsk)).slice(0, 4) }; }
+      if (fieldAsk === 'updates') { var upd = pmOf(one.f).phone.replace(/[^\d+]/g, ''); return { paras: ONE[fieldAsk](one), acts: (upd.length >= 10 ? [['Call your project manager', 'tel:' + upd]] : [CALL]).concat(follow(one, fieldAsk)).slice(0, 4) }; }
+      /* PORTAL 6.151 (Chris: "onsite is not AGC, make the button match"): one call button per person the answer names, labelled with who
+         it rings (the onsite contact, the project manager); "Call AGC" only when the answer itself says to call AGC (nobody listed). */
+      if (fieldAsk === 'contact') { var cActs = [], oc = onsiteOf(one.f), pmc = pmOf(one.f), pmd = pmc.phone.replace(/[^\d+]/g, '');
+        if (oc.phone) cActs.push(['Call ' + (oc.name || 'onsite contact'), 'tel:' + oc.phone]);
+        if (pmc.name && pmd.length >= 10) cActs.push(['Call ' + (S(pmc.name).split(' ')[0] || 'your project manager'), 'tel:' + pmd]);
+        if (!oc.raw && !pmc.name) cActs.push(CALL);
+        return { paras: ONE.contact(one), acts: cActs.slice(0, 3) }; }
       /* PORTAL 6.129: a shipping answer has a link to track each shipment, then the usual buttons */
       var trk = fieldAsk === 'shipping' ? tracks(S(pick(one.f, 'TRACKING NUMBER', 'TRACKING NUMBER(S)')), S(pick(one.f, 'SHIPPING CO.', 'SHIPPING COMPANY'))).slice(0, 6).filter(function(x){ return !!x.url; }).map(function(x){ return ['Track ' + (x.carrier ? x.carrier + ' ' : '') + x.num, x.url]; }) : [];
       return { paras: fn(one), acts: trk.concat((fieldAsk === 'files' || fieldAsk === 'closeout' ? [open()] : fieldAsk === 'invoice' ? [INVOICE] : []).concat(follow(one, fieldAsk)).slice(0, 4)) };
@@ -12863,7 +12877,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.150</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.151</span>
  </div>
 
  <div class="hero">
@@ -37132,7 +37146,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6150; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6151; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
