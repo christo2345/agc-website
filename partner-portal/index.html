@@ -7007,7 +7007,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     'Unlike the loading dock, I’m open.', 'I’m here all day. That’s not a threat.', 'No pound signs, I promise.'];
   window.AGC_ALFRED_QUIP = function(){ return QUIPS[Math.floor(Math.random() * QUIPS.length)]; };
   var JOKE_Q = /\b(joke|jokes|funny|make me laugh|humou?r|blague|blagues|drole|fais moi rire|chiste|chistes|broma|gracioso|hazme reir)\b/;
-  function answer(text, hintId, hintKind){
+  function answer0(text, hintId, hintKind){
     if (JOKE_Q.test(' ' + norm(text) + ' ')) return Promise.resolve({ paras: [joke()], acts: [['Another one', 'ask:Tell me another joke']] });
     if (!window.AGC_ALFRED_DATA) return Promise.resolve({ paras: ['I can’t see your portal data right now.'], acts: [] });
     var q = ' ' + norm(text).replace(/#/g, ' ') + ' ', k;
@@ -7032,7 +7032,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       var ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); }); keepTitles(ps);
       var one = null, many = [], scr = onScreen(ps, data), screen = data.screen || {}, hereAsk = !hintId && HERE.test(q), thisAsk = THIS.test(q) || (hereAsk && !!scr);
       var onStep = screen.view === 'profile' && screen.step >= 1 && screen.step <= 5 ? screen.step : 0, key = ctxKey(scr, screen);
-      function keep(p){ lastId = p.id; lastScr = scr ? scr.id : ''; lastCtx = key; }
+      function keep(p){ lastId = p.id; lastScr = scr ? scr.id : ''; lastCtx = key; touched = p; }
       function step(){ return stepAnswer(onStep, screen.part, inst, data.steps); }
       if (aboutAgc) return other(q, ps, data, false, true);
       if (hintId) { one = ps.filter(function(p){ return p.id === hintId; })[0] || null; if (!one) return { paras: ['I don’t see that project among yours any more.'], acts: [] }; many = [one]; }
@@ -7139,12 +7139,12 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (/\b(help|what can you (do|tell|see|answer)|what do you (know|do)|who are you|what are you)\b/.test(q))
       return { paras: ['In the portal I answer from what AGC has on file for you.', 'Your projects: schedule, store and address, budget, scope, notes, PPE, crew, shipping and tracking, contacts, files, invoice and close-out. Name the job by its AGC number or its name.', 'Your profile: which steps are done, your rates, insurance, contract, banking, tax forms, services and service area.'],
         acts: [['My next job', 'ask:What is my next job?'], ['My projects', 'ask:List my projects'], ['My profile', 'ask:Is my profile complete?']] };
-    if (aboutJobs && ps.length) return { paras: aList(ps, 'I’m not sure which job or what about it. Your ' + ps.length + ' project' + (ps.length === 1 ? '' : 's') + ':'), acts: pickButtons(ps) };
-    if (aboutAgc) return { paras: ['That is a question about AGC rather than about your work, and it is not in your portal, so I won’t guess.', 'I answer from what AGC has on file for you: your projects and your profile. For anything else, call or email AGC.'], acts: [CALL, MAIL] };
+    if (aboutJobs && ps.length) return U({ paras: aList(ps, 'I’m not sure which job or what about it. Your ' + ps.length + ' project' + (ps.length === 1 ? '' : 's') + ':'), acts: pickButtons(ps) }, 'which job?');
+    if (aboutAgc) return U({ paras: ['That is a question about AGC rather than about your work, and it is not in your portal, so I won’t guess.', 'I answer from what AGC has on file for you: your projects and your profile. For anything else, call or email AGC.'], acts: [CALL, MAIL] }, 'about AGC');
     /* not sure what was asked: what is on screen first (the job, or the profile step), otherwise an overview of what is on file */
     var ctx = scr ? { paras: aSummary(scr), acts: follow(scr) } : onStepAnswer ? onStepAnswer() : null;
-    if (ctx && !aboutJobs) return { paras: ['That one went over my head, and I don’t even own a ladder. Here is what is on your screen.'].concat(ctx.paras.map(function(x){ return x.replace(/^On your screen: s/, 'S'); })), acts: ctx.acts };
-    return overview(ps, data, scr);
+    if (ctx && !aboutJobs) return U({ paras: ['That one went over my head, and I don’t even own a ladder. Here is what is on your screen.'].concat(ctx.paras.map(function(x){ return x.replace(/^On your screen: s/, 'S'); })), acts: ctx.acts }, 'went over my head');
+    return U(overview(ps, data, scr), 'overview');
   }
   /* opened again: what matters now, from their data */
   function back(){
@@ -7155,6 +7155,115 @@ window.AGC_ALFRED_PORTAL = (function(){
       var scr = onScreen(ps, data), st = !scr && data.screen && data.screen.view === 'profile' ? data.screen.step : 0, n = nextLine(ps),
           out = ['Hey ' + (S(data.name) || 'there') + ', have any questions about ' + (scr ? 'this project' : st ? 'your profile' : 'your projects') + '? ' + window.AGC_ALFRED_QUIP()];
       return { paras: out, acts: scr ? follow(scr) : st ? [['This step', 'ask:What is on file for this step?'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']] : n.p ? [['Next job details', askFor(n.p, '')]] : [] }; }, function(){ return null; });
+  }
+  /* ── PORTAL 6.138 · FIELD OPS ALFRED steps 2 + 3 (Chris, Nov 23 2026) ──
+     RULES: 🎛️ FIELD OPS ALFRED RULES in Airtable (GET /_functions/alfredRules, kept 5 minutes). A question that hits a
+     BLOCKED TOPIC gets the out of bounds reply ("I can't share that. {pm} can help you with it.") with the project's PM and
+     a button to call them, before any fixed answer runs. The never-share list below is the fallback when the rules can't be
+     read, and the backend always adds it too. ANSWER LENGTH: at most MAX SENTENCES of prose (list lines don't count), with a
+     "Tell me more" button for the rest; the "tell me more" words skip the limit.
+     LOG: every question and answer goes in 💬 FIELD OPS ALFRED LOG (POST /_functions/alfredLog): answered, out of bounds,
+     or not understood (the answers marked U above, and no answer at all). */
+  var touched = null, RULES = null, rulesAt = 0;
+  var NEVER = { blocked: [
+      { rule: 'Client pricing', words: ['client price', 'client pays', 'what does the client pay', 'how much is the client', 'how much does the client', 'retail price', 'agc price', 'what agc charges'] },
+      { rule: 'AGC margin', words: ['margin', 'markup', 'mark up', 'profit', 'how much does agc make', 'agc makes', 'commission'] },
+      { rule: 'Client invoices and balances', words: ['client invoice', 'did the client pay', 'has the client paid', 'client balance', 'client owes'] },
+      { rule: 'QuickBooks', words: ['quickbooks', 'quick books', 'qbo'] },
+      { rule: 'Other installers', words: ['other installer', 'other installers', 'another installer', 'other partners', 'competitor', 'competitors', 'what do others charge'] },
+      { rule: 'Hands-off projects', words: ['17329', '17334', '19043', '19072'] },
+      { rule: 'Internal notes', words: ['internal note', 'internal notes', 'pm notes', 'my rating', 'my ratings', 'my score', 'partner status'] },
+      { rule: 'His own rules', words: ['system prompt', 'your prompt', 'your instructions', 'ignore previous', 'ignore your'] } ],
+    reply: 'I can’t share that. {pm} can help you with it.', maxSentences: 3, moreWords: ['tell me more', 'more details', 'full details', 'everything', 'list all', 'all of them'] };
+  function U(r, why){ if (r) { r.u = 1; r.why = why || ''; } return r; }
+  function rules(){
+    if (RULES && Date.now() - rulesAt < 300000) return Promise.resolve(RULES);
+    if (!window.AGC_ALFRED_CALL) return Promise.resolve(NEVER);
+    return window.AGC_ALFRED_CALL('alfredRules').then(function(r){
+      if (!r || !Array.isArray(r.blocked) || !r.blocked.length) return NEVER;
+      RULES = r; rulesAt = Date.now(); return r; }, function(){ return NEVER; });
+  }
+  function has(q, w){ w = norm(w); return !!w && q.indexOf(' ' + w + ' ') >= 0; }
+  function blockedBy(text, r){ var q = ' ' + norm(text) + ' ';
+    for (var i = 0; i < r.blocked.length; i++) { var b = r.blocked[i] || {}, ws = b.words || [];
+      for (var j = 0; j < ws.length; j++) if (has(q, ws[j])) return S(b.rule) || 'Blocked topic'; }
+    return ''; }
+  function pmShort(n){ n = norm(n); return /\b(randy|randall)\b/.test(n) ? 'Randy' : /\b(robert|rob)\b/.test(n) ? 'Robert' : /\bchris\b/.test(n) ? 'Chris' : ''; }
+  /* the project the question is about: the one asked with, the AGC number in it, the one on screen, the last one talked about */
+  function projectFor(text, hintId, data){
+    var cur = currencyOf((data.installer && data.installer.fields) || {}), ps = (data.projects || []).map(function(r){ return proj(r, cur); }), nums = numbers(text);
+    var p = (hintId && ps.filter(function(x){ return x.id === hintId; })[0])
+      || (nums.length && ps.filter(function(x){ return nums.indexOf(x.num) >= 0; })[0])
+      || onScreen(ps, data) || (lastId && ps.filter(function(x){ return x.id === lastId; })[0]) || null;
+    if (!p) { var names = ps.map(function(x){ return pmOf(x.f).name; }).filter(Boolean);       /* no project named, but all their jobs have the same PM */
+      if (names.length && names.every(function(n){ return n === names[0]; })) p = ps.filter(function(x){ return pmOf(x.f).name; })[0]; }
+    return { p: p, pm: p ? pmOf(p.f) : { name: '', phone: '' } };
+  }
+  function outOfBounds(r, pm){
+    var who = pm.name || 'your AGC project manager', ph = S(pm.phone).replace(/[^\d+]/g, '');
+    var t = S(r.reply || NEVER.reply).replace(/\{pm\}/g, who).replace(/(^|[.!?]\s+)([a-z])/g, function(m, a, b){ return a + b.toUpperCase(); });
+    return { paras: t.split(/\n{2,}/), acts: [ph.length >= 10 ? ['Call ' + (who.split(' ')[0] || 'your PM'), 'tel:' + ph] : CALL, MAIL] };
+  }
+  function shorten(res, max, text, hintId, hintKind){
+    if (!res || !res.paras || !(max >= 1)) return res;
+    var out = [], n = 0, cut = false;
+    res.paras.forEach(function(p){ var t = S(p);
+      if (!/[.!?](\s|$)/.test(t)) { if (!cut) out.push(p); return; }                               /* a list line: not a sentence */
+      if (cut) return;
+      var ss = t.match(/[^.!?]+(?:[.!?]+(?=\s|$)|$)\s*/g) || [t];
+      if (n + ss.length <= max) { out.push(p); n += ss.length; return; }
+      if (max - n > 0) out.push(ss.slice(0, max - n).join('').trim());
+      n = max; cut = true; });
+    if (!cut) return res;
+    return { paras: out, acts: [['Tell me more', 'ask:Tell me more: ' + String(text).replace(/\|/g, ' ').slice(0, 300) + '|' + (hintId || '') + '|' + (hintKind || '')]].concat(res.acts || []).slice(0, 4), u: res.u, why: res.why };
+  }
+  function answer(text, hintId, hintKind, via){
+    var more = /^\s*tell me more:\s*/i.test(text), q0 = more ? String(text).replace(/^\s*tell me more:\s*/i, '') : text;
+    touched = null;
+    return rules().then(function(r){
+      var dataP = window.AGC_ALFRED_DATA ? window.AGC_ALFRED_DATA().catch(function(){ return null; }) : Promise.resolve(null);
+      var rule = blockedBy(q0, r);
+      var done = function(res, result, topic, pj, logged){
+        if (logged) return res;                                   /* the AI service already logged it (ANSWERED BY 🤖 AI) */
+        dataP.then(function(data){
+          var pf = pj || (touched ? { p: touched, pm: pmOf(touched.f) } : (data ? projectFor(q0, hintId, data) : { p: null, pm: { name: '' } }));
+          var p = touched || (pj && pj.p) || (hintId && pf.p) || null;
+          try { window.AGC_ALFRED_CALL && window.AGC_ALFRED_CALL('alfredLog', {
+            q: String(text).slice(0, 1000), a: res && res.paras ? res.paras.join('\n').slice(0, 4000) : 'I can’t find that in your portal, and I won’t guess.',
+            result: result, topic: topic || '', agc: p ? p.num : '', projectId: p ? p.id : '', pm: p ? pmShort(pmOf(p.f).name) : result === 'blocked' ? pmShort(pf.pm && pf.pm.name) : '',
+            via: via === 'chip' ? 'chip' : 'typed', page: (data && data.screen && data.screen.view) || '', ver: String(window.AGC_PORTAL_BUILD || '') }).catch(function(){}); } catch (e) {}
+        });
+        return res;
+      };
+      if (rule) return dataP.then(function(data){ var pj = data ? projectFor(q0, hintId, data) : { p: null, pm: { name: '', phone: '' } };
+        return done(outOfBounds(r, pj.pm), 'blocked', 'blocked: ' + rule, pj); });
+      var ask0 = more ? q0 : text, words = ' ' + norm(text) + ' ';
+      var skip = more || (r.moreWords || []).some(function(w){ return has(words, w); });
+      /* 🤖 not understood by the fixed answers + this installer is on the AI switch: ask the AI service; any failure keeps the fixed answer */
+      var tryAi = function(res){
+        if (!r.ai || !window.AGC_ALFRED_AI) return Promise.resolve(null);
+        var hist = []; try { hist = (window.AGC_ALFRED_HISTORY ? window.AGC_ALFRED_HISTORY() : []).slice(-4); } catch (e) {}
+        return dataP.then(function(data){
+          var pid = hintId || (touched && touched.id) || (data ? ((projectFor(q0, hintId, data).p) || {}).id : '') || '';
+          return window.AGC_ALFRED_AI({ question: String(q0).slice(0, 600), projectId: pid || '', history: hist, via: via === 'chip' ? 'chip' : 'typed',
+            page: (data && data.screen && data.screen.view) || '', ver: String(window.AGC_PORTAL_BUILD || '') }).then(function(j){
+            if (!j || j.off || !j.reply) return null;
+            var pj = data ? projectFor(q0, pid, data) : { pm: { name: '', phone: '' } }, ph = S(pj.pm.phone).replace(/[^\d+]/g, '');
+            return { paras: String(j.reply).split(/\n{2,}/), acts: ph.length >= 10 && j.result !== 'answered' ? [['Call ' + (S(pj.pm.name).split(' ')[0] || 'your PM'), 'tel:' + ph]] : [], ai: true };
+          });
+        }).catch(function(){ return null; });
+      };
+      return answer0(ask0, hintId, hintKind).then(function(res){
+        if (!res || res.u) return tryAi(res).then(function(a){
+          if (a) return done(a, 'answered', 'ai', null, true);
+          if (!res) return done(null, 'unknown', 'no answer');
+          if (!skip) res = shorten(res, Number(r.maxSentences) || 3, ask0, hintId, hintKind);
+          return done(res, 'unknown', res.why);
+        });
+        if (!skip) res = shorten(res, Number(r.maxSentences) || 3, ask0, hintId, hintKind);
+        return done(res, res.u ? 'unknown' : 'answered', res.u ? res.why : (hintKind || ''));
+      }, function(e){ done(null, 'unknown', 'error'); throw e; });
+    });
   }
   return { answer: answer, back: back };
 })();
@@ -7206,7 +7315,7 @@ KB.forEach(function(e){e.kn=(e.k||[]).map(function(k){var x=k.slice(-1)==='$';re
    No name, email or account is ever attached. Until a URL is set, ratings are not stored anywhere. */
 var FEEDBACK_URL='https://www.americangraphiccontractors.com/_functions/alfredRating',lastQ='';
 function rate(meta,val){var u=window.AGC_ALFRED_FEEDBACK||FEEDBACK_URL;if(!u)return;
-  var body=JSON.stringify({type:'alfred_rating',rating:val,answerId:meta.id||'ai',answer:meta.text||'',question:meta.q||'',lang:L(),scope:SCOPE,page:location.hostname+location.pathname,at:new Date().toISOString()});
+  var body=JSON.stringify({type:'alfred_rating',rating:val,answerId:meta.id||'ai',answer:meta.text||'',question:meta.q||'',lang:L(),scope:window.AGC_ALFRED_PORTAL?'installer-portal':SCOPE,page:location.hostname+location.pathname,at:new Date().toISOString()});
   try{fetch(u,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:body,keepalive:true,credentials:'omit',mode:'no-cors'}).catch(function(){})}catch(e){}}
 /* live AI answers for typed questions (Cloudflare worker alfred-chat); the written answers stay as an instant fallback */
 window.AGC_ALFRED_ENDPOINT=window.AGC_ALFRED_ENDPOINT||'https://alfred-chat.empty-truth-ddcb.workers.dev';
@@ -7372,14 +7481,16 @@ function answer(e){busy=true;var t=typing(),len=e.a.join(' ').length;
 /* PORTAL: in the portal he answers only from the installer's own projects and profile (AGC_ALFRED_PORTAL, look/alfred.portal.js).
    The website's answers below (askSite, match, the knowledge base) are not used here. */
 var NOPE={paras:['I can’t find that in your portal, and I won’t guess.','For anything else, call or email AGC.'],acts:[['Call AGC','tel:+18773957435'],['Email AGC','mailto:projects@americangraphiccontractors.com']]};
+/* PORTAL 6.138: the last turns, for the AI service's follow-up questions */
+window.AGC_ALFRED_HISTORY=function(){return H.slice(-8).map(function(h){return{role:h.r==='u'?'user':'assistant',content:String(h.t||h.x||'')}}).filter(function(h){return h.content})};
 function ask(text,pid,kind){
   var P=window.AGC_ALFRED_PORTAL;
   busy=true;var pt=typing(),done=false,t0=Date.now();
   function fin(r){if(done)return;done=true;clearTimeout(to);setTimeout(function(){pt.remove();busy=false;r=r||NOPE;
     if(H.length&&H[H.length-1].r==='u')H.pop();
-    addBot(r.paras,r.acts,true,{id:'portal',text:'',q:''});setChips(null);bottom()},Math.max(0,500-(Date.now()-t0)))}
+    addBot(r.paras,r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text});setChips(null);bottom()},Math.max(0,500-(Date.now()-t0)))}
   var to=setTimeout(function(){fin({paras:['I couldn’t reach your portal data just now. Please try again in a moment.'],acts:[]})},12000);
-  try{P.answer(text,pid,kind).then(fin,function(){fin(null)})}catch(e){fin(null)}}
+  try{P.answer(text,pid,kind,pid===undefined?'typed':'chip').then(fin,function(){fin(null)})}catch(e){fin(null)}}
 function askSite(text){
   var ep=window.AGC_ALFRED_ENDPOINT;
   if(ep){busy=true;var t=typing();
@@ -36532,6 +36643,31 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      use, so he can only ever see what those pages see: this installer's record and this installer's projects,
      installer-facing fields only. Kept in memory for a minute (so a follow-up question does not fetch again),
      never stored, and gone on sign out (the portal reloads). Signed out, there is nothing to read. */
+  /* PORTAL 6.138 · FIELD OPS ALFRED steps 2 + 3: GET alfredRules (the rules in 🎛️ FIELD OPS ALFRED RULES) and POST alfredLog
+     (one row in 💬 FIELD OPS ALFRED LOG), with the same sign-in session as AGC_ALFRED_DATA. The backend works out the
+     installer from the session; nothing the page sends can name another installer. Signed out, nothing is sent. */
+  window.AGC_ALFRED_CALL = function(name, body){
+    if (!gate.open || !gate.token) return Promise.reject(new Error('signed out'));
+    var dev = false; try { dev = /[?&]agcdev=1(&|$)/.test(location.search); } catch (e) {}
+    var init = { headers: { Authorization: 'Bearer ' + gate.token }, credentials: 'omit' };
+    if (body) { init.method = 'POST'; init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(body); init.keepalive = true; }
+    /* TEST PERIOD (Chris, Nov 23 2026: the portal is not given to installers yet): until the Wix backend with alfredRules / alfredLog is
+       published, the live address answers 404 and the call goes to the saved test backend (/_functions-dev) instead. Once Wix is
+       published the live address answers and this never runs. Remove it at that publish. */
+    var go = function(d){ return fetch('https://www.americangraphiccontractors.com/_functions' + (d ? '-dev' : '') + '/' + name, init); };
+    return go(dev).then(function(r){ return (!dev && r.status === 404) ? go(true) : r; })
+      .then(function(r){ if (!r.ok) throw new Error(name + ' ' + r.status); return r.json(); });
+  };
+  /* PORTAL 6.138 · 🤖 FIELD OPS ALFRED AI (separate Cloudflare service field-ops-alfred, Chris Nov 23). Only questions the fixed answers
+     could not answer, only for installers on the 🤖 AI SWITCH (alfredRules says ai: true). The service checks this sign-in with AGC's
+     backend itself and reads the installer's data there; the page sends only the question, the project asked about and the last turns. */
+  window.AGC_ALFRED_AI = function(body){
+    if (!gate.open || !gate.token) return Promise.reject(new Error('signed out'));
+    var ac = window.AbortController ? new AbortController() : null; if (ac) setTimeout(function(){ ac.abort(); }, 12000);
+    return fetch(window.AGC_FIELDOPS_AI_URL || 'https://field-ops-alfred.empty-truth-ddcb.workers.dev', { method: 'POST', credentials: 'omit',
+      headers: { Authorization: 'Bearer ' + gate.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ac ? ac.signal : undefined })
+      .then(function(r){ if (!r.ok) throw new Error('ai ' + r.status); return r.json(); });
+  };
   var alfData = null, alfAt = 0, alfTok = '';
   window.AGC_ALFRED_DATA = function(){
     if (!gate.open || !gate.token) return Promise.resolve(null);
@@ -36869,7 +37005,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6137;
+  var AGC_BUILD = 6138; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){

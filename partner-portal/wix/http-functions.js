@@ -31,6 +31,7 @@ import { ok, created, badRequest, notFound, serverError, response } from 'wix-ht
 import { AccessToken } from 'livekit-server-sdk';
 import { OFFICE_HTML } from 'backend/officeHtml';
 import { sessionInstaller, installerProjectIds } from 'backend/partnerSession';
+import { rulesForPortal, writeLog, aiEnabledFor } from 'backend/fieldOpsAlfred';   // FIELD OPS ALFRED steps 2 + 3 (Nov 23 2026)
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const BASE = 'app7LeveIY3JoIqBp';
@@ -567,6 +568,72 @@ export async function get_getInstallerSchema(request) {
     return okJson({ skills: skillOptions, union: info(fields.find((f) => /union/i.test(f.name))), availability: info(fields.find((f) => /^avail/i.test(f.name))) }, request);
   } catch (e) { console.error('getInstallerSchema', e); return serverErrorJson(null, request); }
 }
+
+// ═════════════════════════════════════════════════════════════════════
+// FIELD OPS ALFRED (Installer Portal chat) · steps 2 + 3 (Chris, Nov 23 2026)
+//   GET  /_functions/alfredRules   the ACTIVE rows of 🎛️ FIELD OPS ALFRED RULES + the built-in never-share list (backend/fieldOpsAlfred.js)
+//   POST /_functions/alfredLog     one row in 💬 FIELD OPS ALFRED LOG: the installer comes from the session, the project is linked
+//                                  only when it is one of theirs (hands-off projects never), every text is cut to a safe length
+// ═════════════════════════════════════════════════════════════════════
+export function options_alfredRules(request) { return preflight(request); }
+export function options_alfredLog(request) { return preflight(request); }
+export async function get_alfredRules(request) {
+  try {
+    const inst = await signedIn(request);
+    if (!inst) return authJson(request);
+    return okJson(Object.assign({}, await rulesForPortal(), { ai: await aiEnabledFor(inst) }), request);   // ai: this installer is on the AI switch
+  } catch (e) { console.error('alfredRules', e); return serverErrorJson(null, request); }
+}
+export async function post_alfredLog(request) {
+  try {
+    const inst = await signedIn(request);
+    if (!inst) return authJson(request);
+    const body = await request.body.json().catch(() => ({}));
+    const pid = isRecordId(body && body.projectId) && await ownsProject(inst, body.projectId) ? body.projectId : '';
+    const r = await writeLog(inst, body, pid);
+    if (!r.ok) return r.status === 400 ? badRequestJson('missing question', request) : serverErrorJson('log failed', request);
+    return createdJson({ ok: true }, request);
+  } catch (e) { console.error('alfredLog', e); return serverErrorJson(null, request); }
+}
+// GET /_functions/alfredAiContext   (🤖 the installer AI service, field-ops-alfred on Cloudflare, calls this with the installer's own
+//   sign-in; nothing the browser sends is used.) Off the switch = { enabled: false } and no data. On the switch = the rules plus exactly
+//   what getInstaller and getProjects give this installer: the same allow-lists, the hands-off projects never.
+export function options_alfredAiContext(request) { return preflight(request); }
+export async function get_alfredAiContext(request) {
+  try {
+    const inst = await signedIn(request);
+    if (!inst) return authJson(request);
+    if (!(await aiEnabledFor(inst))) return okJson({ enabled: false }, request);
+    const r = await airtableGET('/' + BASE + '/' + INSTALLERS_TABLE + '/' + inst.id);
+    if (!r.ok) return serverErrorJson('airtable read failed', request);
+    const ids = installerProjectIds(inst).filter((id) => !HANDS_OFF_IDS.has(id));
+    const recs = ids.length ? await fetchByIds(PROJECTS_TABLE, ids) : [];
+    const projects = recs.filter((x) => !isHandsOff(x)).map((x) => aiProject(cleanProject(x, inst)));
+    // services go to the AI by name, never as record ids
+    const sIds = [...new Set(projects.flatMap((p) => AI_SERVICE_FIELDS.flatMap((k) => linkIds(p.fields[k]))))];
+    const sRecs = sIds.length ? await fetchByIds(SERVICES_TABLE, sIds) : [];
+    const sName = new Map(sRecs.map((x) => [x.id, String((x.fields || {})['SERVICE TYPE'] || '').trim()]));
+    for (const p of projects) for (const k of AI_SERVICE_FIELDS) if (p.fields[k] != null) {
+      const names = linkIds(p.fields[k]).map((id) => sName.get(id)).filter(Boolean);
+      if (names.length) p.fields[k] = names; else delete p.fields[k];
+    }
+    return okJson({ enabled: true, installerId: inst.id, staff: !!inst.__staff, rules: await rulesForPortal(),
+      installer: aiInstaller(cleanInstaller(r.body.fields)), projects }, request);
+  } catch (e) { console.error('alfredAiContext', e); return serverErrorJson(null, request); }
+}
+// The AI copy only (Chris, Nov 23 2026): the portal's allow-lists, then less. Banking, signature, portal link and profile photo stay
+// out; and, as a second lock, any field whose name sounds like a rating, a score, a work style / people profile or an internal note
+// is dropped even if someone adds it to an allow-list later. Notes that DO reach the AI: installer PORTAL NOTES (their own words);
+// project IMPORTANT NOTES FOR INSTALLER, INSTALLER CLOSEOUT NOTES, SHIPMENT NOTES, PROJECT SCOPE:, PROJECT BRIEF, AGC DIRECTIVES:,
+// AGC REQUIREMENTS, AGC Photo Requirements, DETAILS 1 to 5 (their own budget lines, never on shared jobs).
+const SERVICES_TABLE = 'tblIA61JoHA5owTg2';   // ⚙️ SERVICE TYPES
+const AI_SERVICE_FIELDS = ['PRODUCT / SERVICE 1', 'PRODUCT / SERVICE 2', 'PRODUCT / SERVICE 3', 'PRODUCT / SERVICE 4', 'PRODUCT / SERVICE 5'];
+const AI_INSTALLER_OUT = new Set(['FIRST NAME:', 'LAST NAME:', 'ACCOUNTING EMAIL:', 'BILLING ADDRESS:', 'NAME OF BANK:', 'BANK COUNTRY:', 'CURRENCY:',
+  'ACCOUNT NAME:', 'ACCOUNT TYPE:', 'ACCOUNT NUMBER:', 'TRANSIT NUMBER:', 'INSTITUTION NUMBER:', 'ACH ROUTING NUMBER:', 'VOID CHECK:',
+  'SIGNATURE', 'VENDOR PORTAL URL', 'PROFILE PHOTO']);
+const AI_NEVER = /RATING|SCORE|STYLE|PEOPLE PROFILE|PERSONALITY|INTERNAL|PM NOTE|AGC NOTE|SENIOR PM|PARTNER STATUS|INSURANCE AGENT|^NOTES$|VENDOR PORTAL NOTES/i;
+function aiInstaller(f) { const o = {}; for (const k of Object.keys(f || {})) if (!AI_INSTALLER_OUT.has(k) && !AI_NEVER.test(k)) o[k] = f[k]; return o; }
+function aiProject(p) { const o = {}; for (const k of Object.keys(p.fields || {})) if (!AI_NEVER.test(k)) o[k] = p.fields[k]; return { id: p.id, createdTime: p.createdTime, fields: o }; }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FILE UPLOADS (ImgBB, signed-in installers only)
