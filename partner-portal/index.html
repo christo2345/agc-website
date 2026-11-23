@@ -684,6 +684,7 @@
   .alfc-m{max-width:88%;padding:12px 15px;border-radius:18px;font-size:16px;line-height:1.5;word-wrap:break-word;animation:alfcIn .6s cubic-bezier(.2,.8,.2,1) both}
   .alfc-m p{margin:0}
   .alfc-m p+p{margin-top:8px}
+  .alfc-b p+p{margin-top:14px}   /* PORTAL 6.144 (Chris: breathing room): more space between ALFRED's paragraphs */
   .alfc-b{align-self:flex-start;background:#17181c;border:1px solid rgba(255,255,255,.12);border-bottom-left-radius:6px;color:#f1f1f1}
   .alfc-u{align-self:flex-end;background:#fff;color:#0a0a0a;border-bottom-right-radius:6px;font-weight:600}
   .alfc-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
@@ -6318,9 +6319,14 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
   return digitsAGC(t).replace(/\s+/g,' ').replace(/\s+([,.!?;:])/g,'$1').replace(/,(\s*,)+/g,',').replace(/,\s*([.!?;:])/g,'$1').replace(/([.!?:])\s*,/g,'$1').replace(/^\s*,\s*/,'').trim()}
 try{window.AGC_cityOf=cityOf}catch(e){}
 window.AGC_say=function(text,lang){var cc=chatEl();if(!on||voOff||!text||(cc&&!cc.classList.contains('open')))return;
-  text=forVoice(text,(lang||'en').slice(0,2));if(!text)return;
+  /* 6.144: wait first (with the raw text), then clean it, so it is never cleaned twice */
   var wait=1300-(performance.now()-openedAt);if(wait>0){clearTimeout(window.__sayT);window.__sayT=setTimeout(function(){window.AGC_say(text,lang)},wait);return}
-  lang=(lang||'en').slice(0,2);if(!TTS)return sayBrowser(text,lang);
+  lang=(lang||'en').slice(0,2);
+  /* 6.144 (Chris: "it rambles"): each paragraph (¶) is cleaned on its own; his real voice gets a short pause between them (ElevenLabs
+     break tag, at most 8 per reply, since too many make the voice unstable); the phone's own voice just gets the plain text */
+  var segs=String(text).split(/\s*\u00b6\s*/).map(function(x){return forVoice(x,lang)}).filter(function(x){return x&&/[A-Za-z0-9]/.test(x)});if(!segs.length)return;
+  if(!TTS)return sayBrowser(segs.join(' '),lang);
+  text=segs.reduce(function(a,x,i){return a+(i?(i<=8?' <break time="0.6s" /> ':' '):'')+x},'');
   hush();var id=++speaking,c=chatEl(),a=voEl(),done=false;voCtl=window.AbortController?new AbortController():null;
   /* his real voice only: if it is slow or fails, he stays quiet rather than switching to the phone's own voice */
   var quiet=function(){if(id===speaking){speaking=0;duck(false);if(c)c.classList.remove('speaking')}};
@@ -7433,7 +7439,7 @@ function addBot(paras,acts,noTr,meta){var d=bubble('alfc-b',noTr);
   paras.forEach(function(p){var e=document.createElement('p');e.textContent=p;d.appendChild(e)});
   /* with sound on, ALFRED reads his reply aloud (after the page has translated it) */
   /* PORTAL: read as sentences: each line ends with a stop, and the dots that separate facts in a line ("19501 · Nov 23 · Confirmed") are pauses */
-  setTimeout(function(){if(window.AGC_say&&box.classList.contains('open'))window.AGC_say([].map.call(d.querySelectorAll('p'),function(x){var t=x.textContent.trim();return /[.!?:…]$/.test(t)?t:t+'.'}).join(' ').replace(/\s*·\s*/g,', '),L())},90);
+  setTimeout(function(){if(window.AGC_say&&box.classList.contains('open'))window.AGC_say([].map.call(d.querySelectorAll('p'),function(x){var t=x.textContent.trim();return /[.!?:…]$/.test(t)?t:t+'.'}).join(' \u00b6 ').replace(/\s*·\s*/g,', '),L())},90);   /* 6.144: ¶ = a pause between paragraphs */
   if(acts&&acts.length){var w=document.createElement('div');w.className='alfc-acts';
     acts.forEach(function(a){var b;var t=a[1];
       if(/^(mailto:|tel:|https?:)/.test(t)){b=document.createElement('a');b.href=t;if(/^https?:/.test(t)){b.target='_blank';b.rel='noopener'}}
@@ -7510,6 +7516,12 @@ var EMO=[[/^(safety gear|ppe|required ppe)\b/i,'🦺'],[/^(ladders? and lifts|re
   [/^(project manager|your project manager|call or email|contact)/i,'📞'],[/^\d{5}\b/,'🗂️'],[/^(that one went over my head|i can.?t find|i don.?t see|i.?m not sure)/i,'🤔'],
   [/^(heads up|warning|note:|closed|holiday)/i,'⚠️']];
 var EMO_KEY=[[/\bstore hours?\b|\bopen\b.*\b(am|pm)\b/i,'🕘'],[/\bequipment|bring\b/i,'🧰'],[/\bweather|forecast\b/i,'🌦️'],[/\bship|tracking\b/i,'🚚'],[/\baddress|located\b/i,'📍'],[/\bbudget|paid|payment\b/i,'💰']];
+/* PORTAL 6.144 (Chris: "needs breathing room, it rambles"): one sentence per paragraph. A paragraph that is a "Label: list" line stays whole,
+   and the split never happens after a short abbreviation (St. Louis, Ave., No., a.m.). */
+function airy(paras){if(!Array.isArray(paras))return paras;var out=[];paras.forEach(function(p){var t=String(p==null?'':p).trim();if(!t)return;
+  if(t.length<90){out.push(t);return}
+  var bits=t.split(/(?<=[.!?])(?<!\b(?:St|Ste|Mr|Mrs|Ms|Dr|Ave|Rd|Blvd|No|Jr|Sr|Inc|Ltd|Co|vs|approx|a\.m|p\.m|e\.g|i\.e)\.)\s+(?=["“(]?[A-Z0-9\p{Extended_Pictographic}])/u);
+  bits.forEach(function(b){b=b.trim();if(b)out.push(b)})});return out}
 function emo(paras){if(!Array.isArray(paras))return paras;return paras.map(function(p,i){var t=String(p==null?'':p);
   if(!t.trim()||/^\s*\p{Extended_Pictographic}/u.test(t))return t;
   for(var k=0;k<EMO.length;k++)if(EMO[k][0].test(t.trim()))return EMO[k][1]+' '+t;
@@ -7520,7 +7532,7 @@ function ask(text,pid,kind){
   busy=true;var pt=typing(),done=false,t0=Date.now();
   function fin(r){if(done)return;done=true;clearTimeout(to);setTimeout(function(){pt.remove();busy=false;r=r||NOPE;
     if(H.length&&H[H.length-1].r==='u')H.pop();
-    addBot(emo(r.paras),r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text});setChips(r.chips&&r.chips.length?r.chips:null);bottom()}   /* 6.143: the job's topics */,Math.max(0,500-(Date.now()-t0)))}
+    addBot(emo(airy(r.paras)),r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text});setChips(r.chips&&r.chips.length?r.chips:null);bottom()}   /* 6.143: the job's topics */,Math.max(0,500-(Date.now()-t0)))}
   var to=setTimeout(function(){fin({paras:['I couldn’t reach your portal data just now. Please try again in a moment.'],acts:[]})},12000);
   try{P.answer(text,pid,kind,pid===undefined?'typed':'chip').then(fin,function(){fin(null)})}catch(e){fin(null)}}
 function askSite(text){
@@ -7594,7 +7606,7 @@ var reopens=0;
 function welcomeBack(){
   /* PORTAL: from their data, not one of the website's lines */
   var P=window.AGC_ALFRED_PORTAL;if(P&&P.back){if(!box.classList.contains('open')||busy)return;busy=true;var pt=typing(),t0=Date.now(),
-    fin=function(r){setTimeout(function(){pt.remove();busy=false;if(!r||!box.classList.contains('open'))return;holdTop=false;addBot(emo(r.paras),r.acts,true);var l=log.lastElementChild;if(l)l.classList.add('alfc-wb');setChips(null);bottom()},Math.max(0,700-(Date.now()-t0)))};
+    fin=function(r){setTimeout(function(){pt.remove();busy=false;if(!r||!box.classList.contains('open'))return;holdTop=false;addBot(emo(airy(r.paras)),r.acts,true);var l=log.lastElementChild;if(l)l.classList.add('alfc-wb');setChips(null);bottom()},Math.max(0,700-(Date.now()-t0)))};
     try{P.back().then(fin,function(){fin(null)})}catch(e){fin(null)}return}
   var e=reopens%2===1?BY.back:BY.third;if(!box.classList.contains('open')||busy||!e)return;
   busy=true;var t=typing();setTimeout(function(){t.remove();busy=false;if(!box.classList.contains('open'))return;holdTop=false;addBot(e.a,[],false,{id:e.id});var l=log.lastElementChild;if(l)l.classList.add('alfc-wb');setChips(null);bottom()},1100)}
@@ -12780,7 +12792,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.143</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.144</span>
  </div>
 
  <div class="hero">
@@ -37039,7 +37051,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6143; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6144; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
