@@ -6726,7 +6726,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       var c = carrierIn(t.slice(Math.max(0, t.lastIndexOf('\n', m.index) + 1, m.index - 60), m.index)) || coC;
       if (!c) { var byShape = /^1Z/.test(n) ? 'UPS' : /^[A-Z]{2}\d{9}CA$/.test(n) || /^\d{16}$/.test(n) ? 'Canada Post' : /^[A-Z]{2}\d{9}US$/.test(n) || /^9\d{19,21}$/.test(n) ? 'USPS' : /^(\d{12}|\d{15}|\d{20}|\d{22})$/.test(n) ? 'FedEx' : /^\d{10}$/.test(n) ? 'DHL' : '';
         c = CARRIERS.filter(function(x){ return x[0] === byShape; })[0] || null; }
-      out.push({ carrier: c ? c[0] : '', num: n, url: c ? c[2] + encodeURIComponent(n) : 'https://parcelsapp.com/en/tracking/' + encodeURIComponent(n) }); }
+      out.push({ carrier: c ? c[0] : '', num: n, url: c ? c[2] + encodeURIComponent(n) : '' }); } /* PORTAL 6.137: no button when no carrier fits (was a generic lookup site) */
     return out; }
   function aShipping(p){ var f = p.f, out = [], to = clean(pick(f, 'SHIPPING TO:', 'SHIPPING TO'), 160), co = S(pick(f, 'SHIPPING CO.', 'SHIPPING COMPANY')), tr = S(pick(f, 'TRACKING NUMBER', 'TRACKING NUMBER(S)')),
         pk = S(pick(f, 'Number of PKGS', 'Number of Pkgs', 'NUMBER OF PKGS')), ad = clean(pick(f, 'SHIPPING ADDRESS:'), 200), ds = toDate(f['DATE SHIPPED']), cond = S(f['SHIPMENT CONDITION']), sn = clean(f['SHIPMENT NOTES'], 300);
@@ -7105,7 +7105,7 @@ window.AGC_ALFRED_PORTAL = (function(){
       /* PORTAL 6.129: "any updates?" points to the project manager, with a button to call */
       if (fieldAsk === 'updates' || fieldAsk === 'contact') { var upd = pmOf(one.f).phone.replace(/[^\d+]/g, ''); return { paras: ONE[fieldAsk](one), acts: (upd.length >= 10 ? [['Call your project manager', 'tel:' + upd]] : [CALL]).concat(follow(one, fieldAsk)).slice(0, 4) }; }
       /* PORTAL 6.129: a shipping answer has a link to track each shipment, then the usual buttons */
-      var trk = fieldAsk === 'shipping' ? tracks(S(pick(one.f, 'TRACKING NUMBER', 'TRACKING NUMBER(S)')), S(pick(one.f, 'SHIPPING CO.', 'SHIPPING COMPANY'))).slice(0, 6).map(function(x){ return ['Track ' + (x.carrier ? x.carrier + ' ' : '') + x.num, x.url]; }) : [];
+      var trk = fieldAsk === 'shipping' ? tracks(S(pick(one.f, 'TRACKING NUMBER', 'TRACKING NUMBER(S)')), S(pick(one.f, 'SHIPPING CO.', 'SHIPPING COMPANY'))).slice(0, 6).filter(function(x){ return !!x.url; }).map(function(x){ return ['Track ' + (x.carrier ? x.carrier + ' ' : '') + x.num, x.url]; }) : [];
       return { paras: fn(one), acts: trk.concat((fieldAsk === 'files' || fieldAsk === 'closeout' ? [open()] : fieldAsk === 'invoice' ? [INVOICE] : []).concat(follow(one, fieldAsk)).slice(0, 4)) };
     }, function(){ return { paras: ['I couldn’t reach your portal data just now. Please try again in a moment.'], acts: [] }; });
   }
@@ -21233,7 +21233,21 @@ function renderDetails(opts){
        // a friendly clickable link. Plain numbers without markdown still
        // work — they get a Google-search fallback URL like before. Multiple
        // tracking numbers separated by commas or newlines are handled too.
-       const parseTracking=(raw)=>{
+       /* PORTAL 6.137 (Chris, Nov 23 2026): every tracking number gets a 'Track on <carrier>' button that opens that carrier's own
+         tracking page for that exact number. The carrier comes from the link already saved on the number, else SHIPPING CO., else
+         the shape of the number (1Z = UPS, ..CA = Canada Post, 12 / 15 / 20 / 22 digits = FedEx...). No carrier = no button (the
+         number is still shown). It used to open a Google search. */
+      const TRK_CARRIERS=[['UPS',/\bups\b|ups\.com/i,'https://www.ups.com/track?tracknum='],['FedEx',/fed\s?ex/i,'https://www.fedex.com/fedextrack/?trknbr='],
+        ['Purolator',/purolator/i,'https://www.purolator.com/en/shipping/tracker?pins='],['Canada Post',/canada\s?post|postes\s?canada|canadapost/i,'https://www.canadapost-postescanada.ca/track-reperage/en#/details/'],
+        ['DHL',/\bdhl\b/i,'https://www.dhl.com/ca-en/home/tracking.html?tracking-id='],['USPS',/\busps\b/i,'https://tools.usps.com/go/TrackConfirmAction?tLabels='],
+        ['Canpar',/canpar/i,'https://www.canpar.com/en/tracking/track.htm?barcode='],['Loomis',/loomis/i,'https://www.loomis-express.com/loomship/Track/TrackStatus?wbs=']];
+      const trkCarrierIn=(s)=>TRK_CARRIERS.find(c=>c[1].test(String(s||'')))||null;
+      const trkByShape=(n)=>{const k=/^1Z/.test(n)?'UPS':(/^[A-Z]{2}\d{9}CA$/.test(n)||/^\d{16}$/.test(n))?'Canada Post':(/^[A-Z]{2}\d{9}US$/.test(n)||/^9\d{19,21}$/.test(n))?'USPS':/^(\d{12}|\d{15}|\d{20}|\d{22})$/.test(n)?'FedEx':'';return TRK_CARRIERS.find(c=>c[0]===k)||null;};
+      const trkLink=(num,savedUrl)=>{const n=String(num||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+        const c=trkCarrierIn(savedUrl)||trkCarrierIn(p.shippingCo)||trkByShape(n);
+        if(!c||n.length<8)return {num:String(num||'').trim(),url:'',carrier:''};
+        return {num:String(num||'').trim(),url:(savedUrl&&trkCarrierIn(savedUrl)===c)?savedUrl:c[2]+encodeURIComponent(n),carrier:c[0]};};
+      const parseTracking=(raw)=>{
          const out=[];
          const text=String(raw||'');
          // Strip these markdown-syntax tokens out of any plain-text gap before
@@ -21254,18 +21268,18 @@ function renderDetails(opts){
          while((m=re.exec(text))!==null){
            const before=cleanGap(text.slice(lastEnd,m.index));
            if(before){
-             before.split(/\s+/).filter(isTrackingLike).forEach(n=>out.push({num:n,url:'https://www.google.com/search?q='+encodeURIComponent(n)}));
+             before.split(/\s+/).filter(isTrackingLike).forEach(n=>out.push(trkLink(n,'')));
            }
-           out.push({num:m[1].trim(),url:m[2].trim()});
+           out.push(trkLink(m[1].trim(),m[2].trim()));
            lastEnd=re.lastIndex;
          }
          const tail=cleanGap(text.slice(lastEnd));
          if(tail){
-           tail.split(/\s+/).filter(isTrackingLike).forEach(n=>out.push({num:n,url:'https://www.google.com/search?q='+encodeURIComponent(n)}));
+           tail.split(/\s+/).filter(isTrackingLike).forEach(n=>out.push(trkLink(n,'')));
          }
          if(!out.length){
            const clean=cleanGap(text);
-           if(isTrackingLike(clean))out.push({num:clean,url:'https://www.google.com/search?q='+encodeURIComponent(clean)});
+           if(isTrackingLike(clean))out.push(trkLink(clean,''));
          }
          return out;
        };
@@ -21275,8 +21289,8 @@ function renderDetails(opts){
        // the same URL in a new tab. Multiple numbers stack vertically.
        const trackingRowsHtml=trackingItems.map(t=>(
          '<div style="display:flex;align-items:center;gap:12px;">'+
-           '<a href="'+esc(t.url)+'" target="_blank" rel="noopener" style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:0.5px;color:#fff;text-decoration:none;flex:1;word-break:break-all;border-bottom:1px dashed rgba(255,255,255,0.4);padding-bottom:1px;" onmouseover="this.style.borderBottomColor=\'rgba(255,255,255,1)\'" onmouseout="this.style.borderBottomColor=\'rgba(255,255,255,0.4)\'">'+esc(t.num)+'</a>'+
-           '<a href="'+esc(t.url)+'" target="_blank" rel="noopener" style="font-size:11px;font-weight:800;color:#92C64B;text-decoration:none;text-transform:uppercase;letter-spacing:0.6px;white-space:nowrap;flex-shrink:0;background:rgba(146,198,75,0.12);border:1px solid rgba(146,198,75,0.45);border-radius:999px;padding:5px 12px;transition:all 0.15s;" onmouseover="this.style.background=\'rgba(146,198,75,0.85)\';this.style.color=\'#0a0a0a\';this.style.borderColor=\'#92C64B\';" onmouseout="this.style.background=\'rgba(146,198,75,0.12)\';this.style.color=\'#92C64B\';this.style.borderColor=\'rgba(146,198,75,0.45)\';">Track ↗</a>'+
+           (t.url?'<a href="'+esc(t.url)+'" target="_blank" rel="noopener" style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:0.5px;color:#fff;text-decoration:none;flex:1;word-break:break-all;border-bottom:1px dashed rgba(255,255,255,0.4);padding-bottom:1px;" onmouseover="this.style.borderBottomColor=\'rgba(255,255,255,1)\'" onmouseout="this.style.borderBottomColor=\'rgba(255,255,255,0.4)\'">'+esc(t.num)+'</a>':'<span style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:0.5px;color:#fff;flex:1;word-break:break-all;">'+esc(t.num)+'</span>')+
+           (t.url?'<a href="'+esc(t.url)+'" target="_blank" rel="noopener" style="font-size:11px;font-weight:800;color:#92C64B;text-decoration:none;text-transform:uppercase;letter-spacing:0.6px;white-space:nowrap;flex-shrink:0;background:rgba(146,198,75,0.12);border:1px solid rgba(146,198,75,0.45);border-radius:999px;padding:5px 12px;transition:all 0.15s;" onmouseover="this.style.background=\'rgba(146,198,75,0.85)\';this.style.color=\'#0a0a0a\';this.style.borderColor=\'#92C64B\';" onmouseout="this.style.background=\'rgba(146,198,75,0.12)\';this.style.color=\'#92C64B\';this.style.borderColor=\'rgba(146,198,75,0.45)\';">Track on '+esc(t.carrier)+' ↗</a>':'')+
          '</div>'
        )).join('<div style="height:8px;"></div>');
        const leftCol=
@@ -36855,7 +36869,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6136;
+  var AGC_BUILD = 6137;
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
