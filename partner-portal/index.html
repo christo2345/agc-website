@@ -7491,12 +7491,26 @@ function answer(e){busy=true;var t=typing(),len=e.a.join(' ').length;
 var NOPE={paras:['I can’t find that in your portal, and I won’t guess.','For anything else, call or email AGC.'],acts:[['Call AGC','tel:+18773957435'],['Email AGC','mailto:projects@americangraphiccontractors.com']]};
 /* PORTAL 6.138: the last turns, for the AI service's follow-up questions */
 window.AGC_ALFRED_HISTORY=function(){return H.slice(-8).map(function(h){return{role:h.r==='u'?'user':'assistant',content:String(h.t||h.x||'')}}).filter(function(h){return h.content})};
+/* PORTAL 6.142 (Chris, Nov 23): a topic emoji at the start of each paragraph of a portal answer (fixed answers and AI answers alike),
+   chosen from a fixed list by how the paragraph starts. Shown only: the voice skips emoji (forVoice), and the log keeps the plain text. */
+var EMO=[[/^(safety gear|ppe|required ppe)\b/i,'🦺'],[/^(ladders? and lifts|reach|lift|scaffold)/i,'🪜'],[/^hand tools/i,'🔧'],[/^power tools/i,'🔌'],[/^supplies/i,'🧴'],
+  [/^site and store/i,'🏬'],[/^(store hours|hours|install time|time:)/i,'🕘'],[/^(scheduled|no install date|your next job|next job|install date|date)/i,'📅'],
+  [/^(where|address|stores?\b|location)/i,'📍'],[/^(budget|no budget|total agc earnings|earnings|payment|invoice)/i,'💰'],[/^(shipping|shipped|tracking|delivery)/i,'🚚'],
+  [/^(weather|forecast)/i,'🌦️'],[/^(scope|project scope|brief)/i,'📋'],[/^(files?|directive|close-?out|photos?)/i,'📎'],[/^(notes|important)/i,'📝'],
+  [/^(project manager|your project manager|call or email|contact)/i,'📞'],[/^\d{5}\b/,'🗂️'],[/^(that one went over my head|i can.?t find|i don.?t see|i.?m not sure)/i,'🤔'],
+  [/^(heads up|warning|note:|closed|holiday)/i,'⚠️']];
+var EMO_KEY=[[/\bstore hours?\b|\bopen\b.*\b(am|pm)\b/i,'🕘'],[/\bequipment|bring\b/i,'🧰'],[/\bweather|forecast\b/i,'🌦️'],[/\bship|tracking\b/i,'🚚'],[/\baddress|located\b/i,'📍'],[/\bbudget|paid|payment\b/i,'💰']];
+function emo(paras){if(!Array.isArray(paras))return paras;return paras.map(function(p,i){var t=String(p==null?'':p);
+  if(!t.trim()||/^\s*\p{Extended_Pictographic}/u.test(t))return t;
+  for(var k=0;k<EMO.length;k++)if(EMO[k][0].test(t.trim()))return EMO[k][1]+' '+t;
+  if(i===0)for(var j=0;j<EMO_KEY.length;j++)if(EMO_KEY[j][0].test(t.slice(0,90)))return EMO_KEY[j][1]+' '+t;
+  return t})}
 function ask(text,pid,kind){
   var P=window.AGC_ALFRED_PORTAL;
   busy=true;var pt=typing(),done=false,t0=Date.now();
   function fin(r){if(done)return;done=true;clearTimeout(to);setTimeout(function(){pt.remove();busy=false;r=r||NOPE;
     if(H.length&&H[H.length-1].r==='u')H.pop();
-    addBot(r.paras,r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text});setChips(null);bottom()},Math.max(0,500-(Date.now()-t0)))}
+    addBot(emo(r.paras),r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text});setChips(null);bottom()},Math.max(0,500-(Date.now()-t0)))}
   var to=setTimeout(function(){fin({paras:['I couldn’t reach your portal data just now. Please try again in a moment.'],acts:[]})},12000);
   try{P.answer(text,pid,kind,pid===undefined?'typed':'chip').then(fin,function(){fin(null)})}catch(e){fin(null)}}
 function askSite(text){
@@ -7570,7 +7584,7 @@ var reopens=0;
 function welcomeBack(){
   /* PORTAL: from their data, not one of the website's lines */
   var P=window.AGC_ALFRED_PORTAL;if(P&&P.back){if(!box.classList.contains('open')||busy)return;busy=true;var pt=typing(),t0=Date.now(),
-    fin=function(r){setTimeout(function(){pt.remove();busy=false;if(!r||!box.classList.contains('open'))return;holdTop=false;addBot(r.paras,r.acts,true);var l=log.lastElementChild;if(l)l.classList.add('alfc-wb');setChips(null);bottom()},Math.max(0,700-(Date.now()-t0)))};
+    fin=function(r){setTimeout(function(){pt.remove();busy=false;if(!r||!box.classList.contains('open'))return;holdTop=false;addBot(emo(r.paras),r.acts,true);var l=log.lastElementChild;if(l)l.classList.add('alfc-wb');setChips(null);bottom()},Math.max(0,700-(Date.now()-t0)))};
     try{P.back().then(fin,function(){fin(null)})}catch(e){fin(null)}return}
   var e=reopens%2===1?BY.back:BY.third;if(!box.classList.contains('open')||busy||!e)return;
   busy=true;var t=typing();setTimeout(function(){t.remove();busy=false;if(!box.classList.contains('open'))return;holdTop=false;addBot(e.a,[],false,{id:e.id});var l=log.lastElementChild;if(l)l.classList.add('alfc-wb');setChips(null);bottom()},1100)}
@@ -12756,7 +12770,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.141</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.142</span>
  </div>
 
  <div class="hero">
@@ -37015,7 +37029,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6141; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6142; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
