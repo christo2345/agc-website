@@ -641,8 +641,40 @@ export async function get_alfredAiContext(request) {
         .map((f) => String(f['RULE'] || '').trim() + ': ' + String(f['WHAT TO BRING'] || '').replace(/\s+/g, ' ').trim()).filter((x) => x.length > 2);
       if (list.length) p.fields['EQUIPMENT TO BRING (approved by AGC)'] = list;
     }
+    // STEP 4 (Chris, Nov 23 2026: "lets do it"): holidays, the installer's own bill, the directive PDF.
+    //  - 🕘 HOURS + HOLIDAYS: the job's store-hours and public-holiday check, WITHOUT its "👥 AGC Holiday Calendar" line (it names people on leave).
+    //  - 🧾 QBO BILL: only the lines whose vendor is this installer (QBO VENDOR NAME, else COMPANY), and only "paid" or "not paid yet":
+    //    no amounts, no mismatch notes. The 📒 QBO fields, 💸 PAYMENT ON THE WAY and DATE PAID are the CLIENT's money and never go out.
+    //  - AGC DIRECTIVES: the job's directive PDF (name + link; the AI service reads it when asked about the directive).
+    const venNames = [r.body.fields['QBO VENDOR NAME'], r.body.fields['COMPANY']].map((n) => String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()).filter(Boolean);
+    const isMine = (vendor) => { const v = String(vendor || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      return !!v && venNames.some((n) => v === n || v.startsWith(n + ' ') || n.startsWith(v + ' ')); };
+    const rawBy = new Map(recs.map((x) => [x.id, x.fields || {}]));
+    for (const p of projects) {
+      const f = rawBy.get(p.id) || {};
+      const hh = String(f['🕘 HOURS + HOLIDAYS'] || '').split('\n').filter((l) => l.trim() && !/^\s*👥/.test(l)).join('\n').trim();
+      if (hh) p.fields['STORE HOURS + HOLIDAY CHECK'] = hh;
+      const bills = String(f['🧾 QBO BILL'] || '').split('\n').filter((l) => l.trim() && !/^\s*⚠/.test(l)).map((l) => l.split(' · ').map((x) => x.trim()))
+        .filter((b) => b.length >= 3 && isMine(b[0])).map((b) => {
+          const ref = (b.find((x) => /^ref\s/i.test(x)) || '').replace(/^ref\s*/i, ''), dated = b.find((x) => /^[A-Z][a-z]{2} \d{1,2}, \d{4}$/.test(x)) || '', last = b[b.length - 1];
+          const st = /\bOPEN\b/i.test(last) ? 'not paid yet' : /\bPAID\b/i.test(last) ? 'paid' : 'status not clear, ask AGC accounting';
+          return 'Your invoice' + (ref ? ' ' + ref : '') + (dated ? ' (dated ' + dated + ')' : '') + ': ' + st; });
+      if (bills.length) p.fields['YOUR BILL TO AGC (payment status)'] = bills;
+      const dirs = (Array.isArray(f['AGC DIRECTIVES:']) ? f['AGC DIRECTIVES:'] : []).filter((a) => a && a.url && /pdf/i.test(String(a.type || a.filename || '')));
+      if (dirs.length) p.fields['DIRECTIVE PDF'] = dirs.slice(0, 2).map((a) => ({ name: String(a.filename || 'Directive.pdf'), url: a.url }));
+    }
+    // the days AGC's office is closed: AGC Holiday Calendar rows named "... AGC CLOSED" (never anyone's leave); a job that lands on one is flagged
+    let agcClosed = [];
+    try {
+      const hq = '?pageSize=50&filterByFormula=' + encodeURIComponent("AND(FIND('AGC CLOSED',UPPER({Name})),IS_AFTER(IF({End Date},{End Date},{Start Date}),DATEADD(TODAY(),-1,'days')))");
+      const hr = await airtableGET('/' + BASE + '/' + HOLIDAY_TABLE + hq);
+      if (hr.ok) agcClosed = ((hr.body && hr.body.records) || []).map((x) => ({ name: String((x.fields || {})['Name'] || '').trim(), from: String((x.fields || {})['Start Date'] || ''),
+        to: String((x.fields || {})['End Date'] || (x.fields || {})['Start Date'] || '') })).filter((x) => x.from).sort((a, b) => a.from.localeCompare(b.from)).slice(0, 12);
+    } catch (e) { console.warn('alfredAiContext holidays', e && e.message); }
+    for (const p of projects) { const d = String(p.fields['DATE SCHEDULED:'] || '').slice(0, 10), hit = d && agcClosed.find((c) => d >= c.from && d <= c.to);
+      if (hit) p.fields['AGC CLOSED ON INSTALL DAY'] = hit.name + ' (' + hit.from + ' to ' + hit.to + ')'; }
     return okJson({ enabled: true, installerId: inst.id, staff: !!inst.__staff, rules: await rulesForPortal(),
-      installer: aiInstaller(cleanInstaller(r.body.fields)), projects }, request);
+      installer: aiInstaller(cleanInstaller(r.body.fields)), projects, agcClosed }, request);
   } catch (e) { console.error('alfredAiContext', e); return serverErrorJson(null, request); }
 }
 // The AI copy only (Chris, Nov 23 2026): the portal's allow-lists, then less. Banking, signature, portal link and profile photo stay
@@ -651,6 +683,7 @@ export async function get_alfredAiContext(request) {
 // project IMPORTANT NOTES FOR INSTALLER, INSTALLER CLOSEOUT NOTES, SHIPMENT NOTES, PROJECT SCOPE:, PROJECT BRIEF, AGC DIRECTIVES:,
 // AGC REQUIREMENTS, AGC Photo Requirements, DETAILS 1 to 5 (their own budget lines, never on shared jobs).
 const SERVICES_TABLE = 'tblIA61JoHA5owTg2';   // ⚙️ SERVICE TYPES
+const HOLIDAY_TABLE = 'tblN3LmMIb3auuWMQ';   // AGC Holiday Calendar (only the "AGC CLOSED" rows are read)
 const EQUIPMENT_TABLE = 'tbla3ZKTLFAA13UnF';   // 🧰 EQUIPMENT RULES (RULE, WHAT TO BRING, STATUS)
 const AI_STORE_FIELD = 'STORE NAME(s) & ADDRESS(es)';   // linked 🏬 STORES & LOCATIONS (Store Name, Store Address, STORE HOURS)
 const AI_SERVICE_FIELDS = ['PRODUCT / SERVICE 1', 'PRODUCT / SERVICE 2', 'PRODUCT / SERVICE 3', 'PRODUCT / SERVICE 4', 'PRODUCT / SERVICE 5'];

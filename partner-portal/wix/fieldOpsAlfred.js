@@ -55,7 +55,7 @@ let _rules = null, _rulesAt = 0;
 export async function rulesForPortal() {
   if (_rules && Date.now() - _rulesAt < 300000) return _rules;
   const blocked = BUILTIN_BLOCKED.map((b) => ({ rule: b.rule, words: b.words.slice() }));
-  let reply = DEFAULT_REPLY, max = DEFAULT_MAX, more = DEFAULT_MORE.slice(), fromTable = false, aiIds = [];
+  let reply = DEFAULT_REPLY, max = DEFAULT_MAX, more = DEFAULT_MORE.slice(), fromTable = false, aiIds = [], safety = [];
   try {
     const qs = '?pageSize=100&filterByFormula=' + encodeURIComponent('{ACTIVE}') + ['rule', 'type', 'words', 'reply', 'max'].map((k) => '&fields%5B%5D=' + R[k]).join('') + '&returnFieldsByFieldId=true';
     const res = await fetch('https://api.airtable.com/v0/' + BASE + '/' + RULES_TABLE + qs, { headers: await headers() });
@@ -70,11 +70,12 @@ export async function rulesForPortal() {
           const same = blocked.find((b) => b.rule.toLowerCase() === S(f[R.rule]).toLowerCase());
           if (same) { for (const x of w) if (!same.words.includes(x)) same.words.push(x); } else blocked.push({ rule: cut(f[R.rule], 80) || 'Blocked topic', words: w });
         } else if (/REPLY/.test(type) && /out of bounds/i.test(S(f[R.rule])) && S(f[R.reply])) reply = cut(f[R.reply], 300);
+        else if (/SAFETY/.test(type)) { const t = cut(f[R.reply], 500); if (t) safety.push({ rule: cut(f[R.rule], 80), text: t }); }   // 🦺 approved safety rules (ACTIVE = approved by a PM)
         else if (/LENGTH/.test(type)) { const n = Number(f[R.max]); if (Number.isInteger(n) && n >= 1 && n <= 12) max = n; const w = words(f[R.words]); if (w.length) more = w; }
       }
     } else console.warn('alfredRules: rules table read failed', res.status);
   } catch (e) { console.warn('alfredRules', e && e.message); }
-  _rules = { v: 1, fromTable, blocked, reply, maxSentences: max, moreWords: more };
+  _rules = { v: 1, fromTable, blocked, reply, maxSentences: max, moreWords: more, safety };
   _ai = new Set(aiIds);
   _rulesAt = Date.now();
   return _rules;

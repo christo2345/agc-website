@@ -7153,13 +7153,17 @@ window.AGC_ALFRED_PORTAL = (function(){
       /* PORTAL 6.140 (Chris, Nov 23: "what are the store hours for 19164" got the job summary, marked answered, and never reached the AI):
          a job is named but the rest of the question is not a topic the fixed answers know. The summary is now only the fallback;
          marked not understood, so the AI gets it first (when it fails, this summary is what shows, logged as not understood). */
+      /* PORTAL 6.153 (Chris, step 4): safety and heights, payment, the directive and holidays are answered by the AI (it has the approved safety
+         rules, the installer's own bill status, the directive PDF and the holiday checks); the fixed answer is only the fallback. */
+      if (!hintId && fieldAsk !== 'weather' && fieldAsk !== 'traffic' && AIQ.test(q)) return U({ paras: fieldAsk && ONE[fieldAsk] ? ONE[fieldAsk](one) : aSummary(one), acts: follow(one) }, 'AI first: ' + (q.match(AIQ) || [''])[0].trim());
       if (!fieldAsk && !hintId) {
         var GEN = ' tell me about more details detail summary overview info information what whats s about on for of the a an is are job jobs project projects install installs installation agc please show open status this that it give ', tw = ' ' + norm(one.title) + ' ';
         var left = q.trim().split(' ').filter(function(w){ return w && !/^\d+$/.test(w) && GEN.indexOf(' ' + w + ' ') < 0 && tw.indexOf(' ' + w + ' ') < 0; });
         if (left.length) return U({ paras: aSummary(one), acts: follow(one) }, 'job named, topic not known: ' + left.slice(0, 4).join(' '));
       }
       if (fieldAsk === 'weather') return weather(one, q).then(function(paras){ return { paras: paras, acts: follow(one, 'weather') }; });
-      if (fieldAsk === 'traffic') return drive(one).then(function(paras){ var ad = one.addresses[0] || one.stores[0]; return { paras: paras, acts: (ad ? [['Directions in Google Maps', dirUrl(ad)], ['See it on the project map', 'proj:' + one.title + '|map']] : []).concat(follow(one, 'traffic').slice(0, 2)) }; });
+      /* 6.153 (travel basics): the drive answer also gives the install-day weather at the store */
+      if (fieldAsk === 'traffic') return Promise.all([drive(one), weather(one, q).then(null, function(){ return []; })]).then(function(two){ var paras = two[0].concat((two[1] || []).slice(0, 2)); var ad = one.addresses[0] || one.stores[0]; return { paras: paras, acts: (ad ? [['Directions in Google Maps', dirUrl(ad)], ['See it on the project map', 'proj:' + one.title + '|map']] : []).concat(follow(one, 'traffic').slice(0, 2)) }; });
       var fn = fieldAsk ? ONE[fieldAsk] : aSummary;
       /* PORTAL 6.129: the address answer has a Google Maps link per address and a button for the project map */
       if (fieldAsk === 'where') return { paras: aWhere(one), acts: whereActs(one).concat(follow(one, 'where').slice(0, 2)) };
@@ -7179,13 +7183,14 @@ window.AGC_ALFRED_PORTAL = (function(){
   }
 
   /* ── where things are in the portal, and the questions the portal's data does not answer ── */
+  var AIQ = /\b(safe|safety|harness|fall protection|fall arrest|tie ?off|windy?|heights?|how high|spotter|guard ?rails?|paid|payment|pay ?day|get paid|cheque|e ?transfer|directives?|instructions|guidelines?|holidays?|stat|closed|long weekend)\b/;
   var CALL = ['Call AGC', 'tel:+18773957435'], MAIL = ['Email AGC', 'mailto:projects@americangraphiccontractors.com'], INVOICE = ['Open Upload Invoice', 'sel:#links [data-nav=invoice]'];
   var PAY = /\b(get paid|getting paid|be paid|paid out|payment terms|pay ?day|when (do|will|does|am) .*\b(pay|paid|payment)\b)/;
   function nextLine(ps){ var today = midnight(new Date()), up = ps.filter(function(p){ return p.date && midnight(p.date) >= today; });
     return up.length ? { p: up[0], text: 'Your next job is ' + line(up[0]) + '.' } : { p: null, text: ps.length ? 'You have no upcoming jobs with a date set.' : 'You have no projects with AGC yet.' }; }
   function nav(q, howto, ps){
     var doing = howto || /\b(upload|submit|send|add|attach|open|find|where|change|reset|forgot|forgotten|update|edit)\b/.test(q);
-    if (PAY.test(q)) return { paras: ['Payment dates are not part of your portal data, so I won’t guess.', 'What I can see is the budget on each of your jobs, and whether an invoice is in for review. For payment timing, ask AGC directly.'], acts: [['My earnings', 'ask:What are my total earnings?'], CALL, MAIL] };
+    if (PAY.test(q)) return U({ paras: ['Payment dates are not part of your portal data, so I won’t guess.', 'What I can see is the budget on each of your jobs, and whether an invoice is in for review. For payment timing, ask AGC directly.'], acts: [['My earnings', 'ask:What are my total earnings?'], CALL, MAIL] }, 'AI first: payment');
     if (/\binvoic\w*\b/.test(q) && doing) return { paras: ['Upload Invoice is in the menu at the top of the portal.', 'To check whether an invoice is already in for one of your jobs, ask me with its AGC number.'], acts: [INVOICE] };
     if (/\bcalendar\b/.test(q)) { var n = nextLine(ps); return { paras: ['My Calendar is in the menu at the top. It shows your scheduled jobs by date.', n.text], acts: [['Open My Calendar', 'sel:#links [data-nav=calendar]']].concat(n.p ? [['Next job details', askFor(n.p, '')]] : []) }; }
     if (/\bpassword\b/.test(q)) return { paras: ['To change your password, sign out from the menu, then press “Forgotten your password?” on the sign-in screen.'], acts: [] };
@@ -7318,7 +7323,8 @@ window.AGC_ALFRED_PORTAL = (function(){
             page: (data && data.screen && data.screen.view) || '', ver: String(window.AGC_PORTAL_BUILD || '') }).then(function(j){
             if (!j || j.off || !j.reply) return null;
             var pj = data ? projectFor(q0, pid, data) : { pm: { name: '', phone: '' } }; chipP = pj.p || null; var ph = S(pj.pm.phone).replace(/[^\d+]/g, '');
-            return { paras: String(j.reply).split(/\n{2,}/), acts: ph.length >= 10 && j.result !== 'answered' ? [['Call ' + (S(pj.pm.name).split(' ')[0] || 'your PM'), 'tel:' + ph]] : [], ai: true };
+            var links = (Array.isArray(j.links) ? j.links : []).filter(function(x){ return x && /^https:\/\//.test(S(x.url)); }).slice(0, 2).map(function(x){ return [S(x.label) || 'Open', S(x.url)]; });   /* 6.153: e.g. Open the directive */
+            return { paras: String(j.reply).split(/\n{2,}/), acts: links.concat(ph.length >= 10 && j.result !== 'answered' ? [['Call ' + (S(pj.pm.name).split(' ')[0] || 'your PM'), 'tel:' + ph]] : []), ai: true };
           });
         }).catch(function(){ return null; });
       };
@@ -12890,7 +12896,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.152</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.153</span>
  </div>
 
  <div class="hero">
@@ -37159,7 +37165,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6152; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6153; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
