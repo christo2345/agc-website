@@ -6235,6 +6235,14 @@ function sayInFull(t,k){
   var mo=Object.keys(MO).sort(function(a,b){return b.length-a.length}).join('|');
   t=t.replace(new RegExp('\\b('+mo+')\\.?(?=\\s+\\d)|(\\d\\s+)('+mo+')\\b','g'+(k?'i':'')),function(x,a,d,b){return a?MO[a]||MO[a.toLowerCase()]||a:d+(MO[b]||MO[b.toLowerCase()]||b)});
   if(k)return t;
+  /* 6.146 (Chris: "January 5 should be said January fifth"): dates as ordinals. "January 5" = "January fifth", "5 January" = "the fifth
+     of January", "the 22nd" = "the twenty-second". A time ("January 5:30") or a bigger number is left alone. */
+  var ORD=['','first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelfth','thirteenth','fourteenth','fifteenth','sixteenth','seventeenth','eighteenth','nineteenth','twentieth',
+    'twenty-first','twenty-second','twenty-third','twenty-fourth','twenty-fifth','twenty-sixth','twenty-seventh','twenty-eighth','twenty-ninth','thirtieth','thirty-first'],
+    MON='January|February|March|April|May|June|July|August|September|October|November|December';
+  t=t.replace(new RegExp('\\b('+MON+')\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b(?![:.]\\d)','g'),function(x,m,d){d=+d;return d>=1&&d<=31?m+' '+ORD[d]:x})
+   .replace(new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?('+MON+')\\b','g'),function(x,d,m){d=+d;return d>=1&&d<=31?'the '+ORD[d]+' of '+m:x})
+   .replace(/\b(\d{1,2})(?:st|nd|rd|th)\b/g,function(x,d){d=+d;return d>=1&&d<=31?ORD[d]:x});
   var DAY={Mon:'Monday',Tue:'Tuesday',Tues:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Thur:'Thursday',Thurs:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday'};
   t=t.replace(/\b(Mon|Tues|Tue|Wed|Thurs|Thur|Thu|Fri|Sat|Sun)\b\.?(?=,?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|\d))/g,function(x,d){return DAY[d]});
   /* addresses: street types after a house number and street name, the compass part after them, Suite, Saint, Fort, Mount */
@@ -6308,6 +6316,9 @@ function forVoice(text,lang){var t=String(text||''),k=lang==='fr'?1:lang==='es'?
    .replace(/(?:US|CA|C)?\$\s?(\d[\d,]*(?:\.\d+)?)/g,function(x,n){return moneyWords(n,DOL[k],k)})
    .replace(/(\d[\d,]*(?:\.\d{1,2})?)\s?\$(?!\s*(?:CAD|USD|MXN)\b)/g,function(x,n){return moneyWords(n,DOL[k],k)})
    .replace(/\b(CAD|USD|MXN)\b/g,function(x,c){return CUR[c][k]});
+  /* 6.146 (Chris: "text gets jumbled in parentheses"): "Banner(s)" = "Banners"; an acronym in brackets after its full name ("lift operator
+     (MEWP) card") is not read; any other bracketed aside is read with a short pause on each side, not as stray commas */
+  t=t.replace(/(\w)\((s|es)\)/gi,'$1$2').replace(/\s*\(([A-Z][A-Z0-9&]{1,7})\)/g,'').replace(/\s*\(([^()]{1,160})\)\s*/g,', $1, ');
   t=sayInFull(t,k);
   /* symbols */
   t=t.replace(/\s&\s/g,AND[k]).replace(/(\d)\s?%/g,'$1'+PCT[k]+' ')
@@ -12795,7 +12806,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.145</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.146</span>
  </div>
 
  <div class="hero">
@@ -37054,7 +37065,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6145; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6146; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
