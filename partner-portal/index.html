@@ -6686,7 +6686,8 @@ window.AGC_ALFRED_PORTAL = (function(){
      question ("ask:<the words shown as the installer's message>|<project id>|<kind>"), so nothing has to be re-read from the words. */
   var QT = { '': 'Tell me about', when: 'When is', where: 'What is the address for', budget: 'What is the budget for', scope: 'What is the scope for', shipping: 'What is the shipping for',
     contact: 'Who are the contacts for', weather: 'What is the weather for', status: 'What is the status of', notes: 'What are the notes for', ppe: 'What PPE is needed for', crew: 'How many workers for', files: 'What files are on',
-    invoice: 'Is there an invoice on', closeout: 'Where is the closeout for' };
+    invoice: 'Is there an invoice on', closeout: 'Where is the closeout for',
+    traffic: 'What is the drive time to' };   /* 6.150 (Chris: the Drive time button gave the general summary): it had no question of its own */
   function nameOf(p){ return p.num ? 'AGC #' + p.num : p.title; }
   /* PORTAL 6.128 (Chris): total earnings = the Total AGC Earnings box on Home, nothing more. The box's own figure when it has
      painted; before that, the same sum the box makes (TOTAL BUDGET of every job, masters and cancelled jobs left out). */
@@ -12862,7 +12863,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.149</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.150</span>
  </div>
 
  <div class="hero">
@@ -37131,7 +37132,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6149; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6150; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
