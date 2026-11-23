@@ -6660,7 +6660,16 @@ window.AGC_ALFRED_PORTAL = (function(){
   /* PORTAL 6.125: the job names and numbers of this installer, their store names and addresses, so his voice can say a job by its number, a store by its chain and number and an address by its city only (forVoice, 6.125 to 6.127) */
   function keepTitles(ps){ try { window.AGC_ALFRED_TITLES = ps.filter(function(p){ return p.num && p.title; }).map(function(p){ return [p.title, p.num]; }); var st = []; ps.forEach(function(p){ (p.stores || []).forEach(function(x){ if (x && st.indexOf(x) < 0) st.push(x); }); }); window.AGC_ALFRED_STORES = st; var ad = []; ps.forEach(function(p){ (p.addresses || []).forEach(function(x){ if (x && ad.indexOf(x) < 0) ad.push(x); }); }); window.AGC_ALFRED_ADDRS = ad; } catch (e) {} }
   function askFor(p, kind){ kind = QT[kind] ? kind : ''; return 'ask:' + QT[kind] + ' ' + nameOf(p).replace(/\|/g, ' ') + '?|' + p.id + '|' + kind; }
-  function follow(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Drive time', 'traffic'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
+  /* PORTAL 6.143 (Chris, Nov 23: "way too many buttons; only the ones that apply to the question; we already have the carousel"):
+     no more related-topic buttons on answers. Buttons that act on that answer stay (track, directions, call the PM, upload invoice,
+     open My Projects, pick a job). The list below is kept for reference only. */
+  function follow(){ return []; }
+  /* PORTAL 6.143 (Chris: "I'd rather have the carousel update to related topics"): after an answer about a job, the carousel at the
+     bottom shows that job's other topics (each one asks about that job); an answer that is not about a job puts the usual chips back. */
+  var TOPICS = [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Drive time', 'traffic'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']];
+  function related(p, skip){ return TOPICS.filter(function(a){ return a[1] !== skip; }).map(function(a){ return { chip: a[0], act: askFor(p, a[1]) }; }); }
+  function askedKind(text, hintKind){ if (hintKind) return hintKind; var q = ' ' + norm(text).replace(/#/g, ' ') + ' '; for (var k in I) if (I[k].test(q)) return k; return ''; }
+  function followOld(p, skip){ return [['Schedule', 'when'], ['Address', 'where'], ['Weather', 'weather'], ['Budget', 'budget'], ['Drive time', 'traffic'], ['Scope', 'scope'], ['Shipping', 'shipping'], ['Contacts', 'contact']]
     .filter(function(a){ return a[1] !== skip; }).slice(0, 4).map(function(a){ return [a[0], askFor(p, a[1])]; }); }
   function open(){ return ['Open My Projects', 'sel:#links [data-nav=projects]']; }
   function head(p){ return p.title; }
@@ -6738,7 +6747,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     if (pk) bits.push(pk + ' package' + (pk === '1' ? '' : 's'));
     if (bits.length) out.push(bits.join(', ').replace(/^./, function(c){ return c.toUpperCase(); }) + '.');
     var tk = tracks(tr, co); if (tk.length) out.push('Tracking: ' + tk.map(function(x){ return (x.carrier ? x.carrier + ' ' : '') + x.num; }).join(', ') + '.'); else if (tr) out.push('Tracking: ' + clean(tr, 200));
-    if (to || ad) out.push('Shipping to: ' + [to, ad].filter(Boolean).join(' · '));
+    if (to || ad) out.push('Shipping to: ' + [to, ad].filter(Boolean).join(' · ').replace(/[\s,;·]+$/, '') + '.');   /* 6.143: no trailing comma */
     if (cond) out.push('Condition on arrival: ' + cond + (sn ? ' (' + sn + ')' : '') + '.');
     return out; }
   /* PORTAL 6.129 (Chris: "any recent updates to this project?" got the whole job summary). Job updates are not in the portal yet,
@@ -7227,7 +7236,7 @@ window.AGC_ALFRED_PORTAL = (function(){
   }
   function answer(text, hintId, hintKind, via){
     var more = /^\s*tell me more:\s*/i.test(text), q0 = more ? String(text).replace(/^\s*tell me more:\s*/i, '') : text;
-    touched = null;
+    touched = null; var chipP = null;
     return rules().then(function(r){
       var dataP = window.AGC_ALFRED_DATA ? window.AGC_ALFRED_DATA().catch(function(){ return null; }) : Promise.resolve(null);
       var rule = blockedBy(q0, r);
@@ -7256,7 +7265,7 @@ window.AGC_ALFRED_PORTAL = (function(){
           return window.AGC_ALFRED_AI({ question: String(q0).slice(0, 600), projectId: pid || '', history: hist, via: via === 'chip' ? 'chip' : 'typed',
             page: (data && data.screen && data.screen.view) || '', ver: String(window.AGC_PORTAL_BUILD || '') }).then(function(j){
             if (!j || j.off || !j.reply) return null;
-            var pj = data ? projectFor(q0, pid, data) : { pm: { name: '', phone: '' } }, ph = S(pj.pm.phone).replace(/[^\d+]/g, '');
+            var pj = data ? projectFor(q0, pid, data) : { pm: { name: '', phone: '' } }; chipP = pj.p || null; var ph = S(pj.pm.phone).replace(/[^\d+]/g, '');
             return { paras: String(j.reply).split(/\n{2,}/), acts: ph.length >= 10 && j.result !== 'answered' ? [['Call ' + (S(pj.pm.name).split(' ')[0] || 'your PM'), 'tel:' + ph]] : [], ai: true };
           });
         }).catch(function(){ return null; });
@@ -7271,7 +7280,8 @@ window.AGC_ALFRED_PORTAL = (function(){
         if (!skip) res = shorten(res, Number(r.maxSentences) || 3, ask0, hintId, hintKind);
         return done(res, res.u ? 'unknown' : 'answered', res.u ? res.why : (hintKind || ''));
       }, function(e){ done(null, 'unknown', 'error'); throw e; });
-    });
+    }).then(function(res){                                   /* 6.143: the job's other topics, for the carousel */
+      var p = touched || chipP; if (res && p && !res.chips) res.chips = related(p, askedKind(q0, hintKind)); return res; });
   }
   return { answer: answer, back: back };
 })();
@@ -7476,9 +7486,9 @@ chips.addEventListener('touchmove',function(){hold(4000)},{passive:true});
 chips.addEventListener('scroll',function(){if(drag||tween)return;var x=chips.scrollLeft;if(Math.abs(x-pos)<1.5)return;
   hold(3000);if(loopW&&(x>=loopW||x<=0)){setPos(x)}else pos=x},{passive:true});
 function setChips(ids){chips.innerHTML='';chips.classList.remove('marq');cw.classList.remove('ov');loopW=0;pos=0;tween=null;var tr=document.createElement('div');tr.className='alfc-tr';chips.appendChild(tr);
-  function add(copy){(ids||chipIds()).forEach(function(id){var e=BY[id];if(!e)return;var c=document.createElement('button');c.type='button';c.className='alfc-c';c.textContent=e.chip||id;
+  function add(copy){(ids||chipIds()).forEach(function(id){var e=id&&typeof id==='object'?id:BY[id];if(!e)return;var c=document.createElement('button');c.type='button';c.className='alfc-c';c.textContent=e.chip||id;
     if(copy){c.setAttribute('aria-hidden','true');c.tabIndex=-1}
-    c.addEventListener('click',function(){if(busy)return;if(window.AGC_voicePrime)AGC_voicePrime();var lab=c.textContent;lastQ=lab;addUser(lab);H.push({r:'u',t:lab});if(e.q)ask(e.q);else answer(e)});tr.appendChild(c)})}
+    c.addEventListener('click',function(){if(busy)return;if(e.act){act(e.act);return}if(window.AGC_voicePrime)AGC_voicePrime();var lab=c.textContent;lastQ=lab;addUser(lab);H.push({r:'u',t:lab});if(e.q)ask(e.q);else answer(e)});tr.appendChild(c)})}
   add(false);chips.scrollLeft=0;
   requestAnimationFrame(function(){if(!tr.children.length||tr.scrollWidth<=chips.clientWidth+2)return;cw.classList.add('ov');
     var w=tr.scrollWidth;add(true);loopW=w+8;chips.classList.add('marq');hold(1200)})}
@@ -7510,7 +7520,7 @@ function ask(text,pid,kind){
   busy=true;var pt=typing(),done=false,t0=Date.now();
   function fin(r){if(done)return;done=true;clearTimeout(to);setTimeout(function(){pt.remove();busy=false;r=r||NOPE;
     if(H.length&&H[H.length-1].r==='u')H.pop();
-    addBot(emo(r.paras),r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text});setChips(null);bottom()},Math.max(0,500-(Date.now()-t0)))}
+    addBot(emo(r.paras),r.acts,true,{id:'portal',text:r.paras.join('\n\n').slice(0,2000),q:text});setChips(r.chips&&r.chips.length?r.chips:null);bottom()}   /* 6.143: the job's topics */,Math.max(0,500-(Date.now()-t0)))}
   var to=setTimeout(function(){fin({paras:['I couldn’t reach your portal data just now. Please try again in a moment.'],acts:[]})},12000);
   try{P.answer(text,pid,kind,pid===undefined?'typed':'chip').then(fin,function(){fin(null)})}catch(e){fin(null)}}
 function askSite(text){
@@ -12770,7 +12780,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.142</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.143</span>
  </div>
 
  <div class="hero">
@@ -37029,7 +37039,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6142; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6143; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
