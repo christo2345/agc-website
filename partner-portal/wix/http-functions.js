@@ -617,6 +617,19 @@ export async function get_alfredAiContext(request) {
       const names = linkIds(p.fields[k]).map((id) => sName.get(id)).filter(Boolean);
       if (names.length) p.fields[k] = names; else delete p.fields[k];
     }
+    // store hours (Chris, Nov 23 2026): each linked store by NAME with its STORE HOURS (the Google Maps hours, the trusted source);
+    // the project's TIME / TIME: (install time or after-hours note) overrides them, and the AI is told so. Store ids never reach the AI.
+    const stIds = [...new Set(projects.flatMap((p) => linkIds(p.fields[AI_STORE_FIELD])))];
+    const stRecs = stIds.length ? await fetchByIds(STORES_TABLE, stIds) : [];
+    const stBy = new Map(stRecs.map((x) => [x.id, x.fields || {}]));
+    for (const p of projects) {
+      const ids = linkIds(p.fields[AI_STORE_FIELD]);
+      if (p.fields[AI_STORE_FIELD] != null) delete p.fields[AI_STORE_FIELD];
+      const list = ids.map((id) => stBy.get(id)).filter(Boolean).map((f) => ({ store: String(f['Store Name'] || '').trim(),
+        address: String(f['Store Address'] || '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+        hours: String(f['STORE HOURS'] || '').trim() || 'not on file' })).filter((x) => x.store);
+      if (list.length) p.fields['STORES (Google Maps hours)'] = list;
+    }
     return okJson({ enabled: true, installerId: inst.id, staff: !!inst.__staff, rules: await rulesForPortal(),
       installer: aiInstaller(cleanInstaller(r.body.fields)), projects }, request);
   } catch (e) { console.error('alfredAiContext', e); return serverErrorJson(null, request); }
@@ -627,6 +640,7 @@ export async function get_alfredAiContext(request) {
 // project IMPORTANT NOTES FOR INSTALLER, INSTALLER CLOSEOUT NOTES, SHIPMENT NOTES, PROJECT SCOPE:, PROJECT BRIEF, AGC DIRECTIVES:,
 // AGC REQUIREMENTS, AGC Photo Requirements, DETAILS 1 to 5 (their own budget lines, never on shared jobs).
 const SERVICES_TABLE = 'tblIA61JoHA5owTg2';   // ⚙️ SERVICE TYPES
+const AI_STORE_FIELD = 'STORE NAME(s) & ADDRESS(es)';   // linked 🏬 STORES & LOCATIONS (Store Name, Store Address, STORE HOURS)
 const AI_SERVICE_FIELDS = ['PRODUCT / SERVICE 1', 'PRODUCT / SERVICE 2', 'PRODUCT / SERVICE 3', 'PRODUCT / SERVICE 4', 'PRODUCT / SERVICE 5'];
 const AI_INSTALLER_OUT = new Set(['FIRST NAME:', 'LAST NAME:', 'ACCOUNTING EMAIL:', 'BILLING ADDRESS:', 'NAME OF BANK:', 'BANK COUNTRY:', 'CURRENCY:',
   'ACCOUNT NAME:', 'ACCOUNT TYPE:', 'ACCOUNT NUMBER:', 'TRANSIT NUMBER:', 'INSTITUTION NUMBER:', 'ACH ROUTING NUMBER:', 'VOID CHECK:',

@@ -84,8 +84,9 @@ export async function rulesForPortal() {
 // The list is never sent to a browser.
 let _ai = new Set();
 export async function aiEnabledFor(inst) {
-  await rulesForPortal();
-  return !!(inst && inst.id && _ai.has(inst.id));
+  // Chris, Nov 23 2026: the test-only switch is retired; every signed-in partner gets AI answers (fixed answers still go first,
+  // read only, never-share list, hands-off projects hidden, everything logged). The 🤖 AI SWITCH row is no longer read for this.
+  return !!(inst && inst.id);
 }
 
 // POST /_functions/alfredLog (signed-in installers only)
