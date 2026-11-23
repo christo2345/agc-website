@@ -6243,6 +6243,18 @@ function sayInFull(t,k){
   t=t.replace(new RegExp('\\b('+MON+')\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b(?![:.]\\d)','g'),function(x,m,d){d=+d;return d>=1&&d<=31?m+' '+ORD[d]:x})
    .replace(new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?('+MON+')\\b','g'),function(x,d,m){d=+d;return d>=1&&d<=31?'the '+ORD[d]+' of '+m:x})
    .replace(/\b(\d{1,2})(?:st|nd|rd|th)\b/g,function(x,d){d=+d;return d>=1&&d<=31?ORD[d]:x});
+  /* 6.147 (Chris: "o'clock after the time is said weird"): clock times in words, so the voice never adds "o'clock" for ":00".
+     "10:00 AM" = "ten AM", "10:30 PM" = "ten thirty PM", "9:05 AM" = "nine oh five AM", "12 PM" = "noon", "12 AM" = "midnight",
+     "10:00" alone = "ten". */
+  var NW=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'],
+      TW=['','','twenty','thirty','forty','fifty'],
+      mins=function(m){m=+m;return !m?'':m<10?' oh '+NW[m]:m<20?' '+NW[m]:' '+TW[Math.floor(m/10)]+(m%10?'-'+NW[m%10]:'')};
+  t=t.replace(/(\d(?::\d{2})?\s*[ap]\.?\s?m\.?)\s*[–—-]\s*(?=\d)/gi,'$1 to ')                    /* "9 AM–9 PM" = "nine AM to nine PM" */
+   .replace(/\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s?m\b(?:\.(?=\s+[a-z]))?/gi,function(x,h,m,ap){h=+h;if(h<1||h>12||(m&&+m>59))return x;ap=ap.toLowerCase();
+      if(h===12&&!+(m||0))return ap==='p'?'noon':'midnight';return NW[h]+mins(m||0)+(ap==='p'?' PM':' AM')})
+   .replace(/\b(\d{1,2}):(\d{2})\b(?!\s*[ap]\.?\s?m\b)/gi,function(x,h,m){var lead=/^0/.test(h);h=+h;if(h>23||+m>59)return x;var hh=h%12||12;
+      if(h===0&&!+m)return 'midnight';if(h===12&&!+m)return 'noon';return NW[hh]+mins(m)+(h>=13?' PM':lead?' AM':'')})
+   .replace(/(\b(?:AM|PM|noon|midnight))\s*[–—-]\s*(?=[a-z])/gi,'$1 to ');                                  /* "nine AM – five PM" */
   var DAY={Mon:'Monday',Tue:'Tuesday',Tues:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Thur:'Thursday',Thurs:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday'};
   t=t.replace(/\b(Mon|Tues|Tue|Wed|Thurs|Thur|Thu|Fri|Sat|Sun)\b\.?(?=,?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|\d))/g,function(x,d){return DAY[d]});
   /* addresses: street types after a house number and street name, the compass part after them, Suite, Saint, Fort, Mount */
@@ -12806,7 +12818,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.146</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.147</span>
  </div>
 
  <div class="hero">
@@ -37065,7 +37077,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6146; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6147; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
