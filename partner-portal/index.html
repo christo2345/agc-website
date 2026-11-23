@@ -12748,7 +12748,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.136</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.138</span>
  </div>
 
  <div class="hero">
@@ -37006,6 +37006,11 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
   var AGC_BUILD = 6138; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
+     (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
+  (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
+    try { var b = document.getElementById('agc-lock-ver'); if (b) b.textContent = t; } catch (e) {}   /* the sign-in screen's label */
+    try { var a = document.getElementById('portal-version'); if (a) a.textContent = t; } catch (e) {} })();
   (function(){
     if (!/(^|\.)github\.io$/i.test(location.hostname || '') || !window.fetch) return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
