@@ -6598,7 +6598,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     files: /\b(files?|layouts?|plans?|drawings?|pdfs?|artwork|data ?sheet|documents?|attachments?)\b/,
     budget: /\b(budget|pay|pays|paid|paying|payment|price|money|amount|worth|how much|total|dollars?)\b/,
     contact: /\b(contact|contacts|onsite|on site|who do i (call|talk|ask|contact|see)|whom|manager|pm|phone|number to call)\b/,
-    ppe: /\b(ppe|safety|hard ?hat|vest|boots|harness|lift|ladder|reach|height|how high|equipment)\b/,
+    ppe: /\b(ppe|safety|hard ?hat|vest|boots|harness|lift|ladder|reach|height|how high)\b/,   /* 6.141: "equipment" goes to the AI (the PMs' approved 🧰 equipment rules) */
     crew: /\b(workers?|crew|helpers?|how many (guys|people|workers|installers))\b/,
     when: /\b(when|date|dates|schedul\w*|what time|start\w*|what day|deadline|due)\b/,
     where: /\b(where|address\w*|location|locations|located|directions?|which store|what store)\b/,
@@ -12756,7 +12756,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.140</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.141</span>
  </div>
 
  <div class="hero">
@@ -37015,7 +37015,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6140; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6141; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
