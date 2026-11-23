@@ -701,6 +701,13 @@
   .alfc-in:focus{border-color:rgba(146,198,75,.8)}
   .alfc-send{flex:none;height:48px;padding:0 18px;border-radius:14px;font:800 15px/1 var(--font,inherit);letter-spacing:.05em;text-transform:uppercase;color:#fff;cursor:pointer; background:linear-gradient(180deg,#1f1f25,#0b0b0e);border:1px solid rgba(255,255,255,.28);transition:background .3s,color .3s}
   .alfc-send:hover,.alfc-send:focus-visible{background:#fff;color:#000;outline:none}
+  /* PORTAL 6.149 · 🎤 dictation button */
+  .alfc-mic{flex:none;width:48px;height:48px;display:grid;place-items:center;padding:0;border-radius:14px;color:#fff;cursor:pointer;background:linear-gradient(180deg,#1f1f25,#0b0b0e);border:1px solid rgba(255,255,255,.3);transition:background .25s,color .25s,box-shadow .25s}
+  .alfc-mic[hidden]{display:none}
+  .alfc-mic svg{width:22px;height:22px}
+  .alfc-mic:hover,.alfc-mic:focus-visible{background:#fff;color:#000;outline:none}
+  .alfc-mic.on{background:#92c64b;color:#0a0a0a;border-color:#92c64b;animation:alfcMic 1.2s ease-in-out infinite}
+  @keyframes alfcMic{0%,100%{box-shadow:0 0 0 0 rgba(146,198,75,.55)}50%{box-shadow:0 0 0 8px rgba(146,198,75,0)}}
   .alfc-t{display:inline-flex;gap:6px;padding:16px 18px}
   .alfc-t i{width:8px;height:8px;border-radius:50%;background:#92c64b;animation:alfcDot 1.1s ease-in-out infinite}
   .alfc-t i:nth-child(2){animation-delay:.15s}
@@ -7668,6 +7675,36 @@ function nextJoke(){var list=[BY.joke,BY.joke2].filter(Boolean),e=jokesTold<list
   if(jokesTold<list.length){jokesTold++;try{localStorage.setItem('agc_alf_jokes_v3',String(jokesTold))}catch(x){}}return e}
 var JOKE=/\b(joke|jokes|funny|make me laugh|humou?r|blague|blagues|dr[oô]le|fais[- ]moi rire|chiste|chistes|broma|gracioso|hazme re[ií]r)\b/i;
 form.addEventListener('submit',function(ev){ev.preventDefault();var t=inp.value.trim();if(!t||busy)return;if(window.AGC_voicePrime)AGC_voicePrime();inp.value='';lastQ=t;addUser(t);H.push({r:'u',t:t});save();ask(t)});
+/* PORTAL 6.149 · 🎤 DICTATION (Chris, Nov 23 2026: a microphone in the chat, speech to text into the box). The words go into the box only;
+   Send stays a tap. Inside the Wix page the browser blocks the microphone in this frame (Wix gives it "fullscreen" only), so there the
+   page's own helper listens (Wix custom code, "agc_dictate" messages, AGC's site only) and hands the words back. The button shows only when
+   dictation can work: this page on its own with speech recognition, or the Wix helper answering. Phones also have the keyboard's mic. */
+(function(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition,framed=window.top!==window,PAR=/^https:\/\/(www\.)?americangraphiccontractors\.com$/,
+      mic=document.createElement('button'),listening=false,base='',rec=null,parentOK=false,PH=inp.getAttribute('placeholder')||'';
+  mic.type='button';mic.className='alfc-mic';mic.hidden=true;mic.setAttribute('aria-label','Speak your question');mic.setAttribute('aria-pressed','false');mic.setAttribute('translate','no');
+  mic.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3.5"/><path d="M8.5 21.5h7"/></svg>';
+  form.insertBefore(mic,form.querySelector('.alfc-send'));
+  function ui(o){listening=o;mic.classList.toggle('on',o);mic.setAttribute('aria-pressed',o?'true':'false');inp.setAttribute('placeholder',o?'Listening…':PH)}
+  function got(ev,text){if(ev==='start'){ui(true);return}
+    if(ev==='interim'||ev==='final'){var t=String(text||'').replace(/\s+/g,' ').trim();inp.value=(base?base+' ':'')+t;if(ev==='final')try{inp.focus()}catch(e){}return}
+    if(ev==='end'||ev==='error')ui(false)}
+  var LANG={fr:'fr-CA',es:'es-MX'};
+  function startLocal(){try{rec&&rec.abort()}catch(e){}rec=new SR();rec.lang=LANG[L()]||'en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
+    rec.onstart=function(){got('start')};rec.onresult=function(r){var t='',fin=false;for(var i=0;i<r.results.length;i++){t+=r.results[i][0].transcript;if(r.results[i].isFinal)fin=true}got(fin?'final':'interim',t)};
+    rec.onerror=function(){got('error')};rec.onend=function(){got('end')};try{rec.start()}catch(e){got('error')}}
+  function tell(cmd){try{window.parent.postMessage({type:'agc_dictate',cmd:cmd,lang:L()},'*')}catch(e){}}
+  if(!framed&&SR)mic.hidden=false;
+  if(framed){window.addEventListener('message',function(e){var d=e.data;if(!PAR.test(e.origin)||!d||d.type!=='agc_dictate')return;
+      if(d.ev==='ready'){parentOK=true;mic.hidden=false;return}if(d.ev==='none')return;got(d.ev,d.text)});
+    var pings=0;(function ping(){if(parentOK||pings++>8)return;tell('ping');setTimeout(ping,1500)})()}
+  mic.addEventListener('click',function(){
+    if(listening){if(rec)try{rec.stop()}catch(e){}else tell('stop');ui(false);return}
+    if(window.AGC_hush)try{AGC_hush()}catch(e){}            /* he stops talking, so he is not what gets written down */
+    base=inp.value.trim();ui(true);
+    if(!framed&&SR)startLocal();else if(parentOK)tell('start');else ui(false)});
+  form.addEventListener('submit',function(){if(listening){if(rec)try{rec.stop()}catch(e){}else tell('stop');ui(false)}},true);
+})();
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&box.classList.contains('open')&&!document.querySelector('dialog[open]')){ev.preventDefault();close()}});
 window.AGC_ALFRED_OPEN=open;window.AGC_ALFRED_CLOSE=function(){if(box.classList.contains('open'))close(true)};
 /* a one-time hello from the corner */
@@ -12825,7 +12862,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.148</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.149</span>
  </div>
 
  <div class="hero">
@@ -37094,7 +37131,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6148; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6149; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');

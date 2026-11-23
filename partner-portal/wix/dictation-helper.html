@@ -1,0 +1,33 @@
+<!-- AGC Partner Portal · ALFRED dictation helper (Chris, Nov 23 2026)
+     Wix: Settings > Custom Code > + Add Custom Code. Paste this, "Load code on: Choose specific pages" = vendor-portal,
+     "Place code in: Body - end". The portal (GitHub frame) may not use the microphone itself (Wix gives its frame "fullscreen"
+     only), so this page listens when the portal's mic button asks, and hands the words back to that frame only.
+     It does nothing else: no data is sent anywhere, and messages from any other site are ignored. -->
+<script>
+(function(){
+  var ORIGIN = 'https://christo2345.github.io',
+      SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, src = null;
+  function send(m){ try { if (src) src.postMessage(Object.assign({ type: 'agc_dictate' }, m), ORIGIN); } catch (e) {} }
+  window.addEventListener('message', function(e){
+    var d = e.data;
+    if (e.origin !== ORIGIN || !d || d.type !== 'agc_dictate') return;
+    src = e.source;
+    if (d.cmd === 'ping') { send({ ev: SR ? 'ready' : 'none' }); return; }
+    if (!SR) return;
+    if (d.cmd === 'stop') { try { if (rec) rec.stop(); } catch (x) {} return; }
+    if (d.cmd === 'start') {
+      try { if (rec) rec.abort(); } catch (x) {}
+      rec = new SR();
+      rec.lang = ({ fr: 'fr-CA', es: 'es-MX' })[d.lang] || 'en-US';
+      rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+      rec.onstart = function(){ send({ ev: 'start' }); };
+      rec.onresult = function(r){ var t = '', fin = false;
+        for (var i = 0; i < r.results.length; i++) { t += r.results[i][0].transcript; if (r.results[i].isFinal) fin = true; }
+        send({ ev: fin ? 'final' : 'interim', text: t }); };
+      rec.onerror = function(r){ send({ ev: 'error', error: r && r.error }); };
+      rec.onend = function(){ send({ ev: 'end' }); };
+      try { rec.start(); } catch (x) { send({ ev: 'error', error: 'start' }); }
+    }
+  });
+})();
+</script>
