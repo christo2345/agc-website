@@ -7097,6 +7097,14 @@ window.AGC_ALFRED_PORTAL = (function(){
         if (scr && (aboutJobs || gen)) one = scr; else if (gen && onStep && !aboutJobs && !(lastId && lastCtx === key)) return step(); else if (gen && lastId && shortQ) one = byId(lastId); }
       if (!one) return other(q, ps, data, aboutJobs, false, scr, onStep ? step : null);
       keep(one);
+      /* PORTAL 6.140 (Chris, Nov 23: "what are the store hours for 19164" got the job summary, marked answered, and never reached the AI):
+         a job is named but the rest of the question is not a topic the fixed answers know. The summary is now only the fallback;
+         marked not understood, so the AI gets it first (when it fails, this summary is what shows, logged as not understood). */
+      if (!fieldAsk && !hintId) {
+        var GEN = ' tell me about more details detail summary overview info information what whats s about on for of the a an is are job jobs project projects install installs installation agc please show open status this that it give ', tw = ' ' + norm(one.title) + ' ';
+        var left = q.trim().split(' ').filter(function(w){ return w && !/^\d+$/.test(w) && GEN.indexOf(' ' + w + ' ') < 0 && tw.indexOf(' ' + w + ' ') < 0; });
+        if (left.length) return U({ paras: aSummary(one), acts: follow(one) }, 'job named, topic not known: ' + left.slice(0, 4).join(' '));
+      }
       if (fieldAsk === 'weather') return weather(one, q).then(function(paras){ return { paras: paras, acts: follow(one, 'weather') }; });
       if (fieldAsk === 'traffic') return drive(one).then(function(paras){ var ad = one.addresses[0] || one.stores[0]; return { paras: paras, acts: (ad ? [['Directions in Google Maps', dirUrl(ad)], ['See it on the project map', 'proj:' + one.title + '|map']] : []).concat(follow(one, 'traffic').slice(0, 2)) }; });
       var fn = fieldAsk ? ONE[fieldAsk] : aSummary;
@@ -12748,7 +12756,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.139</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.140</span>
  </div>
 
  <div class="hero">
@@ -37007,7 +37015,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6139; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6140; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
