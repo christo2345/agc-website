@@ -12896,7 +12896,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.153</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.154</span>
  </div>
 
  <div class="hero">
@@ -36799,13 +36799,10 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     var dev = false; try { dev = /[?&]agcdev=1(&|$)/.test(location.search); } catch (e) {}
     var init = { headers: { Authorization: 'Bearer ' + gate.token }, credentials: 'omit' };
     if (body) { init.method = 'POST'; init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(body); init.keepalive = true; }
-    /* TEST PERIOD (Chris, Nov 23 2026: the portal is not given to installers yet): until the Wix backend with alfredRules / alfredLog is
-       published, the live address answers 404 and the call goes to the saved test backend (/_functions-dev) instead. Once Wix is
-       published the live address answers and this never runs. Remove it at that publish. */
+    /* 6.154 · LIVE (Chris, Nov 23 2026: yes, go live): the Wix backend is published, so the live address answers. The TEST PERIOD
+       fallback to the saved test backend is gone; ?agcdev=1 still sends one browser to /_functions-dev for testing. */
     var go = function(d){ return fetch('https://www.americangraphiccontractors.com/_functions' + (d ? '-dev' : '') + '/' + name, init); };
-    /* 6.139: from GitHub the live 404 has no permission header for this address, so the browser throws instead of showing a 404,
-       and 6.138 never reached the test backend (no rules, no AI, no log rows). A throw on the live address now also goes to the test one. */
-    return go(dev).then(function(r){ return (!dev && r.status === 404) ? go(true) : r; }, function(e){ if (dev) throw e; return go(true); })
+    return go(dev)
       .then(function(r){ if (!r.ok) throw new Error(name + ' ' + r.status); return r.json(); });
   };
   /* PORTAL 6.138 · 🤖 FIELD OPS ALFRED AI (separate Cloudflare service field-ops-alfred, Chris Nov 23). Only questions the fixed answers
@@ -37165,7 +37162,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6153; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6154; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');

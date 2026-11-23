@@ -656,9 +656,12 @@ export async function get_alfredAiContext(request) {
       if (hh) p.fields['STORE HOURS + HOLIDAY CHECK'] = hh;
       const bills = String(f['🧾 QBO BILL'] || '').split('\n').filter((l) => l.trim() && !/^\s*⚠/.test(l)).map((l) => l.split(' · ').map((x) => x.trim()))
         .filter((b) => b.length >= 3 && isMine(b[0])).map((b) => {
-          const ref = (b.find((x) => /^ref\s/i.test(x)) || '').replace(/^ref\s*/i, ''), dated = b.find((x) => /^[A-Z][a-z]{2} \d{1,2}, \d{4}$/.test(x)) || '', last = b[b.length - 1];
-          const st = /\bOPEN\b/i.test(last) ? 'not paid yet' : /\bPAID\b/i.test(last) ? 'paid' : 'status not clear, ask AGC accounting';
-          return 'Your invoice' + (ref ? ' ' + ref : '') + (dated ? ' (dated ' + dated + ')' : '') + ': ' + st; });
+          // Nov 23 2026 (Chris: yes): status and due date are found by their label, not by position (a shared bill ends with
+          // 'one bill for AGC ...', and unpaid bills now carry 'due <date>' from the QuickBooks bill). Amounts still never go out.
+          const ref = (b.find((x) => /^ref\s/i.test(x)) || '').replace(/^ref\s*/i, ''), dated = b.find((x) => /^[A-Z][a-z]{2} \d{1,2}, \d{4}$/.test(x)) || '';
+          const stx = b.find((x) => /^(PART PAID|PAID|OPEN)\b/i.test(x)) || '', due = (b.find((x) => /^due\s/i.test(x)) || '').replace(/^due\s*/i, '');
+          const st = /^PART PAID/i.test(stx) ? 'partly paid' : /^OPEN/i.test(stx) ? 'not paid yet' : /^PAID/i.test(stx) ? 'paid' : 'status not clear, ask AGC accounting';
+          return 'Your invoice' + (ref ? ' ' + ref : '') + (dated ? ' (dated ' + dated + ')' : '') + ': ' + st + (due && st !== 'paid' ? '; due date in AGC\'s books: ' + due : ''); });
       if (bills.length) p.fields['YOUR BILL TO AGC (payment status)'] = bills;
       const dirs = (Array.isArray(f['AGC DIRECTIVES:']) ? f['AGC DIRECTIVES:'] : []).filter((a) => a && a.url && /pdf/i.test(String(a.type || a.filename || '')));
       if (dirs.length) p.fields['DIRECTIVE PDF'] = dirs.slice(0, 2).map((a) => ({ name: String(a.filename || 'Directive.pdf'), url: a.url }));
