@@ -7176,7 +7176,8 @@ window.AGC_ALFRED_PORTAL = (function(){
       var cur = currencyOf((data.installer && data.installer.fields) || {}), ps = (data.projects || []).map(function(r){ return proj(r, cur); }).sort(function(a, b){ return sortKey(a) - sortKey(b); }); keepTitles(ps);
       /* PORTAL 6.132 (Chris: too long): opened again = one line, like the first welcome */
       var scr = onScreen(ps, data), st = !scr && data.screen && data.screen.view === 'profile' ? data.screen.step : 0, n = nextLine(ps),
-          out = ['Hey ' + (S(data.name) || 'there') + ', have any questions about ' + (scr ? 'this project' : st ? 'your profile' : 'your projects') + '? ' + window.AGC_ALFRED_QUIP()];
+          qp = String(window.AGC_ALFRED_QUIP ? window.AGC_ALFRED_QUIP() : '').trim(),
+          out = ['Hey ' + (S(data.name) || 'there') + ', have any questions about ' + (scr ? 'this project' : st ? 'your profile' : 'your projects') + '?'].concat(qp ? qp.split(/(?<=[.!?])\s+(?=[A-Z0-9“"])/) : []);   /* 6.145: question and quip on separate lines */
       return { paras: out, acts: scr ? follow(scr) : st ? [['This step', 'ask:What is on file for this step?'], ['Am I fully onboarded?', 'ask:Am I fully onboarded?']] : n.p ? [['Next job details', askFor(n.p, '')]] : [] }; }, function(){ return null; });
   }
   /* ── PORTAL 6.138 · FIELD OPS ALFRED steps 2 + 3 (Chris, Nov 23 2026) ──
@@ -7327,7 +7328,9 @@ function chipIds(){var on=onScreen(),first=on.id||on.title?JOBCHIPS:on.view==='p
    (about the project open on screen; otherwise about their projects, or their profile while they are on it) */
 function helloP(){var n='',on=onScreen();try{n=window.AGC_ALFRED_NAME?String(AGC_ALFRED_NAME()||''):''}catch(e){}
   var what=on.title?'this project':(on.view==='profile'?'your profile':'your projects');
-  return ['Hey '+(n||'there')+', have any questions about '+what+'? '+(window.AGC_ALFRED_QUIP?AGC_ALFRED_QUIP():'')]}
+  /* 6.145 (Chris: breathing room in the intro too): the question, then each sentence of the quip, as separate paragraphs */
+  var qp=String(window.AGC_ALFRED_QUIP?AGC_ALFRED_QUIP():'').trim();
+  return ['Hey '+(n||'there')+', have any questions about '+what+'?'].concat(qp?qp.split(/(?<=[.!?])\s+(?=[A-Z0-9“"])/):[])}
 function L(){return root.getAttribute('data-lang')||'en'}
 function tr(s){try{return window.AGC_T?window.AGC_T(s):s}catch(e){return s}}
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘`]/g,"'").replace(/[^a-z0-9'\s]/g,' ').replace(/\s+/g,' ').trim()}
@@ -12792,7 +12795,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.144</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.145</span>
  </div>
 
  <div class="hero">
@@ -37051,7 +37054,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6144; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6145; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
