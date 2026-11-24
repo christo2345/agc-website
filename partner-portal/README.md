@@ -155,6 +155,15 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
     in [`wix/portal-6.156-fields.md`](wix/portal-6.156-fields.md): published in Wix on Nov 24 2026. The same change also sends the
     installer's onboarding status and what is missing, tax form, WCB, licences, height training and delivery instructions
     (no page shows those yet; Field Ops ALFRED receives them).
+- Time off in My Calendar (since 6.157, Chris Nov 24 2026): an installer marks days as "On holiday" or "Not available".
+  - Each range is one row in the AGC Holiday Calendar table in Airtable, linked to the installer, so the PMs see it where
+    they already look. The portal lists the installer's rows, adds one, and removes only rows the installer added in the
+    portal (rows AGC made for them show without a Remove button).
+  - The calendar hatches those days in amber, rings a day in red when a job is already booked on it, and tags the days
+    AGC's office is closed. A job's Schedule says "You marked this day off" when the install lands on one.
+  - Needs three backend endpoints (`timeOff`, `timeOffAdd`, `timeOffDelete`), described in
+    [`wix/portal-6.157-time-off.md`](wix/portal-6.157-time-off.md). NOT published in Wix yet: until they are, the Time off
+    button stays hidden and nothing else changes.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 

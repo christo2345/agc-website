@@ -9925,6 +9925,71 @@ window.AGC_LOOK_FIELD = {
  }
  .cal-fs-close:hover{background:rgba(239,68,68,0.85);border-color:#fff;}
  .cal-fs-close svg{width:18px;height:18px;stroke-width:2.5;}
+ /* PORTAL 6.157 (Chris, Nov 24 2026): TIME OFF in My Calendar. The button in the bar, the days it marks, and its panel. */
+ .cal-off-btn{
+   display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;
+   background:rgba(240,165,0,0.14);border:1px solid rgba(240,165,0,0.55);color:#fff;cursor:pointer;
+   font-family:var(--font);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;white-space:nowrap;transition:all 0.15s;
+ }
+ .cal-off-btn:hover{background:rgba(240,165,0,0.85);color:#0a0a0a;border-color:#fff;}
+ #cal-fs .cal-day.cal-off{background:repeating-linear-gradient(135deg,rgba(240,165,0,0.16) 0 8px,rgba(240,165,0,0.07) 8px 16px) !important;box-shadow:inset 0 0 0 1px rgba(240,165,0,0.55);}
+ #cal-fs .cal-day.cal-off.cal-off-clash{box-shadow:inset 0 0 0 2px rgba(239,68,68,0.9);}
+ #cal-fs .cal-day.cal-agc-closed:not(.cal-off){box-shadow:inset 0 0 0 1px rgba(255,255,255,0.35);}
+ .cal-off-tag,.cal-closed-tag{
+   max-width:100%;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.6px;line-height:1.2;
+   padding:3px 7px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;
+ }
+ .cal-off-tag{color:#0a0a0a;background:#f0a500;}
+ .cal-closed-tag{color:#e0e0e0;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.28);}
+ .cal-tag-m{display:none;}
+ .cal-off-panel{
+   position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;padding:20px;
+   background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+ }
+ .cal-off-panel.show{display:flex;}
+ .cal-off-card{
+   width:min(520px,100%);max-height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:20px;
+   background:#161616;border:1px solid rgba(255,255,255,0.22);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,0.7);
+ }
+ .cal-off-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+ .cal-off-title{font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;}
+ .cal-off-x{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.25);background:#000;color:#fff;font-size:15px;font-weight:900;cursor:pointer;line-height:1;}
+ .cal-off-kinds{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+ .cal-off-kind{
+   padding:12px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.22);background:#000;color:#c0c0c0;cursor:pointer;
+   font-family:var(--font);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;
+ }
+ .cal-off-kind.on{background:#f0a500;color:#0a0a0a;border-color:#f0a500;}
+ .cal-off-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+ .cal-off-field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+ .cal-off-field label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#909090;}
+ .cal-off-field input{
+   width:100%;box-sizing:border-box;height:42px;padding:0 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.22);
+   background:#000;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;color-scheme:dark;
+ }
+ .cal-off-save{
+   height:46px;border-radius:10px;border:0;background:var(--green,#92C64B);color:#0a0a0a;cursor:pointer;
+   font-family:var(--font);font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:1px;
+ }
+ .cal-off-save[disabled]{opacity:0.55;cursor:default;}
+ .cal-off-msg{min-height:18px;font-size:13px;font-weight:700;color:#fca5a5;line-height:1.4;}
+ .cal-off-msg.ok{color:#92C64B;}
+ .cal-off-list{display:flex;flex-direction:column;gap:6px;}
+ .cal-off-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-left:3px solid #f0a500;}
+ .cal-off-item-text{flex:1;min-width:0;font-size:13px;font-weight:700;line-height:1.35;}
+ .cal-off-item-text small{display:block;font-size:11px;font-weight:600;color:#909090;}
+ .cal-off-del{padding:7px 12px;border-radius:999px;border:1px solid rgba(239,68,68,0.55);background:rgba(239,68,68,0.14);color:#fff;cursor:pointer;font-family:var(--font);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;}
+ .cal-off-foot{font-size:12px;color:#909090;line-height:1.5;}
+ @media (max-width:900px){
+   .cal-off-btn{height:36px;padding:0 12px;font-size:11px;}
+   #cal-fs .cal-off-btn{height:34px;padding:0 9px;font-size:10px;letter-spacing:0.3px;}
+   #cal-fs .cal-fs-month{min-width:112px;}
+   /* the phone hides the pills, so each marked day carries one short word instead; a job on a day off shows both colours */
+   .cal-tag-m{display:block;position:absolute;left:1px;right:1px;bottom:6px;text-align:center;font-size:8px;font-weight:900;letter-spacing:0.3px;text-transform:uppercase;line-height:1;pointer-events:none;}
+   .cal-tag-m.off{color:#f0a500;} .cal-tag-m.closed{color:#d0d0d0;}
+   .cal-day.has-projects .cal-tag-m{color:#0a0a0a;}
+   #cal-fs .cal-day.cal-off.has-projects{background:repeating-linear-gradient(135deg,var(--green) 0 9px,#f0a500 9px 18px) !important;}
+ }
  /* Body fills the rest of the viewport */
  .cal-fs-body{
    flex:1;min-height:0;display:flex;flex-direction:column;
@@ -12900,7 +12965,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.156</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.157</span>
  </div>
 
  <div class="hero">
@@ -13320,6 +13385,7 @@ window.AGC_LOOK_FIELD = {
        <button class="cal-fs-nav-btn" type="button" aria-label="Next month" onclick="calNav(1)">&#8250;</button>
      </div>
      <div class="cal-fs-actions">
+       <button class="cal-off-btn" id="cal-off-btn" type="button" style="display:none" onclick="calTimeOffOpen()" title="Mark the days you are on holiday or not available">Time off</button>
        <button class="cal-fs-close" type="button" aria-label="Close calendar" onclick="closeCalendarFullscreen()">
          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
        </button>
@@ -13328,6 +13394,24 @@ window.AGC_LOOK_FIELD = {
    <div class="cal-fs-body">
      <div class="cal-grid" id="cal-grid"></div>
      <div class="cal-fs-empty" id="cal-fs-empty" style="display:none;">No projects scheduled this month.</div>
+   </div>
+   <div class="cal-off-panel" id="cal-off-panel" onclick="if(event.target===this)calTimeOffClose()">
+     <div class="cal-off-card" role="dialog" aria-modal="true" aria-labelledby="cal-off-title">
+       <div class="cal-off-head"><div class="cal-off-title" id="cal-off-title">My time off</div><button class="cal-off-x" type="button" aria-label="Close" onclick="calTimeOffClose()">&#10005;</button></div>
+       <div class="cal-off-kinds">
+         <button class="cal-off-kind on" type="button" id="cal-off-kind-holiday" onclick="calTimeOffKind('holiday')">On holiday</button>
+         <button class="cal-off-kind" type="button" id="cal-off-kind-unavailable" onclick="calTimeOffKind('unavailable')">Not available</button>
+       </div>
+       <div class="cal-off-row">
+         <div class="cal-off-field"><label for="cal-off-from">First day</label><input type="date" id="cal-off-from" onchange="calTimeOffFromChanged()"></div>
+         <div class="cal-off-field"><label for="cal-off-to">Last day</label><input type="date" id="cal-off-to"></div>
+       </div>
+       <div class="cal-off-field"><label for="cal-off-note">Note for AGC (optional)</label><input type="text" id="cal-off-note" maxlength="200" autocomplete="off" placeholder="Back on the Monday"></div>
+       <button class="cal-off-save" type="button" id="cal-off-save" onclick="calTimeOffSave()">Add to my calendar</button>
+       <div class="cal-off-msg" id="cal-off-msg" role="status"></div>
+       <div class="cal-off-field"><label>On my calendar</label><div class="cal-off-list" id="cal-off-list"></div></div>
+       <div class="cal-off-foot">Your AGC project managers see these days when they schedule jobs. A job already booked on one of them is not moved: call or email AGC about it.</div>
+     </div>
    </div>
  </div>
 
@@ -14075,6 +14159,25 @@ function renderCalendar(){
       eventsWrap.appendChild(more);
     }
 
+    // PORTAL 6.157: the installer's own time off, and the days AGC's office is closed
+    const offHere=_calTimeOff.find(function(t){return key>=t.from&&key<=(t.to||t.from);});
+    if(offHere){
+      cell.classList.add('cal-off'); if(hasProjects) cell.classList.add('cal-off-clash');
+      const tag=document.createElement('div'); tag.className='cal-off-tag';
+      tag.textContent=offHere.kind==='unavailable'?'Not available':'On holiday';
+      tag.title=(hasProjects?'You have a job on a day you marked off. ':'')+(offHere.note||'');
+      eventsWrap.appendChild(tag);
+      const m=document.createElement('div'); m.className='cal-tag-m off'; m.textContent='Off'; cell.appendChild(m);
+    }
+    const closedHere=_calAgcClosed.find(function(c){return key>=c.from&&key<=(c.to||c.from);});
+    if(closedHere){
+      cell.classList.add('cal-agc-closed');
+      const tag=document.createElement('div'); tag.className='cal-closed-tag'; tag.textContent='AGC closed';
+      tag.title=String(closedHere.name||'').replace(/\s*-?\s*AGC CLOSED\s*/i,' ').trim();
+      eventsWrap.appendChild(tag);
+      if(!offHere){ const m=document.createElement('div'); m.className='cal-tag-m closed'; m.textContent='Closed'; cell.appendChild(m); }
+    }
+
     // Mobile: event pills are hidden (CSS), so let a tap on the green
     // day itself open its first project. Runtime matchMedia keeps desktop
     // behaviour unchanged (pills remain the click target there).
@@ -14105,9 +14208,88 @@ function renderCalendar(){
 }
 
 // ── Open / close the fullscreen overlay ──────────────────────────────────
+/* ═══ PORTAL 6.157 (Chris, Nov 24 2026): TIME OFF ═══════════════════════════════════════════════════════════════════════
+   The installer marks days as "On holiday" or "Not available". Saved by the shell (parent.AGC_PORTAL_TIMEOFF) as rows in
+   AGC Holiday Calendar linked to them. The calendar hatches those days in amber (red ring when a job is booked on one)
+   and tags the days AGC's office is closed. Rows AGC made for them show too, without a Remove button. */
+let _calTimeOff=[], _calAgcClosed=[], _calOffKind='holiday', _calOffBusy=false;
+function _calOffApi(){ try{ const a=window.parent&&window.parent!==window&&window.parent.AGC_PORTAL_TIMEOFF; return a&&typeof a.list==='function'?a:null; }catch(e){ return null; } }
+function _calOffIsOpen(){ const fs=document.getElementById('cal-fs'); return !!(fs&&fs.classList.contains('show')); }
+function calLoadTimeOff(fresh){
+  const api=_calOffApi(); if(!api) return Promise.resolve();
+  return api.list(!!fresh).then(function(d){
+    _calTimeOff=(d&&d.records)||[]; _calAgcClosed=(d&&d.agcClosed)||[];
+    const b=document.getElementById('cal-off-btn'); if(b) b.style.display='';   /* the button only shows once AGC's side answers (it is published separately in Wix) */
+    if(_calOffIsOpen()) renderCalendar();
+    _calOffRenderList();
+  },function(){});
+}
+function _calOffFmt(ymd){ const d=parseAirtableDate(ymd); return d?d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}):String(ymd||''); }
+function _calOffMsg(text,ok){ const m=document.getElementById('cal-off-msg'); if(m){ m.textContent=text||''; m.classList.toggle('ok',!!ok); } }
+function _calOffRenderList(){
+  const box=document.getElementById('cal-off-list'); if(!box) return;
+  box.textContent='';
+  if(!_calTimeOff.length){ const e=document.createElement('div'); e.className='cal-off-foot'; e.textContent='Nothing yet.'; box.appendChild(e); return; }
+  _calTimeOff.forEach(function(t){
+    const row=document.createElement('div'); row.className='cal-off-item';
+    const tx=document.createElement('div'); tx.className='cal-off-item-text';
+    tx.textContent=(t.to&&t.to!==t.from)?_calOffFmt(t.from)+' to '+_calOffFmt(t.to):_calOffFmt(t.from);
+    const sm=document.createElement('small'); sm.textContent=(t.kind==='unavailable'?'Not available':'On holiday')+(t.note?' · '+t.note:'')+(t.mine?'':' · added by AGC');
+    tx.appendChild(sm); row.appendChild(tx);
+    if(t.mine){ const b=document.createElement('button'); b.type='button'; b.className='cal-off-del'; b.textContent='Remove';
+      b.addEventListener('click',function(){ calTimeOffRemove(t.id,b); }); row.appendChild(b); }
+    box.appendChild(row);
+  });
+}
+function calTimeOffKind(k){
+  _calOffKind=k==='unavailable'?'unavailable':'holiday';
+  ['holiday','unavailable'].forEach(function(n){ const b=document.getElementById('cal-off-kind-'+n); if(b) b.classList.toggle('on',n===_calOffKind); });
+}
+function calTimeOffFromChanged(){
+  const f=document.getElementById('cal-off-from'), t=document.getElementById('cal-off-to'); if(!f||!t) return;
+  t.min=f.value||t.min; if(f.value&&(!t.value||t.value<f.value)) t.value=f.value;
+}
+function calTimeOffOpen(){
+  const p=document.getElementById('cal-off-panel'); if(!p) return;
+  const today=dateKey(new Date()), f=document.getElementById('cal-off-from'), t=document.getElementById('cal-off-to');
+  if(f){ f.min=today; if(!f.value||f.value<today) f.value=today; }
+  if(t){ t.min=(f&&f.value)||today; if(!t.value||t.value<t.min) t.value=t.min; }
+  _calOffMsg('');
+  _calOffRenderList();
+  p.classList.add('show');
+  if(!_calOffApi()) _calOffMsg('Time off is not available right now. Please reload the portal.');
+  else calLoadTimeOff(true);
+}
+function calTimeOffClose(){ const p=document.getElementById('cal-off-panel'); if(p) p.classList.remove('show'); }
+function calTimeOffSave(){
+  const api=_calOffApi(), f=document.getElementById('cal-off-from'), t=document.getElementById('cal-off-to'), n=document.getElementById('cal-off-note'), btn=document.getElementById('cal-off-save');
+  if(!api||_calOffBusy) return;
+  const from=f?f.value:'', to=(t&&t.value)||from;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)){ _calOffMsg('Pick the first day.'); return; }
+  if(to<from){ _calOffMsg('The last day is before the first day.'); return; }
+  _calOffBusy=true; if(btn){ btn.disabled=true; btn.textContent='Saving...'; } _calOffMsg('');
+  const done=function(){ _calOffBusy=false; if(btn){ btn.disabled=false; btn.textContent='Add to my calendar'; } };
+  api.add({from:from,to:to,kind:_calOffKind,note:n?n.value:''}).then(function(){
+    done(); if(n) n.value='';
+    _calOffMsg('Added. AGC can see it now.',true);
+    return calLoadTimeOff(true);
+  },function(e){ done(); _calOffMsg((e&&e.message)||'That could not be saved. Please try again.'); });
+}
+function calTimeOffRemove(id,btn){
+  const api=_calOffApi(); if(!api||_calOffBusy) return;
+  /* two presses: the first asks, the second removes (no browser dialog: they are blocked inside the portal's frame) */
+  if(btn&&btn.dataset.sure!=='1'){ btn.dataset.sure='1'; btn.textContent='Sure?'; setTimeout(function(){ if(btn.isConnected){ btn.dataset.sure=''; btn.textContent='Remove'; } },4000); return; }
+  _calOffBusy=true; if(btn){ btn.disabled=true; btn.textContent='...'; } _calOffMsg('');
+  api.remove(id).then(function(){ _calOffBusy=false; _calOffMsg('Removed.',true); return calLoadTimeOff(true); },
+    function(e){ _calOffBusy=false; if(btn){ btn.disabled=false; btn.dataset.sure=''; btn.textContent='Remove'; } _calOffMsg((e&&e.message)||'That could not be removed. Please try again.'); });
+}
+/* Esc closes the time-off panel first, not the whole calendar */
+document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return; const p=document.getElementById('cal-off-panel'); if(p&&p.classList.contains('show')){ e.stopImmediatePropagation(); calTimeOffClose(); } },true);
+
 function openCalendarFullscreen(){
   const fs=document.getElementById('cal-fs');
   if(!fs) return;
+  calLoadTimeOff(false);   /* 6.157: time off and AGC closed days (the grid repaints when they arrive) */
   // Always jump to the current month when opening — feels natural and
   // avoids the user landing on whatever month they were last viewing
   // hours ago.
@@ -14124,6 +14306,7 @@ function openCalendarFullscreen(){
 function closeCalendarFullscreen(){
   const fs=document.getElementById('cal-fs');
   if(!fs) return;
+  calTimeOffClose();
   fs.classList.remove('show');
   document.body.style.overflow='';
 }
@@ -19923,6 +20106,16 @@ function refreshHeaderStatusSlots(){
    _agcCloseoutBar  the row under the Closeout header: Photo requirements, Invoicing requirements, the invoice and its status */
 function _agcClean(s){return String(s||'').replace(/[^\w\s&\/().,'-]/g,' ').replace(/\s+/g,' ').trim();}
 function _agcX(p){const x=window._agcExtras;return (x&&x.byId&&p&&x.byId[p.id])||{stores:[],equipment:[],bill:[],closedOnInstall:''};}
+/* 6.157: the installer's own time off (My Calendar on Home), so Schedule can say when a job lands on one of those days.
+   Asked on every Schedule paint (the shell keeps the answer a minute and drops it after an add or a remove); repaints only when the list changed. */
+function _agcTimeOffCheck(){
+ try{const to=window.parent.AGC_PORTAL_TIMEOFF;if(!to||typeof to.list!=='function')return;
+   to.list(false).then(d=>{const recs=(d&&d.records)||[],j=JSON.stringify(recs);
+     if(j===window._agcTimeOffJson)return;
+     window._agcTimeOffJson=j;window._agcTimeOff=recs;
+     try{if(_selected&&_currentTab==='details'&&_currentSection==='schedule'&&window._sectionMap&&window._sectionMap['schedule'])window._sectionMap['schedule'].render();}catch(e){}
+   },()=>{});}catch(e){}
+}
 function _agcLoadExtras(){
  if(window._agcExtrasAsked)return; window._agcExtrasAsked=true;
  try{
@@ -21461,6 +21654,12 @@ function renderDetails(opts){
      }
      if(p.delayReason&&_isProjectDelayed(p))factsHtml+=_fact('Why it is delayed',esc(p.delayReason),'rgba(239,68,68,0.7)');
      if(p.revisits&&p.revisits.length)factsHtml+=_fact(p.revisits.length>1?'Revisit dates':'Revisit date',p.revisits.map(r=>esc(safeDate(r,{weekday:'short',month:'short',day:'numeric',year:'numeric'})||r)).join('\n'),'rgba(96,165,250,0.7)');
+     _agcTimeOffCheck();
+     if(projDate){   /* 6.157 */
+       const k=projDate.getFullYear()+'-'+String(projDate.getMonth()+1).padStart(2,'0')+'-'+String(projDate.getDate()).padStart(2,'0');
+       const off=(window._agcTimeOff||[]).find(t=>k>=t.from&&k<=(t.to||t.from));
+       if(off)factsHtml+=_fact('You marked this day off',(off.kind==='unavailable'?'Not available':'On holiday')+(off.note?'\n'+esc(off.note):'')+'\nCall or email AGC if this job has to move.','rgba(239,68,68,0.8)');
+     }
      if(_x.closedOnInstall)factsHtml+=_fact('AGC office closed on install day',esc(String(_x.closedOnInstall).replace(/\s*AGC CLOSED\s*/i,' ').replace(/\s+/g,' ').trim()),'rgba(240,165,0,0.8)');
      else{
        const ex=window._agcExtras, soon=(ex&&ex.agcClosed||[]).filter(c=>{const d=toDate(c.from);return d&&(d.getTime()-Date.now())<45*86400000;}).slice(0,2);
@@ -36969,6 +37168,34 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      same signed-in backend call that feeds Field Ops ALFRED (GET alfredAiContext: this installer's own projects only, the
      same allow-lists, no amounts). Asked for once, kept 10 minutes in memory, never stored. Signed out = nothing.
      Resolves to { byId: { <project id>: { stores, equipment, bill, closedOnInstall } }, agcClosed: [...] } or null. */
+  /* PORTAL 6.157 (Chris, Nov 24 2026: "yes"): TIME OFF. An installer marks the days they are on holiday or not available, in My
+     Calendar. Each range is one row in AGC Holiday Calendar linked to them (backend: timeOff, timeOffAdd, timeOffDelete), so the
+     PMs see it where they already look. list() = { records: [{ id, from, to, kind, note, mine }], agcClosed: [...] }, kept one
+     minute and shared by Home and My Projects; add() and remove() refresh it. An error carries the server's own words. */
+  var toP = null, toAt = 0, toTok = '';
+  function toCall(name, body){
+    if (!gate.open || !gate.token) return Promise.reject(new Error('Please sign in again.'));
+    var dev = false; try { dev = /[?&]agcdev=1(&|$)/.test(location.search); } catch (e) {}
+    var init = { headers: { Authorization: 'Bearer ' + gate.token }, credentials: 'omit' };
+    if (body) { init.method = 'POST'; init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(body); }
+    return fetch('https://www.americangraphiccontractors.com/_functions' + (dev ? '-dev' : '') + '/' + name, init).then(function(r){
+      return r.json().then(null, function(){ return {}; }).then(function(j){
+        if (!r.ok) throw new Error((j && j.error) || (r.status === 404 ? 'Time off is not switched on yet.' : 'AGC could not be reached. Please try again.'));
+        return j; }); });
+  }
+  window.AGC_PORTAL_TIMEOFF = {
+    list: function(fresh){
+      if (!gate.open || !gate.token) return Promise.resolve({ records: [], agcClosed: [] });
+      if (fresh || !toP || toTok !== gate.token || Date.now() - toAt > 60000) {
+        var p = toCall('timeOff').then(function(d){ return { records: (d && Array.isArray(d.records)) ? d.records : [], agcClosed: (d && Array.isArray(d.agcClosed)) ? d.agcClosed : [] }; });
+        p.then(null, function(){ if (toP === p) toP = null; });
+        toP = p; toAt = Date.now(); toTok = gate.token;
+      }
+      return toP;
+    },
+    add: function(entry){ return toCall('timeOffAdd', { from: String(entry.from || ''), to: String(entry.to || ''), kind: entry.kind === 'unavailable' ? 'unavailable' : 'holiday', note: String(entry.note || '').slice(0, 200) }).then(function(j){ toP = null; return j; }); },
+    remove: function(id){ return toCall('timeOffDelete', { id: String(id || '') }).then(function(j){ toP = null; return j; }); }
+  };
   var extrasP = null, extrasAt = 0, extrasTok = '';
   window.AGC_PORTAL_EXTRAS = function(){
     if (!gate.open || !gate.token) return Promise.resolve(null);
@@ -37342,7 +37569,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6156; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6157; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
