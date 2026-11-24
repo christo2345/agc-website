@@ -6799,6 +6799,9 @@ window.AGC_ALFRED_PORTAL = (function(){
   function pmOf(f){ var raw = S(pick(f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')), pd = S(f['PM Direct']), ph = '';
     var m = raw.match(/\(?\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\)?/); if (m) { ph = m[0].replace(/^\(+(?=\()/, ''); raw = raw.replace(m[0], ''); }
     var name = raw.replace(/[\s—–|,:;-]+$/, '').replace(/^[\s—–|,:;-]+/, '').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
+    /* 6.155 (Chris, Nov 23: "my name should never be mentioned"): a job the owner manages shows no PM name or phone; the answers fall
+       back to "your AGC project manager" and Call AGC. The Wix backend already leaves these out; this is the second lock. */
+    if (/maassen|\bchristian\b|\bchris\b/i.test(raw + ' ' + S(pick(f, 'AGC PROJECT MANAGER:', 'AGC PROJECT MANAGER', 'PM Name')))) return { name: '', phone: '' };
     return { name: name, phone: (pd || ph).replace(/^\((\(.*\))\)$/, '$1').trim() }; }
   function normalCase(t){ return t && t === t.toUpperCase() && /[A-Z]{3}/.test(t) ? t.charAt(0) + t.slice(1).toLowerCase() : t; }
   /* 6.151: the onsite contact split into a name and a number to dial ("Test Manager, 555-0100" = "Test Manager" / 5550100). The name is
@@ -12896,7 +12899,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.154</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.155</span>
  </div>
 
  <div class="hero">
@@ -37162,7 +37165,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6154; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6155; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');

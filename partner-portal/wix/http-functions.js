@@ -210,8 +210,13 @@ function cleanProject(rec, inst) {
   out['AGC SHARED JOB'] = shared;
   out['AGC DELAYED'] = /delay/i.test(selName(f['PROJECT STATUS']));            // only "delayed or not", never the status itself
   if (shared) for (const k of SHARED_JOB_HIDDEN) delete out[k];
+  // Nov 23 2026 (Chris: "my name should never be mentioned"): a job Chris manages goes out with no PM name and no PM phone,
+  // so the portal and Field Ops ALFRED say "your AGC project manager" and offer Call AGC instead.
+  if (PM_FIELDS.some((k) => OWNER_NAME.test(JSON.stringify(out[k] == null ? '' : out[k])))) for (const k of PM_FIELDS) delete out[k];
   return { id: rec.id, createdTime: rec.createdTime, fields: out };
 }
+const PM_FIELDS = ['AGC PROJECT MANAGER', 'AGC PROJECT MANAGER:', 'PM Name', 'PM Direct'];
+const OWNER_NAME = /maassen|\bchristian\b|\bchris\b/i;
 
 // ─── AIRTABLE HELPERS ────────────────────────────────────────────────────────
 async function airtableHeaders() {
