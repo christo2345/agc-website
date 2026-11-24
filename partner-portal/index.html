@@ -12965,7 +12965,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.159</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.160</span>
  </div>
 
  <div class="hero">
@@ -21517,6 +21517,11 @@ function renderDetails(opts){
      const isToday=(d)=>isMatch(d,today);
      /* 6.158: revisit dates are trips 2, 3, ... (the scheduled date is trip 1); each is a green dot on its own day */
      const _trips158=(p.revisits||[]).map(r=>toDate(r)).filter(Boolean);
+     /* 6.160 (Chris): the trip number goes by the date. The scheduled date and every revisit date are put in order, oldest first:
+        the oldest is Trip 1, whichever Airtable field it was typed in. The same day twice counts once. */
+     const _tripAll160=[]; (projDate?[projDate]:[]).concat(_trips158).forEach(x=>{ if(!_tripAll160.some(y=>isMatch(y,x)))_tripAll160.push(x); });
+     _tripAll160.sort((a,b)=>a.getTime()-b.getTime());
+     const _tripNo160=(x)=>_tripAll160.findIndex(y=>isMatch(y,x))+1;
      let _offSeen158=false,_agcSeen158=false;
 
      // Which grid rows contain a project date (scheduled or due)? Those rows
@@ -21673,9 +21678,9 @@ function renderDetails(opts){
          }
        } else if(_trip158>=0){
          // 6.158: a revisit. A steady green dot with its trip number under it (the first trip is the pulsing one).
-         cells+='<div class="'+rangeClass.trim()+'" title="Trip '+(_trip158+2)+(isHoliday?' · '+esc(holidayTitle):'')+'" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:0;position:relative;z-index:3;background:'+cellBg+';border-radius:8px;'+cellAnim+'">'
-           +'<div data-cal-trip="'+(_trip158+2)+'" style="position:relative;z-index:2;width:clamp(20px,52%,36px);aspect-ratio:1;border-radius:50%;background:#92C64B;border:2px solid #d6f2a8;color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(146,198,75,0.45);">'+d+'</div>'
-           +'<div style="position:relative;z-index:2;font-size:9px;font-weight:900;letter-spacing:0.6px;text-transform:uppercase;color:#b7e07a;line-height:1;">Trip '+(_trip158+2)+'</div>'
+         cells+='<div class="'+rangeClass.trim()+'" title="Trip '+_tripNo160(date)+(isHoliday?' · '+esc(holidayTitle):'')+'" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:0;position:relative;z-index:3;background:'+cellBg+';border-radius:8px;'+cellAnim+'">'
+           +'<div data-cal-trip="'+_tripNo160(date)+'" style="position:relative;z-index:2;width:clamp(20px,52%,36px);aspect-ratio:1;border-radius:50%;background:#92C64B;border:2px solid #d6f2a8;color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(146,198,75,0.45);">'+d+'</div>'
+           +'<div style="position:relative;z-index:2;font-size:9px;font-weight:900;letter-spacing:0.6px;text-transform:uppercase;color:#b7e07a;line-height:1;">Trip '+_tripNo160(date)+'</div>'
            +(isHoliday?'<div style="position:relative;z-index:2;font-size:8px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#fca5a5;line-height:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(holidaysToday[0].type==='AGC closed'?'AGC closed':holidaysToday[0].name)+'</div>':'')
            +'</div>';
        } else if(isDueDay){
@@ -21827,7 +21832,7 @@ function renderDetails(opts){
            (projDate?'<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:#92C64B;box-shadow:0 0 8px rgba(146,198,75,0.5);"></div><span style="font-size:11px;color:#c0c0c0;">Scheduled Date</span></div>':'')+
            (dueDate?'<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.6);"></div><span style="font-size:11px;color:#c0c0c0;">Due Date</span></div>':'')+
            '<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,0.5);"></div><span style="font-size:11px;color:#c0c0c0;">Today</span></div>'+
-           (_trips158.length?'<div id="agc-sched-trips" style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:#92C64B;border:2px solid #d6f2a8;box-sizing:border-box;"></div><span style="font-size:11px;color:#c0c0c0;">'+(projDate?['Trip 1: '+_shortD(projDate)]:[]).concat(_trips158.map((r,i)=>'Trip '+(i+2)+': '+_shortD(r))).join(' &middot; ')+'</span></div>':'')+
+           (_trips158.length?'<div id="agc-sched-trips" style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:#92C64B;border:2px solid #d6f2a8;box-sizing:border-box;"></div><span style="font-size:11px;color:#c0c0c0;">'+_tripAll160.map((r,i)=>'Trip '+(i+1)+': '+_shortD(r)).join(' &middot; ')+'</span></div>':'')+
            (_agcSeen158?'<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:rgba(239,68,68,0.45);border:1px solid rgba(239,68,68,0.7);"></div><span style="font-size:11px;color:#c0c0c0;">AGC office closed</span></div>':'')+
            (_offSeen158?'<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:repeating-linear-gradient(135deg,rgba(240,165,0,0.9) 0 3px,rgba(240,165,0,0.3) 3px 6px);"></div><span style="font-size:11px;color:#c0c0c0;">Your time off</span></div>':'')+
            '<button id="agc-sched-timeoff" onclick="_agcGoTimeOff()" title="Mark the days you are on holiday or not available" '+
@@ -21850,9 +21855,9 @@ function renderDetails(opts){
          '</div>'+
        '</div>'+
        '</div>';
-     /* 6.158: when the job has revisits, the scheduled day says "Trip 1" under its dot */
+     /* 6.158: when the job has revisits, the scheduled day says which trip it is under its dot (6.160: by date order) */
      if(_trips158.length){ try{ const c=el.querySelector('#cal-route-grid [data-cal-sched]'); if(c&&c.parentElement&&!c.parentElement.querySelector('.agc-trip1')){
-       const l=document.createElement('div'); l.className='agc-trip1'; l.textContent='Trip 1';
+       const l=document.createElement('div'); l.className='agc-trip1'; l.textContent='Trip '+_tripNo160(projDate);
        l.style.cssText='position:relative;z-index:2;font-size:9px;font-weight:900;letter-spacing:0.6px;text-transform:uppercase;color:#b7e07a;line-height:1;margin-top:6px;';
        if(getComputedStyle(c.parentElement).flexDirection!=='column'){ c.parentElement.style.flexDirection='column'; c.parentElement.appendChild(l); } else c.insertAdjacentElement('afterend',l); } }catch(e){} }
      // Draw the connecting route (scheduled → due) AFTER the DOM is laid out so we can measure cell positions.
@@ -37712,7 +37717,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6159; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6160; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');

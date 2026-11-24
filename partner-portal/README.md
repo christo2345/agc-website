@@ -177,6 +177,8 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   - Closeout: asks the backend for this project's closeouts only (it asked for every project the installer has), and the
     store names show while that loads. The archived view's Google Drive link no longer keeps a stray ")".
   - Home: the Time off button in My Calendar is always shown; a failed load says why in the panel.
+  - 6.160: trip numbers go by date. The scheduled date and every revisit date are sorted, oldest first, and numbered from
+    Trip 1, whichever Airtable field each was typed in. The same day twice counts once.
   - 6.159: Equipment to bring is one block per piece of equipment (title = the place or kind, body = what to bring) under a
     plain heading, not one block for the whole list. When they do not all fit open they all show as titles. The count is
     black on solid amber, and the open/close arrows are 20 px.
