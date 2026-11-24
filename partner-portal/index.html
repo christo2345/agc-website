@@ -12965,7 +12965,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.157</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.158</span>
  </div>
 
  <div class="hero">
@@ -13385,7 +13385,7 @@ window.AGC_LOOK_FIELD = {
        <button class="cal-fs-nav-btn" type="button" aria-label="Next month" onclick="calNav(1)">&#8250;</button>
      </div>
      <div class="cal-fs-actions">
-       <button class="cal-off-btn" id="cal-off-btn" type="button" style="display:none" onclick="calTimeOffOpen()" title="Mark the days you are on holiday or not available">Time off</button>
+       <button class="cal-off-btn" id="cal-off-btn" type="button" onclick="calTimeOffOpen()" title="Mark the days you are on holiday or not available">Time off</button>
        <button class="cal-fs-close" type="button" aria-label="Close calendar" onclick="closeCalendarFullscreen()">
          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
        </button>
@@ -14222,7 +14222,7 @@ function calLoadTimeOff(fresh){
     const b=document.getElementById('cal-off-btn'); if(b) b.style.display='';   /* the button only shows once AGC's side answers (it is published separately in Wix) */
     if(_calOffIsOpen()) renderCalendar();
     _calOffRenderList();
-  },function(){});
+  },function(e){ const p=document.getElementById('cal-off-panel'); if(p&&p.classList.contains('show')) _calOffMsg((e&&e.message)||'Time off could not be loaded. Please try again.'); });
 }
 function _calOffFmt(ymd){ const d=parseAirtableDate(ymd); return d?d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}):String(ymd||''); }
 function _calOffMsg(text,ok){ const m=document.getElementById('cal-off-msg'); if(m){ m.textContent=text||''; m.classList.toggle('ok',!!ok); } }
@@ -14290,6 +14290,7 @@ function openCalendarFullscreen(){
   const fs=document.getElementById('cal-fs');
   if(!fs) return;
   calLoadTimeOff(false);   /* 6.157: time off and AGC closed days (the grid repaints when they arrive) */
+  try{ if(window.parent&&window.parent!==window&&window.parent.AGC_OPEN_TIMEOFF){ window.parent.AGC_OPEN_TIMEOFF=false; setTimeout(calTimeOffOpen,450); } }catch(e){}   /* 6.158: asked for from a job's Schedule */
   // Always jump to the current month when opening — feels natural and
   // avoids the user landing on whatever month they were last viewing
   // hours ago.
@@ -20116,6 +20117,98 @@ function _agcTimeOffCheck(){
      try{if(_selected&&_currentTab==='details'&&_currentSection==='schedule'&&window._sectionMap&&window._sectionMap['schedule'])window._sectionMap['schedule'].render();}catch(e){}
    },()=>{});}catch(e){}
 }
+/* ═══ PORTAL 6.158 (Chris, Nov 24 2026) ═══════════════════════════════════════════════════════════════════════════════════
+   SCOPE, right column: every block opens and closes (click its title) and the column never scrolls on desktop. Whatever does
+   not fit is closed from the bottom up; opening one closes others to make room. A block too long to fit on its own is cut
+   with a "See all" button (pop-up). Order: Graphic Location, Qty installers, Equipment to bring (or Reach, PPE), Lift. */
+(function(){ try{ const st=document.createElement('style'); st.textContent=
+  '.agc-scope-col{width:300px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.1);overflow:hidden;padding:14px;display:flex;flex-direction:column;gap:8px;}'+
+  '.agc-acc{display:flex;flex-direction:column;flex-shrink:0;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(0,0,0,0.22);overflow:hidden;}'+
+  '.agc-acc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 12px;background:transparent;border:0;cursor:pointer;color:#c0c0c0;font-family:var(--font);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;text-align:left;}'+
+  '.agc-acc-h:hover{color:#fff;background:rgba(255,255,255,0.05);}'+
+  '.agc-acc-h em{font-style:normal;margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(240,165,0,0.18);color:#f0a500;font-size:10px;}'+
+  '.agc-acc-h i{font-style:normal;font-size:12px;transition:transform 0.18s;}'+
+  '.agc-acc.shut .agc-acc-h i{transform:rotate(-90deg);}'+
+  '.agc-acc-b{padding:0 12px 12px;}'+
+  '.agc-acc.shut .agc-acc-b,.agc-acc.shut .agc-acc-more{display:none;}'+
+  '.agc-acc-more{margin:0 12px 12px;padding:8px;border-radius:8px;border:1px solid rgba(240,165,0,0.5);background:rgba(240,165,0,0.12);color:#fff;cursor:pointer;font-family:var(--font);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;}'+
+  '.agc-fold-h{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}.agc-fold-h:hover{color:#fff;}'+
+  '.agc-fold-h i{font-style:normal;font-size:12px;transition:transform 0.18s;}.agc-fold.shut .agc-fold-h i{transform:rotate(-90deg);}'+
+  '.agc-fold.shut>.d-notes{display:none !important;}.agc-fold.shut{flex:0 0 auto !important;}'+
+  '@media (max-width:900px){.agc-scope-col{width:260px;overflow-y:auto;}}';
+  document.head.appendChild(st);}catch(e){} })();
+window._agcAccUser=window._agcAccUser||{};   /* what the installer opened or closed by hand, kept while the portal is open */
+function _agcAcc(id,label,inner,count){
+ return '<div class="agc-acc'+(window._agcAccUser[id]===false?' shut':'')+'" data-acc="'+id+'" data-label="'+esc(label)+'">'+
+   '<button type="button" class="agc-acc-h" onclick="_agcAccToggle(\''+id+'\')" aria-expanded="true"><span>'+esc(label)+(count?'<em>'+count+'</em>':'')+'</span><i>&#9662;</i></button>'+
+   '<div class="agc-acc-b">'+inner+'</div></div>';
+}
+function _agcFold(h){ const w=h.parentElement; if(!w)return; const shut=!w.classList.contains('shut'); w.classList.toggle('shut',shut); window._agcAccUser[w.dataset.fold]=!shut; }
+function _agcAccToggle(id){
+ const col=document.getElementById('agc-scope-col'); if(!col)return;
+ const s=col.querySelector('.agc-acc[data-acc="'+id+'"]'); if(!s)return;
+ const open=s.classList.contains('shut');
+ s.classList.toggle('shut',!open); window._agcAccUser[id]=open;
+ _agcAccFit(open?id:'');
+}
+function _agcAccFit(keep){
+ const col=document.getElementById('agc-scope-col'); if(!col)return;
+ const secs=[...col.querySelectorAll('.agc-acc')];
+ secs.forEach(s=>{const b=s.querySelector('.agc-acc-b');b.style.maxHeight='';b.style.overflow='';const m=s.querySelector('.agc-acc-more');if(m)m.remove();
+   s.querySelector('.agc-acc-h').setAttribute('aria-expanded',s.classList.contains('shut')?'false':'true');});
+ if(window.innerWidth<=900)return;   /* phone: the page scrolls as before */
+ const over=()=>col.scrollHeight>col.clientHeight+1;
+ if(!keep)secs.forEach(s=>{if(window._agcAccUser[s.dataset.acc]!==false)s.classList.remove('shut');});   /* a fresh paint starts open, then closes what does not fit */
+ for(let i=secs.length-1;i>=0&&over();i--){const s=secs[i];if(s.dataset.acc===keep||s.classList.contains('shut'))continue;s.classList.add('shut');}
+ if(over()){   /* one block alone is taller than the column: cut it, and offer all of it in a pop-up */
+   const s=secs.find(x=>!x.classList.contains('shut'));
+   if(s){const b=s.querySelector('.agc-acc-b');
+     const more=document.createElement('button');more.type='button';more.className='agc-acc-more';more.textContent='See all';
+     more.addEventListener('click',()=>_agcPopup(s.dataset.label||'',b.innerHTML));s.appendChild(more);
+     b.style.overflow='hidden';b.style.maxHeight=Math.max(60,b.offsetHeight-(col.scrollHeight-col.clientHeight)-2)+'px';}
+ }
+ secs.forEach(s=>s.querySelector('.agc-acc-h').setAttribute('aria-expanded',s.classList.contains('shut')?'false':'true'));
+}
+window.addEventListener('resize',()=>{clearTimeout(window._agcAccT);window._agcAccT=setTimeout(()=>{try{_agcAccFit('');}catch(e){}},150);});
+/* A layout image that will not load becomes a file tile (the inline version of this had a quoting slip and did nothing). */
+function _agcImgFail(img){
+ try{const u=img.dataset.fullUrl||'',n=img.dataset.filename||'File',d=document.createElement('div');
+   d.style.cssText='width:100%;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;background:#333;';
+   d.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" style="width:40px;height:40px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span style="font-size:11px;color:#7a7a7a;"></span>';
+   d.querySelector('span').textContent=n; d.addEventListener('click',()=>openLightbox(u,n)); img.replaceWith(d);}catch(e){}
+}
+/* SCHEDULE: the Time off button. The form lives in My Calendar on Home, so this goes there and opens it. */
+function _agcGoTimeOff(){ try{window.parent.AGC_OPEN_TIMEOFF=true;}catch(e){} goToHomeCalendar(); }
+/* WEATHER: the place the forecast is for, as "City, PR". From the store's address when it is written "..., City, PR ...";
+   otherwise from the map's own answer for that spot. */
+function _agcCityProv(addr){
+ const parts=String(addr||'').split(/\s*[,\n]\s*/).map(x=>x.trim()).filter(Boolean);
+ for(let i=1;i<parts.length;i++){
+   const m=/^([A-Z]{2})\b(?:\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d|\d{5}(?:-\d{4})?))?$/.exec(parts[i]);
+   if(m&&parts[i-1]&&!/\d/.test(parts[i-1]))return parts[i-1]+', '+m[1];
+ }
+ return '';
+}
+async function _agcWxPlace(addr,coords,feat){
+ const a=_agcCityProv(addr); if(a)return a;
+ const fromFeat=(f)=>{ if(!f)return ''; const ctx=(f.context||[]).concat([{id:String((f.place_type||[])[0]||'')+'.x',text:f.text,short_code:(f.properties||{}).short_code}]);
+   const pl=ctx.find(c=>/^place/.test(c.id||'')), rg=ctx.find(c=>/^region/.test(c.id||''));
+   const pr=rg?(String(rg.short_code||'').replace(/^[A-Za-z]{2}-/,'').toUpperCase()||rg.text||''):'';
+   return pl&&pl.text?(pl.text+(pr?', '+pr:'')):''; };
+ let out=fromFeat(feat); if(out)return out;
+ try{ if(coords&&typeof MBTOKEN==='string'&&MBTOKEN){
+   const r=await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+coords[1]+','+coords[0]+'.json?types=place&limit=1&language=en&access_token='+MBTOKEN);
+   const d=await r.json(); out=fromFeat(d&&d.features&&d.features[0]); } }catch(e){}
+ return out||'';
+}
+function _agcWxPlaceBar(){
+ const d=_wxData||{}, p=_selected||{};
+ const n=(p._rawStoreField||[]).length;
+ const where=d._fallback?(d._locName==='Your Location'?'your own location (no store address on file)':'Toronto, ON (no store address on file)'):(d._place||p.address||'the store');
+ return '<div id="agc-wx-place" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px 18px;border-bottom:1px solid rgba(255,255,255,0.16);font-size:12px;font-weight:800;letter-spacing:0.5px;color:#c0c0c0;">'+
+   '<span>WEATHER FOR <span style="color:#fff;font-size:14px;">'+esc(where)+'</span>'+(n>1&&!d._fallback?' <span style="font-weight:600;">(first of '+n+' stores'+(p.storeName?': '+esc(p.storeName):'')+')</span>':'')+'</span>'+
+   '<span style="font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#909090;">Forecast: Open-Meteo</span></div>';
+}
 function _agcLoadExtras(){
  if(window._agcExtrasAsked)return; window._agcExtrasAsked=true;
  try{
@@ -20738,7 +20831,7 @@ async function loadWeatherStrip(){
      const d=await r.json();
      if(d&&d.features&&d.features[0]){
        const[lng,lat]=d.features[0].geometry.coordinates;
-       coords=[lat,lng];
+       coords=[lat,lng]; window._agcWxFeat=d.features[0];
        locName=(d.features[0].context||[]).slice(0,2).map(c=>c.text).join(', ')||d.features[0].place_name||'';
      }
    }catch(e){console.warn('Mapbox weather geocode failed:',e);}
@@ -20766,6 +20859,8 @@ async function loadWeatherStrip(){
    if(!resp.ok)throw new Error('Weather API '+resp.status);
    _wxData=await resp.json();
    _wxData._locName=locName;
+   _wxData._place=''; { const _d=_wxData,_f=window._agcWxFeat; window._agcWxFeat=null;   /* 6.158: "City, PR" for the bar at the top of Weather */
+     if(!_wxFallback)_agcWxPlace(addr,coords,_f).then(pl=>{ _d._place=pl||''; const b=document.getElementById('agc-wx-place'); if(b&&_wxData===_d)b.outerHTML=_agcWxPlaceBar(); },()=>{}); }
    _wxData._fallback=_wxFallback;
    console.log('AGC Weather: code='+(_wxData.current?.weathercode),'loc='+locName);
    renderWeatherStrip();
@@ -20847,6 +20942,7 @@ function openWxDay(i){
  }).join('');
  document.getElementById('wx-fs-content').innerHTML=`
  <div style="display:flex;flex-direction:column;width:100%;height:100%;min-height:0;overflow:hidden;">
+${_agcWxPlaceBar()}
    <\!-- Day selector bar -->
    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.16);flex-shrink:0;background:rgba(0,0,0,0.2);">${daysBar}</div>
    ${(_selected&&_selected.wxNote)?'<div id="agc-wx-note" style="flex-shrink:0;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.16);background:rgba(240,165,0,0.08);border-left:3px solid rgba(240,165,0,0.8);font-size:13px;font-weight:700;color:#fff;line-height:1.5;white-space:pre-line;max-height:120px;overflow-y:auto;"><div class="d-label" style="font-size:9px;margin:0 0 3px;">AGC install-day weather note</div>'+esc(_selected.wxNote)+'</div>':''}
@@ -21269,7 +21365,7 @@ function renderDetails(opts){
    : `<img id="main-layout-img" src="${esc(first.url)}" data-full-url="${esc(first.url)}" data-filename="${esc(first.filename||'')}"
        onclick="openLightbox(this.dataset.fullUrl,this.dataset.filename)"
        style="width:100%;flex:1;min-height:0;display:block;object-fit:contain;cursor:pointer;background:#1c1c1c;"
-       onerror="this.outerHTML='<div onclick=\\'openLightbox(\\''+this.dataset.fullUrl+'\\',\\''+this.dataset.filename+'\\')\\' style=\\'width:100%;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;background:#333;\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#ef4444\\' stroke-width=\\'1.5\\' style=\\'width:40px;height:40px;\\'><path d=\\'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\\'/><polyline points=\\'14 2 14 8 20 8\\'/></svg><span style=\\'font-size:11px;color:#7a7a7a;\\'>${esc(first.filename||'File')}</span></div>'"/>`
+       onerror="_agcImgFail(this)"/>`
  }
  ${arrowsHtml}
  <div style="padding:5px 10px;background:#333;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:6px;border-top:1px solid #252525;">
@@ -21357,9 +21453,9 @@ function renderDetails(opts){
         the place of Reach and PPE Required (the same information twice). A job with no approved list still shows Reach and PPE.
         Then crew size, graphic location and, when the job has one, the lift. */
      const eq=_agcX(p).equipment||[];
-     const _col=(label,inner)=>'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">'+label+'</div>'+inner+'</div>';
-     const eqHtml=eq.length?_col('Equipment to bring','<div style="display:flex;flex-direction:column;gap:7px;">'+eq.map(r=>{const t=String(r),k=t.indexOf(': ');
-       return '<div class="d-box" style="padding:9px 11px;border-left:3px solid rgba(240,165,0,0.6);"><div class="d-val" style="font-size:13px;line-height:1.4;">'+(k>0?'<span style="color:#f0a500;">'+esc(t.slice(0,k))+'</span><br>'+esc(t.slice(k+2)):esc(t))+'</div></div>';}).join('')+'</div>'):'';
+     const _col=(label,inner)=>_agcAcc(label.toLowerCase().replace(/[^a-z]+/g,'-'),label==='Crew size'?'Qty installers':label,inner,label==='Equipment to bring'?eq.length:0);   /* 6.158: each block opens and closes */
+     const eqHtml=eq.length?_col('Equipment to bring','<div style="display:flex;flex-direction:column;gap:5px;">'+eq.map(r=>{const t=String(r),k=t.indexOf(': ');
+       return '<div class="d-box" style="padding:6px 9px;border-left:3px solid rgba(240,165,0,0.6);"><div class="d-val" style="font-size:12px;line-height:1.3;">'+(k>0?'<span style="color:#f0a500;">'+esc(t.slice(0,k))+'</span><br>'+esc(t.slice(k+2)):esc(t))+'</div></div>';}).join('')+'</div>'):'';
      const crewHtml=p.crew?_col('Crew size','<div class="chip-row" style="flex-wrap:wrap;gap:7px;"><span class="chip" style="color:#fff;border-color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.08);font-size:14px;padding:7px 14px;font-weight:700;">'+esc(p.crew)+(String(p.crew).trim()==='1'?' installer':' installers')+'</span></div>'):'';
      const lf=p.lift||{}, liftOn=!!(lf.type||lf.details||lf.days||(lf.status&&!/^(NOT ORDERED YET|N\/A)$/i.test(lf.status)));
      const liftHtml=liftOn?_col('Lift','<div class="d-box" style="padding:9px 11px;"><div class="d-val" style="font-size:13px;line-height:1.5;">'+
@@ -21370,21 +21466,22 @@ function renderDetails(opts){
        '<div style="display:flex;flex:1;min-height:0;overflow:hidden;">'+
          // LEFT: notes + scope (scrollable, takes most space)
          '<div style="flex:1;min-width:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;"'+(hasRight?'':'')+'>'+
-           (p.notes&&p.notes.trim()?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">Important Notes</div><div class="d-notes" style="padding:18px;"><div class="d-notes-text" style="font-size:18px;line-height:1.6;display:block;-webkit-line-clamp:unset;color:#e8e8e8;white-space:normal;">'+mdToHtml(p.notes)+'</div></div></div>':'')+
-           (p.scope&&p.scope.trim()?'<div style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;"><div class="d-label" style="font-size:11px;">Scope of Work</div><div class="d-notes" style="padding:18px;flex:1;min-height:0;overflow-y:auto;"><div class="d-notes-text" style="font-size:18px;line-height:1.6;display:block;-webkit-line-clamp:unset;color:#e8e8e8;white-space:normal;">'+mdToHtml(p.scope)+'</div></div></div>':'')+
+           (p.notes&&p.notes.trim()?'<div class="agc-fold'+(window._agcAccUser['L:notes']===false?' shut':'')+'" data-fold="L:notes" style="display:flex;flex-direction:column;gap:8px;"><div class="d-label agc-fold-h" onclick="_agcFold(this)" title="Click to close or open" style="font-size:11px;">Important Notes<i>&#9662;</i></div><div class="d-notes" style="padding:18px;"><div class="d-notes-text" style="font-size:18px;line-height:1.6;display:block;-webkit-line-clamp:unset;color:#e8e8e8;white-space:normal;">'+mdToHtml(p.notes)+'</div></div></div>':'')+
+           (p.scope&&p.scope.trim()?'<div class="agc-fold'+(window._agcAccUser['L:scope']===false?' shut':'')+'" data-fold="L:scope" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;"><div class="d-label agc-fold-h" onclick="_agcFold(this)" title="Click to close or open" style="font-size:11px;">Scope of Work<i>&#9662;</i></div><div class="d-notes" style="padding:18px;flex:1;min-height:0;overflow-y:auto;"><div class="d-notes-text" style="font-size:18px;line-height:1.6;display:block;-webkit-line-clamp:unset;color:#e8e8e8;white-space:normal;">'+mdToHtml(p.scope)+'</div></div></div>':'')+
          '</div>'+
-         // RIGHT: reach, ppe, graphic location
+         // RIGHT (6.158): graphic location and qty first, then equipment (or reach and PPE), then the lift. Never scrolls on desktop.
          (hasRight?
-           '<div style="width:260px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.1);overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:18px;">'+
-             eqHtml+
-             (!eq.length&&p.reach?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">Reach</div><div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.reach,'#f0a500','rgba(240,165,0,0.35)','rgba(240,165,0,0.08)')+'</div></div>':'')+
-             (!eq.length&&p.ppe?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">PPE Required</div><div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.ppe,'#f97316','rgba(249,115,22,0.35)','rgba(249,115,22,0.08)')+'</div></div>':'')+
+           '<div id="agc-scope-col" class="agc-scope-col">'+
+             (p.graphLoc?_col('Graphic Location','<div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.graphLoc,'#92C64B','rgba(146,198,75,0.35)','rgba(146,198,75,0.08)')+'</div>'):'')+
              crewHtml+
-             (p.graphLoc?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">Graphic Location</div><div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.graphLoc,'#92C64B','rgba(146,198,75,0.35)','rgba(146,198,75,0.08)')+'</div></div>':'')+
+             eqHtml+
+             (!eq.length&&p.reach?_col('Reach','<div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.reach,'#f0a500','rgba(240,165,0,0.35)','rgba(240,165,0,0.08)')+'</div>'):'')+
+             (!eq.length&&p.ppe?_col('PPE Required','<div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.ppe,'#f97316','rgba(249,115,22,0.35)','rgba(249,115,22,0.08)')+'</div>'):'')+
              liftHtml+
            '</div>'
          :'')+
        '</div>';
+     try{_agcAccFit('');}catch(e){}
    }
  });
 
@@ -21406,12 +21503,15 @@ function renderDetails(opts){
      const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
      const isMatch=(d,ref)=>ref&&d.getFullYear()===ref.getFullYear()&&d.getMonth()===ref.getMonth()&&d.getDate()===ref.getDate();
      const isToday=(d)=>isMatch(d,today);
+     /* 6.158: revisit dates are trips 2, 3, ... (the scheduled date is trip 1); each is a green dot on its own day */
+     const _trips158=(p.revisits||[]).map(r=>toDate(r)).filter(Boolean);
+     let _offSeen158=false,_agcSeen158=false;
 
      // Which grid rows contain a project date (scheduled or due)? Those rows
      // get double the height of others so the important week(s) read bigger.
      const totalRows=Math.ceil((firstDay+daysInMonth)/7);
      const projRows=new Set();
-     [projDate,dueDate].forEach(ref=>{
+     [projDate,dueDate].concat(_trips158).forEach(ref=>{
        if(!ref)return;
        if(ref.getFullYear()!==calYear||ref.getMonth()!==calMonth)return;
        projRows.add(Math.floor((firstDay+ref.getDate()-1)/7));
@@ -21443,6 +21543,17 @@ function renderDetails(opts){
        const dy=h.date.getDate();
        if(!holByDay[dy])holByDay[dy]=[];
        holByDay[dy].push(h);
+     });
+     /* 6.158 (Chris): a day AGC's office is closed shows on its own day of this month, red, the way a holiday does. Nothing above the calendar. */
+     ((window._agcExtras&&window._agcExtras.agcClosed)||[]).forEach(c=>{
+       const a=toDate(c.from), b=toDate(c.to||c.from)||a; if(!a)return;
+       const nm=String(c.name||'').replace(/\s*-?\s*AGC CLOSED\s*/i,' ').replace(/\s+/g,' ').trim()||'Office closed';
+       const t=new Date(a.getFullYear(),a.getMonth(),a.getDate(),12);
+       for(let n=0;n<62&&t.getTime()<=b.getTime()+3600000;n++,t.setDate(t.getDate()+1)){
+         if(t.getFullYear()!==calYear||t.getMonth()!==calMonth)continue;
+         const dy=t.getDate(); if(!holByDay[dy])holByDay[dy]=[];
+         holByDay[dy].unshift({date:new Date(t),name:nm,region:'AGC office',type:'AGC closed'}); _agcSeen158=true;
+       }
      });
 
      // ── CONFLICT DETECTION ─────────────────────────────────────────────────
@@ -21504,6 +21615,11 @@ function renderDetails(opts){
            cellAnim='box-shadow:inset 0 0 0 1px rgba(239,68,68,0.5);';
          }
        }
+       /* 6.158: a day the installer marked off (amber hatch), and which trip this day is, if any */
+       const _k158=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+       const _off158=(window._agcTimeOff||[]).find(t=>_k158>=t.from&&_k158<=(t.to||t.from));
+       if(_off158){_offSeen158=true;if(!isHoliday){cellBg='repeating-linear-gradient(135deg,rgba(240,165,0,0.28) 0 8px,rgba(240,165,0,0.10) 8px 16px)';cellAnim='box-shadow:inset 0 0 0 1px rgba(240,165,0,0.6);';}}
+       const _trip158=_trips158.findIndex(r=>isMatch(date,r));
        // Holiday text block: larger, WHITE, centered. Two variants:
        //   - holidayTextBlock: fills the remaining vertical space below a circle
        //     (used when the cell also has a Scheduled or Due marker on top)
@@ -21531,7 +21647,7 @@ function renderDetails(opts){
          // the SVG route overlay that runs through the cell center.
          if(isHoliday){
            cells+='<div class="'+rangeClass.trim()+'" title="'+esc(holidayTitle)+'" style="display:flex;flex-direction:column;align-items:center;padding:4px;min-height:0;position:relative;z-index:3;background:'+cellBg+';border-radius:8px;'+cellAnim+'">'
-             +'<div style="position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:800;letter-spacing:1.2px;color:#fff;text-transform:uppercase;">Holiday</div>'
+             +'<div style="position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:800;letter-spacing:1.2px;color:#fff;text-transform:uppercase;">'+(holidaysToday[0].type==='AGC closed'?'AGC closed':'Holiday')+'</div>'
              +'<div data-cal-sched="1" class="cal-sched-circle" style="position:relative;z-index:2;width:clamp(22px,62%,42px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-weight:900;font-size:14px;animation:calSchedPulse 1.8s ease-in-out infinite;will-change:transform,background,box-shadow;">'+d+'</div>'
              +'<div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;line-height:1.2;padding:0 4px;width:100%;">'
                +'<div style="font-size:11px;font-weight:700;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(holidaysToday[0].name)+'</div>'
@@ -21543,6 +21659,13 @@ function renderDetails(opts){
              +'<div data-cal-sched="1" class="cal-sched-circle" style="position:relative;z-index:2;width:clamp(22px,62%,42px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-weight:900;font-size:14px;animation:calSchedPulse 1.8s ease-in-out infinite;will-change:transform,background,box-shadow;">'+d+'</div>'
              +'</div>';
          }
+       } else if(_trip158>=0){
+         // 6.158: a revisit. A steady green dot with its trip number under it (the first trip is the pulsing one).
+         cells+='<div class="'+rangeClass.trim()+'" title="Trip '+(_trip158+2)+(isHoliday?' · '+esc(holidayTitle):'')+'" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:0;position:relative;z-index:3;background:'+cellBg+';border-radius:8px;'+cellAnim+'">'
+           +'<div data-cal-trip="'+(_trip158+2)+'" style="position:relative;z-index:2;width:clamp(20px,52%,36px);aspect-ratio:1;border-radius:50%;background:#92C64B;border:2px solid #d6f2a8;color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(146,198,75,0.45);">'+d+'</div>'
+           +'<div style="position:relative;z-index:2;font-size:9px;font-weight:900;letter-spacing:0.6px;text-transform:uppercase;color:#b7e07a;line-height:1;">Trip '+(_trip158+2)+'</div>'
+           +(isHoliday?'<div style="position:relative;z-index:2;font-size:8px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#fca5a5;line-height:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(holidaysToday[0].type==='AGC closed'?'AGC closed':holidaysToday[0].name)+'</div>':'')
+           +'</div>';
        } else if(isDueDay){
          // Due day — same symmetric flex-column pattern when it's also a holiday.
          // z-index:3 pushes the whole cell above the SVG route overlay (z:1) so
@@ -21551,7 +21674,7 @@ function renderDetails(opts){
          // can't bleed through and reduce the date number's contrast.
          if(isHoliday){
            cells+='<div class="'+rangeClass.trim()+'" title="'+esc(holidayTitle)+'" style="display:flex;flex-direction:column;align-items:center;padding:4px;min-height:0;position:relative;z-index:3;background:'+cellBg+';border-radius:8px;'+cellAnim+'">'
-             +'<div style="position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:800;letter-spacing:1.2px;color:#fff;text-transform:uppercase;">Holiday</div>'
+             +'<div style="position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:800;letter-spacing:1.2px;color:#fff;text-transform:uppercase;">'+(holidaysToday[0].type==='AGC closed'?'AGC closed':'Holiday')+'</div>'
              +'<div data-cal-due="1" style="position:relative;z-index:2;width:clamp(22px,62%,42px);aspect-ratio:1;border-radius:50%;background:#3a1414;border:2px solid #ef4444;color:#f87171;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(239,68,68,0.45);">'+d+'</div>'
              +'<div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;line-height:1.2;padding:0 4px;width:100%;">'
                +'<div style="font-size:11px;font-weight:700;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(holidaysToday[0].name)+'</div>'
@@ -21631,40 +21754,36 @@ function renderDetails(opts){
            '</div>';
          })()
        : '';
-     /* PORTAL 6.156 (Chris, Nov 24 2026): facts under the two dates. Each one shows only when there is something to show:
-        store hours on the install day (click = the whole week), how firm the date is and AGC's note on it, why the job is
-        delayed, the revisit dates, and AGC's office being closed on the install day (or soon). */
+     /* PORTAL 6.158 (Chris, Nov 24 2026): no row of boxes above the calendar. Store hours, how firm the date is, AGC's note on it,
+        why the job is delayed and "you marked this day off" are one short line each inside the Scheduled box. AGC's closed days,
+        the trips and the installer's time off are drawn on the calendar. */
      const _x=_agcX(p), _DN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-     const _fact=(label,body,color,click)=>'<div'+(click?' onclick="'+click+'" title="Click for more"':'')+' style="flex:0 1 auto;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:3px;padding:8px 12px;border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-left:3px solid '+color+';'+(click?'cursor:pointer;':'')+'"><div class="d-label" style="font-size:9px;margin:0;">'+label+'</div><div class="d-val" style="font-size:13px;line-height:1.35;white-space:pre-line;">'+body+'</div></div>';
-     let factsHtml='';
+     _agcTimeOffCheck();
+     const _sub=[], _one=(html,full)=>'<span title="'+esc(full||'')+'" style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+html+'</span>';
      if(_x.stores&&_x.stores.length){
        const dn=projDate?_DN[projDate.getDay()]:'';
-       const rows=_x.stores.slice(0,3).map(st=>{
-         const lines=String(st.hours||'').split('\n').map(l=>l.trim()).filter(Boolean);
+       const onFile=(st)=>String(st.hours||'').trim()&&!/not on file/i.test(st.hours);
+       let txt='';
+       if(_x.stores.length===1&&onFile(_x.stores[0])){
+         const lines=String(_x.stores[0].hours||'').split('\n').map(l=>l.trim()).filter(Boolean);
          const hit=dn?lines.find(l=>l.toLowerCase().indexOf(dn.toLowerCase())===0):'';
-         const val=hit?hit.slice(dn.length).trim():(lines.length?'':'not on file');
-         return val?((_x.stores.length>1?esc(st.store)+': ':'')+esc(val)):'';
-       }).filter(Boolean);
-       if(rows.length)factsHtml+=_fact('Store hours'+(dn?', '+dn:''),rows.join('\n')+(_x.stores.length>3?'\n+ '+(_x.stores.length-3)+' more':''),'rgba(146,198,75,0.6)','_agcStoreHours()');
-       else if(_x.stores.some(st=>String(st.hours||'').trim()&&!/not on file/i.test(st.hours)))factsHtml+=_fact('Store hours','See the whole week','rgba(146,198,75,0.6)','_agcStoreHours()');
+         txt=hit?('Store hours '+dn+': '+hit.slice(dn.length).trim()):'Store hours: see the week';
+       } else if(_x.stores.length>1&&_x.stores.some(onFile)) txt='Store hours'+(dn?' '+dn:'')+': '+_x.stores.length+' stores, see each one';
+       if(txt)_sub.push('<span id="agc-sched-hours" onclick="_agcStoreHours()" title="See the whole week" style="cursor:pointer;color:#b7e07a;text-decoration:underline;text-decoration-color:rgba(146,198,75,0.5);text-underline-offset:3px;white-space:nowrap;">'+esc(txt)+'</span>');
      }
-     if(p.dateStatus||p.dateNote){
-       const c=/FIRM/i.test(p.dateStatus)?'#92C64B':/TENTATIVE/i.test(p.dateStatus)?'#f0a500':/MOVED/i.test(p.dateStatus)?'#60a5fa':'rgba(255,255,255,0.4)';
-       factsHtml+=_fact('Date status',(p.dateStatus?'<span style="color:'+c+';font-weight:900;">'+esc(p.dateStatus)+'</span>':'')+(p.dateStatus&&p.dateNote?'\n':'')+esc(p.dateNote),c);
+     if(p.dateStatus){
+       const c=/FIRM/i.test(p.dateStatus)?'#92C64B':/TENTATIVE/i.test(p.dateStatus)?'#f0a500':/MOVED/i.test(p.dateStatus)?'#60a5fa':'#c0c0c0';
+       _sub.push('<span style="color:'+c+';font-weight:900;white-space:nowrap;">'+esc(p.dateStatus)+'</span>');
      }
-     if(p.delayReason&&_isProjectDelayed(p))factsHtml+=_fact('Why it is delayed',esc(p.delayReason),'rgba(239,68,68,0.7)');
-     if(p.revisits&&p.revisits.length)factsHtml+=_fact(p.revisits.length>1?'Revisit dates':'Revisit date',p.revisits.map(r=>esc(safeDate(r,{weekday:'short',month:'short',day:'numeric',year:'numeric'})||r)).join('\n'),'rgba(96,165,250,0.7)');
-     _agcTimeOffCheck();
-     if(projDate){   /* 6.157 */
+     if(p.dateNote)_sub.push(_one(esc(p.dateNote),p.dateNote));
+     if(p.delayReason&&_isProjectDelayed(p))_sub.push(_one('<span style="color:#fca5a5;">Delayed: '+esc(p.delayReason)+'</span>',p.delayReason));
+     if(projDate){
        const k=projDate.getFullYear()+'-'+String(projDate.getMonth()+1).padStart(2,'0')+'-'+String(projDate.getDate()).padStart(2,'0');
        const off=(window._agcTimeOff||[]).find(t=>k>=t.from&&k<=(t.to||t.from));
-       if(off)factsHtml+=_fact('You marked this day off',(off.kind==='unavailable'?'Not available':'On holiday')+(off.note?'\n'+esc(off.note):'')+'\nCall or email AGC if this job has to move.','rgba(239,68,68,0.8)');
+       if(off)_sub.push(_one('<span style="color:#fca5a5;">You marked this day off. Call or email AGC if this job has to move.</span>',''));
      }
-     if(_x.closedOnInstall)factsHtml+=_fact('AGC office closed on install day',esc(String(_x.closedOnInstall).replace(/\s*AGC CLOSED\s*/i,' ').replace(/\s+/g,' ').trim()),'rgba(240,165,0,0.8)');
-     else{
-       const ex=window._agcExtras, soon=(ex&&ex.agcClosed||[]).filter(c=>{const d=toDate(c.from);return d&&(d.getTime()-Date.now())<45*86400000;}).slice(0,2);
-       if(soon.length)factsHtml+=_fact('AGC office closed',soon.map(c=>esc(String(c.name||'').replace(/\s*-?\s*AGC CLOSED\s*/i,' ').replace(/\s+/g,' ').trim()+': '+(safeDate(c.from,{month:'short',day:'numeric'})||c.from)+(c.to&&c.to!==c.from?' to '+(safeDate(c.to,{month:'short',day:'numeric'})||c.to):''))).join('\n'),'rgba(255,255,255,0.4)');
-     }
+     const subHtml=_sub.length?'<div id="agc-sched-sub" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px 16px;font-size:13px;font-weight:700;color:#c8c8c8;line-height:1.45;">'+_sub.join('')+'</div>':'';
+     const _shortD=(d)=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
      el.innerHTML=
        _sectionHeader('Schedule')+
        '<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;">'+
@@ -21672,10 +21791,9 @@ function renderDetails(opts){
        '<div style="flex:1;min-height:0;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden;">'+
          // Date fields — enlarged, both white text
          '<div style="display:grid;grid-template-columns:'+(ds&&due?'1fr 1fr':'1fr')+';gap:12px;flex-shrink:0;">'+
-           (ds?'<div style="display:flex;flex-direction:column;gap:6px;"><div class="d-label" style="font-size:11px;color:#92C64B;">Scheduled</div><div class="d-box" style="padding:14px 16px;border-left:3px solid rgba(146,198,75,0.6);"><div class="d-val" style="font-size:20px;font-weight:900;color:#fff;">'+esc(ds)+'</div></div></div>':'')+
+           (ds?'<div style="display:flex;flex-direction:column;gap:6px;"><div class="d-label" style="font-size:11px;color:#92C64B;">Scheduled</div><div class="d-box" style="padding:14px 16px;border-left:3px solid rgba(146,198,75,0.6);"><div class="d-val" style="font-size:20px;font-weight:900;color:#fff;">'+esc(ds)+'</div>'+subHtml+'</div></div>':'')+
            (due?'<div style="display:flex;flex-direction:column;gap:6px;"><div class="d-label" style="font-size:11px;color:#f87171;">Due Date</div><div class="d-box" style="padding:14px 16px;border-left:3px solid rgba(239,68,68,0.6);"><div class="d-val" style="font-size:20px;font-weight:900;color:#fff;">'+esc(due)+'</div></div></div>':'')+
          '</div>'+
-         (factsHtml?'<div id="agc-sched-facts" style="display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0;max-height:34%;overflow-y:auto;">'+factsHtml+'</div>':'')+
          // Calendar — flex:1 so it fills all remaining space
          '<div style="flex:1;min-height:0;background:#000;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;display:flex;flex-direction:column;">'+
            '<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;flex-shrink:0;">'+
@@ -21697,12 +21815,19 @@ function renderDetails(opts){
            (projDate?'<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:#92C64B;box-shadow:0 0 8px rgba(146,198,75,0.5);"></div><span style="font-size:11px;color:#c0c0c0;">Scheduled Date</span></div>':'')+
            (dueDate?'<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.6);"></div><span style="font-size:11px;color:#c0c0c0;">Due Date</span></div>':'')+
            '<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,0.5);"></div><span style="font-size:11px;color:#c0c0c0;">Today</span></div>'+
+           (_trips158.length?'<div id="agc-sched-trips" style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:#92C64B;border:2px solid #d6f2a8;box-sizing:border-box;"></div><span style="font-size:11px;color:#c0c0c0;">'+(projDate?['Trip 1: '+_shortD(projDate)]:[]).concat(_trips158.map((r,i)=>'Trip '+(i+2)+': '+_shortD(r))).join(' &middot; ')+'</span></div>':'')+
+           (_agcSeen158?'<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:rgba(239,68,68,0.45);border:1px solid rgba(239,68,68,0.7);"></div><span style="font-size:11px;color:#c0c0c0;">AGC office closed</span></div>':'')+
+           (_offSeen158?'<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:repeating-linear-gradient(135deg,rgba(240,165,0,0.9) 0 3px,rgba(240,165,0,0.3) 3px 6px);"></div><span style="font-size:11px;color:#c0c0c0;">Your time off</span></div>':'')+
+           '<button id="agc-sched-timeoff" onclick="_agcGoTimeOff()" title="Mark the days you are on holiday or not available" '+
+           'style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;'+
+           'background:rgba(240,165,0,0.14);color:#fff;font-family:var(--font);font-size:11px;font-weight:900;'+
+           'text-transform:uppercase;letter-spacing:1px;border:1px solid rgba(240,165,0,0.55);cursor:pointer;">Time off</button>'+
            // "See All Jobs" CTA — pushed to the right side of the legend
            // row via margin-left:auto. Posts to Wix to switch back to the
            // home iframe (HTML3) and signal it to open its fullscreen
            // calendar. See goToHomeCalendar() for the postMessage contract.
            '<button onclick="goToHomeCalendar()" title="See all installer jobs across the company on the full calendar" '+
-           'style="margin-left:auto;display:flex;align-items:center;gap:9px;padding:10px 18px;border-radius:10px;'+
+           'style="display:flex;align-items:center;gap:9px;padding:10px 18px;border-radius:10px;'+
            'background:#000;color:#fff;font-family:var(--font);font-size:11px;font-weight:900;'+
            'text-transform:uppercase;letter-spacing:1px;border:1px solid rgba(255,255,255,0.18);cursor:pointer;'+
            'transition:all 0.18s;" '+
@@ -21713,6 +21838,11 @@ function renderDetails(opts){
          '</div>'+
        '</div>'+
        '</div>';
+     /* 6.158: when the job has revisits, the scheduled day says "Trip 1" under its dot */
+     if(_trips158.length){ try{ const c=el.querySelector('#cal-route-grid [data-cal-sched]'); if(c&&c.parentElement&&!c.parentElement.querySelector('.agc-trip1')){
+       const l=document.createElement('div'); l.className='agc-trip1'; l.textContent='Trip 1';
+       l.style.cssText='position:relative;z-index:2;font-size:9px;font-weight:900;letter-spacing:0.6px;text-transform:uppercase;color:#b7e07a;line-height:1;margin-top:6px;';
+       if(getComputedStyle(c.parentElement).flexDirection!=='column'){ c.parentElement.style.flexDirection='column'; c.parentElement.appendChild(l); } else c.insertAdjacentElement('afterend',l); } }catch(e){} }
      // Draw the connecting route (scheduled → due) AFTER the DOM is laid out so we can measure cell positions.
      const drawCalRoute=()=>{
        const grid=document.getElementById('cal-route-grid');
@@ -24669,7 +24799,7 @@ function _normalizeExternalUrl(raw){
  // Looks for the first http(s):// substring and takes everything until
  // whitespace or end of string.
  const urlMatch=url.match(/https?:\/\/[^\s<>"]+/i);
- if(urlMatch)return urlMatch[0];
+ if(urlMatch)return (urlMatch[0].indexOf('(')<0)?urlMatch[0].replace(/[)\]]+$/,''):urlMatch[0];   /* 6.158: a link written [TEXT](url) lost its last bracket */
  // Protocol-relative URL: "//drive.google.com/..."
  if(url.indexOf('//')===0)return 'https:'+url;
  // Already has a protocol we recognize
@@ -25113,7 +25243,7 @@ async function fetchExistingStoreCloseouts(projectId){
    const allRecords=[];
    let offset=null;
    do{
-     const url='https://api.airtable.com/v0/'+BASE+'/'+STORE_CLOSEOUTS_TABLE+'?pageSize=100'+(offset?'&offset='+encodeURIComponent(offset):'');
+     const url='https://api.airtable.com/v0/'+BASE+'/'+STORE_CLOSEOUTS_TABLE+'?pageSize=100&filterByFormula='+encodeURIComponent("FIND('"+projectId+"',ARRAYJOIN({RELATED PROJECT}))")+(offset?'&offset='+encodeURIComponent(offset):'');   /* 6.158: this project only */
      const r=await fetch(url,{headers:hdrs()});
      const d=await r.json();
      if(!r.ok){
@@ -25261,7 +25391,8 @@ async function buildStoreCloseouts(){
  }
  const projectChanged=(_storeCloseoutsProjectId!==p.id);
  if(projectChanged){
-   list.innerHTML='<div style="display:flex;flex:1;align-items:center;justify-content:center;gap:10px;color:#909090;font-size:12px;padding:20px;"><div style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.15);border-top-color:#92C64B;border-radius:50%;animation:spin 0.85s linear infinite;"></div>Loading...</div>';
+   list.innerHTML='<div style="display:flex;flex:1;align-items:center;justify-content:center;gap:10px;color:#909090;font-size:12px;padding:20px;"><div style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.15);border-top-color:#92C64B;border-radius:50%;animation:spin 0.85s linear infinite;"></div>Loading closeouts...</div>'.replace('display:flex;flex:1;','display:flex;flex:0 0 auto;')+
+     storeIds.slice(0,60).map(sid=>'<div style="display:flex;flex-direction:column;gap:1px;padding:9px 11px;margin-bottom:6px;border-radius:9px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);opacity:0.6;"><div style="font-size:12px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(storeMeta[sid].name)+'</div><div style="font-size:10px;font-weight:600;color:#7a7a7a;text-transform:uppercase;letter-spacing:0.5px;">Loading...</div></div>').join('');   /* 6.158: the stores show at once */
    _storeCloseouts=await fetchExistingStoreCloseouts(p.id);
    _storeCloseoutsProjectId=p.id;
    _activeStoreId=null;
@@ -37569,7 +37700,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6157; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6158; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');

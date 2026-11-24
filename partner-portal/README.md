@@ -164,6 +164,20 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   - Needs three backend endpoints (`timeOff`, `timeOffAdd`, `timeOffDelete`), described in
     [`wix/portal-6.157-time-off.md`](wix/portal-6.157-time-off.md). Published in Wix on Nov 24 2026. The Time off button
     stays hidden whenever those endpoints do not answer.
+- My Projects after Chris looked at Patrick's portal (since 6.158, Nov 24 2026):
+  - Scope, right column (desktop): every block opens and closes on its title and the column never scrolls. What does not
+    fit is closed from the bottom up; opening one closes others; a block too long on its own gets "See all" (pop-up).
+    Order: Graphic Location, Qty installers, Equipment to bring (or Reach, PPE), Lift. Important Notes and Scope of Work
+    fold on their titles too (a long Scope of Work still scrolls inside its own box).
+  - Schedule: nothing sits above the calendar any more. Store hours, date status and note, delay reason and "you marked
+    this day off" are one short line each inside the Scheduled box. AGC's closed days show on their own days of the month,
+    red, like a holiday. Revisit dates are green dots labelled Trip 2, Trip 3 (the scheduled day is Trip 1), listed in the
+    legend with their dates. The installer's time off is hatched amber. A Time off button opens the form in My Calendar.
+  - Weather: a bar at the top says where the forecast is for ("Calgary, AB") and that it comes from Open-Meteo.
+  - Closeout: asks the backend for this project's closeouts only (it asked for every project the installer has), and the
+    store names show while that loads. The archived view's Google Drive link no longer keeps a stray ")".
+  - Home: the Time off button in My Calendar is always shown; a failed load says why in the panel.
+  - A layout image that will not load becomes a file tile (its old inline handler had a quoting slip).
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 
