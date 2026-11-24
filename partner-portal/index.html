@@ -12965,7 +12965,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.160</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.161</span>
  </div>
 
  <div class="hero">
@@ -21462,7 +21462,9 @@ function renderDetails(opts){
      /* PORTAL 6.156 (Chris, Nov 24 2026): the right column. "Equipment to bring" is AGC's approved list for this job and takes
         the place of Reach and PPE Required (the same information twice). A job with no approved list still shows Reach and PPE.
         Then crew size, graphic location and, when the job has one, the lift. */
-     const eq=_agcX(p).equipment||[];
+     /* 6.161 (Chris: "way too many"): a rule that says there is nothing to bring ("Service · no equipment (charges and notes): Nothing
+        extra ...") is not a piece of equipment, so it is not listed. The rest of the matching is done in Airtable. */
+     const eq=(_agcX(p).equipment||[]).filter(r=>{const t=String(r||'');return t.trim()&&!/no equipment\s*\(/i.test(t)&&!/:\s*nothing extra\b/i.test(t);});
      const _col=(label,inner)=>_agcAcc(label.toLowerCase().replace(/[^a-z]+/g,'-'),label==='Crew size'?'Qty installers':label,inner,label==='Equipment to bring'?eq.length:0);   /* 6.158: each block opens and closes */
      /* 6.159 (Chris): one block per piece of equipment (its title is the place or the kind, the body is what to bring), under a
         plain heading with the count. Not one block for the whole list. A line with no ": " is a title on its own. */
@@ -37717,7 +37719,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6160; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6161; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');
