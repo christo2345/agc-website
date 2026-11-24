@@ -6590,6 +6590,7 @@ window.AGC_ALFRED_PORTAL = (function(){
     p.date = toDate(pick(f, 'DATE SCHEDULED:', 'DATE SCHEDULED')) || toDate(p.whenText);
     p.time = S(pick(f, 'TIME:', 'TIME'));
     p.due = toDate(pick(f, 'DUE DATE:', 'DUE DATE.', 'DUE DATE'));
+    if (p.due && p.date && p.due.toDateString() === p.date.toDateString()) p.due = null;   /* 6.156: due date = install date: said once */
     var names = list(pick(f, 'NAME (from STORE NAME(s) & ADDRESS(es))', 'Name (from STORE NAME(s) & ADDRESS(es))', 'STORE NAME(s)', 'STORE NAME'));
     if (!names.length) names = list(f['STORE NAME(s) & ADDRESS(es)']);
     p.stores = names;
@@ -12899,7 +12900,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.155</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.156</span>
  </div>
 
  <div class="hero">
@@ -18646,6 +18647,7 @@ function showInvoiceSuccess(){
  <\!-- PHOTOS + CLOSEOUT TAB -->
  <div class="tab-pane" id="pane-photos" style="flex-direction:column;overflow:hidden;">
  <div id="closeout-section-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;color:#fff;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.22);"><span>Closeout</span><span class="hdr-status-slot"></span></div>
+ <div id="agc-closeout-bar" style="display:none;flex-shrink:0;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.14);"></div>
  <\!-- LEGACY CLOSEOUT VIEW — shown ONLY when the project was closed out
       under the OLD workflow (status = INVOICE RECEIVED or INVOICE PAID,
       and INSTALLER CLOSEOUT NOTES is non-empty). In that case we hide the
@@ -19913,6 +19915,85 @@ function refreshHeaderStatusSlots(){
  document.querySelectorAll('.hdr-status-slot').forEach(slot=>{slot.innerHTML=html;});
 }
 
+/* ═══ PORTAL 6.156 (Chris, Nov 24 2026): helpers for what My Projects now shows ═══════════════════════════════════════════
+   _agcClean      a select value without its emoji ("✅ FIRM" = "FIRM")
+   _agcX(p)       what the shell fetched for this project (parent.AGC_PORTAL_EXTRAS): store hours, equipment to bring, the
+                  installer's own bill status, AGC closed on install day. Empty until it arrives; the open section repaints then.
+   _agcPopup      a basic pop-up (title, content, close on the X, a click outside, or Escape)
+   _agcCloseoutBar  the row under the Closeout header: Photo requirements, Invoicing requirements, the invoice and its status */
+function _agcClean(s){return String(s||'').replace(/[^\w\s&\/().,'-]/g,' ').replace(/\s+/g,' ').trim();}
+function _agcX(p){const x=window._agcExtras;return (x&&x.byId&&p&&x.byId[p.id])||{stores:[],equipment:[],bill:[],closedOnInstall:''};}
+function _agcLoadExtras(){
+ if(window._agcExtrasAsked)return; window._agcExtrasAsked=true;
+ try{
+   const fn=window.parent&&window.parent!==window&&window.parent.AGC_PORTAL_EXTRAS;
+   if(typeof fn!=='function'){window._agcExtrasAsked=false;return;}
+   fn().then(x=>{
+     if(!x){window._agcExtrasAsked=false;return;}
+     window._agcExtras=x;
+     try{
+       if(_selected&&_currentTab==='details'&&window._sectionMap&&(_currentSection==='scope'||_currentSection==='schedule')&&window._sectionMap[_currentSection])window._sectionMap[_currentSection].render();
+       if(_selected&&_currentTab==='photos')_agcCloseoutBar();
+     }catch(e){}
+   },()=>{window._agcExtrasAsked=false;});
+ }catch(e){window._agcExtrasAsked=false;}
+}
+function _agcPopup(title,html){
+ _agcPopupClose();
+ const ov=document.createElement('div'); ov.id='agc-popup';
+ ov.style.cssText='position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,0.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px;';
+ ov.innerHTML='<div role="dialog" aria-modal="true" aria-label="'+esc(title)+'" style="width:min(640px,100%);max-height:100%;display:flex;flex-direction:column;background:#161616;border:1px solid rgba(255,255,255,0.22);border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,0.7);overflow:hidden;">'+
+   '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.16);flex-shrink:0;">'+
+     '<div style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;color:#fff;">'+esc(title)+'</div>'+
+     '<button onclick="_agcPopupClose()" aria-label="Close" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.25);background:#000;color:#fff;font-size:16px;font-weight:900;cursor:pointer;line-height:1;">\u2715</button>'+
+   '</div>'+
+   '<div style="padding:18px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;color:#e0e0e0;font-size:14px;line-height:1.55;">'+html+'</div>'+
+ '</div>';
+ ov.addEventListener('click',e=>{if(e.target===ov)_agcPopupClose();});
+ document.body.appendChild(ov);
+}
+function _agcPopupClose(){const o=document.getElementById('agc-popup');if(o)o.remove();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')_agcPopupClose();});
+const _AGC_BTN='display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;background:#000;color:#fff;font-family:var(--font);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;border:1px solid rgba(255,255,255,0.22);cursor:pointer;text-decoration:none;';
+/* Photo requirements: AGC Photo Requirements holds a link (the AGC page, or the video). The pop-up plays a YouTube video
+   in place and gives every other link as a button; any words written with it are shown above. */
+function _agcPhotoReq(){
+ const p=_selected; if(!p||!p.photoReq)return;
+ const urls=[]; const text=String(p.photoReq).replace(/\[([^\]]*)\]\((https?:[^)\s]+)\)/g,(m,t,u)=>{urls.push(u);return ' ';}).replace(/https?:\/\/[^\s)<>]+/g,u=>{urls.push(u);return ' ';}).replace(/[*_`#>]+/g,' ').replace(/\s+/g,' ').trim();
+ const seen=new Set(); let html=text?'<div>'+esc(text)+'</div>':'';
+ urls.filter(u=>{if(seen.has(u))return false;seen.add(u);return true;}).forEach(u=>{
+   const yt=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
+   if(yt)html+='<div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,0.16);"><iframe src="https://www.youtube-nocookie.com/embed/'+esc(yt[1])+'" title="AGC photo requirements video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0;"></iframe></div>';
+   html+='<div><a href="'+esc(u)+'" target="_blank" rel="noopener" style="'+_AGC_BTN+'">'+(yt?'Open the video in a new tab':'Open the photo requirements')+'</a></div>';
+ });
+ if(!html)return;
+ _agcPopup('Photo requirements',html);
+}
+function _agcStoreHours(){
+ const p=_selected; const st=(_agcX(p).stores||[]).filter(x=>x&&x.store); if(!p||!st.length)return;
+ _agcPopup('Store hours',st.map(x=>'<div class="d-box" style="padding:12px 14px;"><div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:6px;">'+esc(x.store)+'</div>'+
+   (x.address?'<div style="font-size:12px;color:#909090;margin-bottom:8px;">'+esc(x.address)+'</div>':'')+
+   '<div style="font-size:13px;color:#e0e0e0;white-space:pre-line;line-height:1.6;">'+esc(String(x.hours||'not on file').trim())+'</div></div>').join('')+
+   '<div style="font-size:12px;color:#909090;">Hours as listed on Google Maps. A time or after-hours note on the Scheduled date comes first.</div>');
+}
+function _agcInvReq(){
+ const p=_selected; if(!p||!p.invReq||!p.invReq.length)return;
+ const a=p.invReq[0]; openLightbox(a.url,a.filename||'Invoicing requirements.pdf');
+}
+function _agcInvoiceOpen(i){
+ const p=_selected; const a=p&&p.invoiceFiles&&p.invoiceFiles[i]; if(a)openLightbox(a.url,a.filename||'Invoice.pdf');
+}
+function _agcCloseoutBar(){
+ const bar=document.getElementById('agc-closeout-bar'); const p=_selected; if(!bar)return;
+ if(!p){bar.style.display='none';return;}
+ const x=_agcX(p); let h='';
+ if(p.photoReq)h+='<button onclick="_agcPhotoReq()" style="'+_AGC_BTN+'">Photo requirements</button>';
+ if(p.invReq&&p.invReq.length)h+='<button onclick="_agcInvReq()" style="'+_AGC_BTN+'">Invoicing requirements</button>';
+ (p.invoiceFiles||[]).slice(0,3).forEach((a,i)=>{h+='<button onclick="_agcInvoiceOpen('+i+')" title="'+esc(a.filename||'')+'" style="'+_AGC_BTN+'border-color:rgba(146,198,75,0.55);">Your invoice'+((p.invoiceFiles.length>1)?' '+(i+1):'')+'</button>';});
+ if(x.bill&&x.bill.length)h+='<div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:700;color:#e0e0e0;line-height:1.4;">'+x.bill.slice(0,3).map(b=>'<div>'+esc(String(b))+'</div>').join('')+'</div>';
+ bar.innerHTML=h; bar.style.display=h?'flex':'none';
+}
+
 function parseProject(rec){
  const f=rec.fields||{};
  const thumbs=f['LAYOUTS & PLANS']||[];
@@ -19967,7 +20048,11 @@ function parseProject(rec){
    return typeof ps==='object'&&ps&&ps.name?ps.name:fStr(ps);
  })(),
  date:fStr(f['DATE & TIME SCHEDULED']||f['DATE & TIME SCHEDULED:']||f['DATE SCHEDULED:']||f['DATE SCHEDULED']||''),
- dueDate:fStr(f['DUE DATE:']||f['DUE DATE.']||f['DUE DATE']||''),
+ /* PORTAL 6.156 (Chris, Nov 24 2026): a due date on the same day as the scheduled date is not shown (Schedule, calendar, cards). */
+ dueDate:(()=>{const d=fStr(f['DUE DATE:']||f['DUE DATE.']||f['DUE DATE']||'');
+   try{const a=toDate(d),b=toDate(fStr(f['DATE & TIME SCHEDULED']||f['DATE & TIME SCHEDULED:']||f['DATE SCHEDULED:']||f['DATE SCHEDULED']||''));
+     if(a&&b&&a.toDateString()===b.toDateString())return '';}catch(e){}
+   return d;})(),
  amount:shared?'HOURLY PLUS COSTS':fNum(f['TOTAL BUDGET']||f['TOTAL PROFIT']||f['TOTAL COST']||''),
  billing:shared?'':billing,
  shared,
@@ -19986,7 +20071,7 @@ function parseProject(rec){
  pm:fStr(f['AGC PROJECT MANAGER:']||f['AGC PROJECT MANAGER']||f['PM Name']||''),
  pmDirect:fStr(f['PM Direct']||''),
  trackNum:fStr(f['TRACKING NUMBER']||f['TRACKING NUMBER(S)']||''),
- pkgs:fStr(f['Number of Pkgs']||f['NUMBER OF PKGS']||''),
+ pkgs:fStr(f['Number of PKGS']||f['Number of Pkgs']||f['NUMBER OF PKGS']||''),   /* 6.156: the field is "Number of PKGS" (it never matched, so packages never showed) */
  shippingCo:fStr(f['SHIPPING CO.']||f['SHIPPING COMPANY']||''),
  shippingTo:fStr(f['SHIPPING TO:']||f['SHIPPING TO']||''),
  dateShipped:fStr(f['DATE SHIPPED']||''),
@@ -19997,6 +20082,25 @@ function parseProject(rec){
  agcDirectives:f['AGC DIRECTIVES:']||f['AGC DIRECTIVES']||[],
  installerPhotos:f['INSTALLER PHOTOS']||[],
  closeoutNotes:fStr(f['INSTALLER CLOSEOUT NOTES']||''),
+ /* PORTAL 6.156 (Chris, Nov 24 2026): more of the job on the page. The first five were already sent by the backend and only
+    ALFRED used them. The rest appear as soon as the backend sends them (wix/portal-6.156-fields.md); until then they are empty. */
+ crew:fStr(f['QTY WORKERS']||''),
+ shipAddr:fStr(f['SHIPPING ADDRESS:']||'').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1').replace(/[*_`]+/g,'').trim(),
+ photoReq:fStr(f['AGC Photo Requirements']||''),
+ invReq:(Array.isArray(f['INVOICING REQUIREMENTS PDF'])?f['INVOICING REQUIREMENTS PDF']:[]).filter(a=>a&&a.url),
+ invoiceFiles:(Array.isArray(f[' INVOICE FOR REVIEW'])?f[' INVOICE FOR REVIEW']:Array.isArray(f['INVOICE FOR REVIEW'])?f['INVOICE FOR REVIEW']:[]).filter(a=>a&&a.url),
+ dateStatus:_agcClean(fStr(f['📅 DATE STATUS']||'')),
+ dateNote:fStr(f['📅 DATE NOTE']||'').trim(),
+ revisits:[1,2,3,4,5,6,7,8,9,10].map(i=>fStr(f['REVISIT DATE '+i+':']||'')).filter(Boolean),
+ delayReason:fStr(f['REASON PROJECT IS DELAYED']||'').trim(),
+ lift:{status:fStr(f['LIFT STATUS']||''),type:fStr(f['Aerial Lift Type (from Aerial Lifts)']||'').trim(),supplier:fStr(f['Supplier (from Aerial Lifts)']||'').trim(),
+   details:fStr(f['AERIAL LIFT DETAILS']||'').trim(),days:fStr(f['TOTAL DAYS REQUIRED']||'')},
+ /* AGC's own notes on these two are written for the office too: the log lines (card sent, PDF drafted) are never shown */
+ wxNote:fStr(f['🌦️ WEATHER']||'').split('\n').filter(l=>l.trim()&&!/^\s*(🔔|📄)/.test(l)).join('\n').trim(),
+ trackByStore:fStr(f['📦 TRACKING BY STORE']||'').split('\n').filter(l=>l.trim()&&!/^\s*📄/.test(l)&&!/drafted to/i.test(l)).join('\n').trim(),
+ manifest:fStr(f['📦 SHIPPING MANIFEST']||'').trim(),
+ surveys:(Array.isArray(f['SURVEYS'])?f['SURVEYS']:[]).filter(a=>a&&a.url),
+ dataSheets2:(Array.isArray(f['Data Sheet (from Data Sheets)'])?f['Data Sheet (from Data Sheets)']:[]).filter(a=>a&&a.url),
  storeLogos:(()=>{
    const raw=f['LOGO (from STORE NAME(s) & ADDRESS(es))']||[];
    return Array.isArray(raw)?raw.map(a=>a&&(a.thumbnails?.large?.url||a.thumbnails?.small?.url||a.url)).filter(Boolean):[];
@@ -20552,6 +20656,7 @@ function openWxDay(i){
  <div style="display:flex;flex-direction:column;width:100%;height:100%;min-height:0;overflow:hidden;">
    <\!-- Day selector bar -->
    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.16);flex-shrink:0;background:rgba(0,0,0,0.2);">${daysBar}</div>
+   ${(_selected&&_selected.wxNote)?'<div id="agc-wx-note" style="flex-shrink:0;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.16);background:rgba(240,165,0,0.08);border-left:3px solid rgba(240,165,0,0.8);font-size:13px;font-weight:700;color:#fff;line-height:1.5;white-space:pre-line;max-height:120px;overflow-y:auto;"><div class="d-label" style="font-size:9px;margin:0 0 3px;">AGC install-day weather note</div>'+esc(_selected.wxNote)+'</div>':''}
    <\!-- TOP ROW: 2 cols (big emoji/temp + stats grid) -->
    <div style="display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.22);">
      <\!-- LEFT: big emoji + temp -->
@@ -20931,6 +21036,7 @@ function renderAllPdfThumbs(){
 function renderDetails(opts){
  const silent=opts&&opts.silent;
  const p=_selected; if(!p)return;
+ _agcLoadExtras();   /* 6.156: store hours, equipment, bill status, AGC closed days (once; the open section repaints when they arrive) */
  const st=STATUS_STYLES[p.status]||STATUS_STYLES.pending;
  let ds='',due='';
  // Scheduled is a formula field from Airtable — display raw so "DURING STORE HOURS" / "5:00 PM" info isn't lost
@@ -20942,7 +21048,7 @@ function renderDetails(opts){
  // file that appears in multiple lookup fields only shows up once.
  const _asArr=v=>Array.isArray(v)?v:(v?[v]:[]);
  const _seenUrls=new Set();
- const layouts=[..._asArr(p.layouts),..._asArr(p.dataSheet),..._asArr(p.agcDirectives)]
+ const layouts=[..._asArr(p.layouts),..._asArr(p.dataSheet),..._asArr(p.dataSheets2),..._asArr(p.agcDirectives),..._asArr(p.surveys)]   /* 6.156: + linked data sheets, + the site survey */
    .filter(f=>{
      if(!f||!f.url)return false;
      if(_seenUrls.has(f.url))return false;
@@ -21051,10 +21157,21 @@ function renderDetails(opts){
  });
 
  // 2. Scope
- if(p.notes||p.scope||p.reach||p.ppe||p.graphLoc) sections.push({id:'scope',label:'Scope',
+ if(p.notes||p.scope||p.reach||p.ppe||p.graphLoc||p.crew) sections.push({id:'scope',label:'Scope',
    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
    render(){
-     const hasRight=p.reach||p.ppe||p.graphLoc;
+     /* PORTAL 6.156 (Chris, Nov 24 2026): the right column. "Equipment to bring" is AGC's approved list for this job and takes
+        the place of Reach and PPE Required (the same information twice). A job with no approved list still shows Reach and PPE.
+        Then crew size, graphic location and, when the job has one, the lift. */
+     const eq=_agcX(p).equipment||[];
+     const _col=(label,inner)=>'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">'+label+'</div>'+inner+'</div>';
+     const eqHtml=eq.length?_col('Equipment to bring','<div style="display:flex;flex-direction:column;gap:7px;">'+eq.map(r=>{const t=String(r),k=t.indexOf(': ');
+       return '<div class="d-box" style="padding:9px 11px;border-left:3px solid rgba(240,165,0,0.6);"><div class="d-val" style="font-size:13px;line-height:1.4;">'+(k>0?'<span style="color:#f0a500;">'+esc(t.slice(0,k))+'</span><br>'+esc(t.slice(k+2)):esc(t))+'</div></div>';}).join('')+'</div>'):'';
+     const crewHtml=p.crew?_col('Crew size','<div class="chip-row" style="flex-wrap:wrap;gap:7px;"><span class="chip" style="color:#fff;border-color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.08);font-size:14px;padding:7px 14px;font-weight:700;">'+esc(p.crew)+(String(p.crew).trim()==='1'?' installer':' installers')+'</span></div>'):'';
+     const lf=p.lift||{}, liftOn=!!(lf.type||lf.details||lf.days||(lf.status&&!/^(NOT ORDERED YET|N\/A)$/i.test(lf.status)));
+     const liftHtml=liftOn?_col('Lift','<div class="d-box" style="padding:9px 11px;"><div class="d-val" style="font-size:13px;line-height:1.5;">'+
+       [lf.type&&esc(lf.type),lf.supplier&&('From '+esc(lf.supplier)),lf.days&&(esc(lf.days)+(String(lf.days).trim()==='1'?' day':' days')),lf.status&&('<span style="color:#f0a500;">'+esc(lf.status)+'</span>'),lf.details&&esc(lf.details)].filter(Boolean).join('<br>')+'</div></div>'):'';
+     const hasRight=p.reach||p.ppe||p.graphLoc||eq.length||p.crew||liftOn;
      document.getElementById('detail-content-panel').innerHTML=
        _sectionHeader('Scope')+
        '<div style="display:flex;flex:1;min-height:0;overflow:hidden;">'+
@@ -21066,9 +21183,12 @@ function renderDetails(opts){
          // RIGHT: reach, ppe, graphic location
          (hasRight?
            '<div style="width:260px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.1);overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:18px;">'+
-             (p.reach?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">Reach</div><div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.reach,'#f0a500','rgba(240,165,0,0.35)','rgba(240,165,0,0.08)')+'</div></div>':'')+
-             (p.ppe?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">PPE Required</div><div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.ppe,'#f97316','rgba(249,115,22,0.35)','rgba(249,115,22,0.08)')+'</div></div>':'')+
+             eqHtml+
+             (!eq.length&&p.reach?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">Reach</div><div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.reach,'#f0a500','rgba(240,165,0,0.35)','rgba(240,165,0,0.08)')+'</div></div>':'')+
+             (!eq.length&&p.ppe?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">PPE Required</div><div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.ppe,'#f97316','rgba(249,115,22,0.35)','rgba(249,115,22,0.08)')+'</div></div>':'')+
+             crewHtml+
              (p.graphLoc?'<div style="display:flex;flex-direction:column;gap:8px;"><div class="d-label" style="font-size:11px;">Graphic Location</div><div class="chip-row" style="flex-wrap:wrap;gap:7px;">'+chipRow(p.graphLoc,'#92C64B','rgba(146,198,75,0.35)','rgba(146,198,75,0.08)')+'</div></div>':'')+
+             liftHtml+
            '</div>'
          :'')+
        '</div>';
@@ -21318,16 +21438,45 @@ function renderDetails(opts){
            '</div>';
          })()
        : '';
+     /* PORTAL 6.156 (Chris, Nov 24 2026): facts under the two dates. Each one shows only when there is something to show:
+        store hours on the install day (click = the whole week), how firm the date is and AGC's note on it, why the job is
+        delayed, the revisit dates, and AGC's office being closed on the install day (or soon). */
+     const _x=_agcX(p), _DN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+     const _fact=(label,body,color,click)=>'<div'+(click?' onclick="'+click+'" title="Click for more"':'')+' style="flex:0 1 auto;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:3px;padding:8px 12px;border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-left:3px solid '+color+';'+(click?'cursor:pointer;':'')+'"><div class="d-label" style="font-size:9px;margin:0;">'+label+'</div><div class="d-val" style="font-size:13px;line-height:1.35;white-space:pre-line;">'+body+'</div></div>';
+     let factsHtml='';
+     if(_x.stores&&_x.stores.length){
+       const dn=projDate?_DN[projDate.getDay()]:'';
+       const rows=_x.stores.slice(0,3).map(st=>{
+         const lines=String(st.hours||'').split('\n').map(l=>l.trim()).filter(Boolean);
+         const hit=dn?lines.find(l=>l.toLowerCase().indexOf(dn.toLowerCase())===0):'';
+         const val=hit?hit.slice(dn.length).trim():(lines.length?'':'not on file');
+         return val?((_x.stores.length>1?esc(st.store)+': ':'')+esc(val)):'';
+       }).filter(Boolean);
+       if(rows.length)factsHtml+=_fact('Store hours'+(dn?', '+dn:''),rows.join('\n')+(_x.stores.length>3?'\n+ '+(_x.stores.length-3)+' more':''),'rgba(146,198,75,0.6)','_agcStoreHours()');
+       else if(_x.stores.some(st=>String(st.hours||'').trim()&&!/not on file/i.test(st.hours)))factsHtml+=_fact('Store hours','See the whole week','rgba(146,198,75,0.6)','_agcStoreHours()');
+     }
+     if(p.dateStatus||p.dateNote){
+       const c=/FIRM/i.test(p.dateStatus)?'#92C64B':/TENTATIVE/i.test(p.dateStatus)?'#f0a500':/MOVED/i.test(p.dateStatus)?'#60a5fa':'rgba(255,255,255,0.4)';
+       factsHtml+=_fact('Date status',(p.dateStatus?'<span style="color:'+c+';font-weight:900;">'+esc(p.dateStatus)+'</span>':'')+(p.dateStatus&&p.dateNote?'\n':'')+esc(p.dateNote),c);
+     }
+     if(p.delayReason&&_isProjectDelayed(p))factsHtml+=_fact('Why it is delayed',esc(p.delayReason),'rgba(239,68,68,0.7)');
+     if(p.revisits&&p.revisits.length)factsHtml+=_fact(p.revisits.length>1?'Revisit dates':'Revisit date',p.revisits.map(r=>esc(safeDate(r,{weekday:'short',month:'short',day:'numeric',year:'numeric'})||r)).join('\n'),'rgba(96,165,250,0.7)');
+     if(_x.closedOnInstall)factsHtml+=_fact('AGC office closed on install day',esc(String(_x.closedOnInstall).replace(/\s*AGC CLOSED\s*/i,' ').replace(/\s+/g,' ').trim()),'rgba(240,165,0,0.8)');
+     else{
+       const ex=window._agcExtras, soon=(ex&&ex.agcClosed||[]).filter(c=>{const d=toDate(c.from);return d&&(d.getTime()-Date.now())<45*86400000;}).slice(0,2);
+       if(soon.length)factsHtml+=_fact('AGC office closed',soon.map(c=>esc(String(c.name||'').replace(/\s*-?\s*AGC CLOSED\s*/i,' ').replace(/\s+/g,' ').trim()+': '+(safeDate(c.from,{month:'short',day:'numeric'})||c.from)+(c.to&&c.to!==c.from?' to '+(safeDate(c.to,{month:'short',day:'numeric'})||c.to):''))).join('\n'),'rgba(255,255,255,0.4)');
+     }
      el.innerHTML=
        _sectionHeader('Schedule')+
        '<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;">'+
        delayedOverlay+
        '<div style="flex:1;min-height:0;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden;">'+
          // Date fields — enlarged, both white text
-         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex-shrink:0;">'+
+         '<div style="display:grid;grid-template-columns:'+(ds&&due?'1fr 1fr':'1fr')+';gap:12px;flex-shrink:0;">'+
            (ds?'<div style="display:flex;flex-direction:column;gap:6px;"><div class="d-label" style="font-size:11px;color:#92C64B;">Scheduled</div><div class="d-box" style="padding:14px 16px;border-left:3px solid rgba(146,198,75,0.6);"><div class="d-val" style="font-size:20px;font-weight:900;color:#fff;">'+esc(ds)+'</div></div></div>':'')+
            (due?'<div style="display:flex;flex-direction:column;gap:6px;"><div class="d-label" style="font-size:11px;color:#f87171;">Due Date</div><div class="d-box" style="padding:14px 16px;border-left:3px solid rgba(239,68,68,0.6);"><div class="d-val" style="font-size:20px;font-weight:900;color:#fff;">'+esc(due)+'</div></div></div>':'')+
          '</div>'+
+         (factsHtml?'<div id="agc-sched-facts" style="display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0;max-height:34%;overflow-y:auto;">'+factsHtml+'</div>':'')+
          // Calendar — flex:1 so it fills all remaining space
          '<div style="flex:1;min-height:0;background:#000;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;display:flex;flex-direction:column;">'+
            '<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;flex-shrink:0;">'+
@@ -21477,6 +21626,8 @@ function renderDetails(opts){
            '<svg viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="1.3" style="width:72px;height:72px;opacity:0.7;"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'+
            '<div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.3px;">This project has not yet been shipped</div>'+
            '<div style="font-size:14px;color:#909090;max-width:420px;line-height:1.55;">Tracking information will appear here once your project ships. Check back later.</div>'+
+           /* 6.156: where it will be shipped is already known before it ships */
+           ((p.shippingTo||p.shipAddr)?'<div class="d-box" style="padding:10px 14px;max-width:460px;"><div class="d-label" style="font-size:9px;">Shipping To</div><div class="d-val" style="font-size:14px;line-height:1.45;">'+[p.shippingTo,p.shipAddr].filter(Boolean).map(esc).join('<br>')+'</div></div>':'')+
          '</div>';
      } else {
        // LEFT COLUMN — all shipping fields stacked, compact so everything
@@ -21556,12 +21707,16 @@ function renderDetails(opts){
          '</div>'
        )).join('<div style="height:8px;"></div>');
        const leftCol=
-         '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;min-height:0;">'+
+         '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto;">'+
            (p.shippingCo?field('Shipping Company',p.shippingCo):'')+
            (p.shippingTo?field('Shipping To',p.shippingTo):'')+
+           (p.shipAddr?field('Shipping Address',p.shipAddr):'')+   /* 6.156 */
            (p.dateShipped?field('Date Shipped',safeDate(p.dateShipped)):'')+
            (p.pkgs?field('Number of Packages',p.pkgs,{big:true}):'')+
            '<div style="display:flex;flex-direction:column;gap:3px;"><div class="d-label" style="font-size:9px;">Tracking Number(s)</div><div class="d-box" style="padding:10px 11px;display:flex;flex-direction:column;gap:6px;">'+trackingRowsHtml+'</div></div>'+
+           /* 6.156: per-store tracking and the manifest, when AGC has filled them in */
+           (p.trackByStore?'<div style="display:flex;flex-direction:column;gap:3px;"><div class="d-label" style="font-size:9px;">Tracking By Store</div><div class="d-box" style="padding:8px 11px;"><div class="d-val" style="font-size:13px;line-height:1.5;white-space:pre-line;">'+esc(p.trackByStore)+'</div></div></div>':'')+
+           (p.manifest?'<div style="display:flex;flex-direction:column;gap:3px;min-height:0;"><div class="d-label" style="font-size:9px;">Shipping Manifest</div><div class="d-box" style="padding:8px 11px;max-height:140px;overflow-y:auto;"><div class="d-val" style="font-size:12px;line-height:1.5;white-space:pre-line;">'+esc(p.manifest)+'</div></div></div>':'')+
          '</div>';
        // RIGHT COLUMN — confirmation action panel. Starts as two buttons,
        // then swaps its contents on click (_shippingSetAction). Only the
@@ -24196,6 +24351,7 @@ function renderFiles(){
 // ─── PHOTOS TAB ────────────────────────────────────────────────────────────
 function renderPhotosTab(){
  const p=_selected; if(!p)return;
+ try{_agcCloseoutBar();}catch(e){}   /* 6.156: Photo requirements, Invoicing requirements, the invoice and its status */
  // The pmBox element no longer exists (old two-column layout retired) but
  // we silently no-op if not found rather than removing this guard, in case
  // the element ever gets restored.
@@ -36808,6 +36964,27 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
     return go(dev)
       .then(function(r){ if (!r.ok) throw new Error(name + ' ' + r.status); return r.json(); });
   };
+  /* PORTAL 6.156 (Chris, Nov 24 2026): My Projects now SHOWS what only ALFRED could tell: each store's hours, the approved
+     equipment to bring, whether the installer's own bill is paid, and the days AGC's office is closed. They come from the
+     same signed-in backend call that feeds Field Ops ALFRED (GET alfredAiContext: this installer's own projects only, the
+     same allow-lists, no amounts). Asked for once, kept 10 minutes in memory, never stored. Signed out = nothing.
+     Resolves to { byId: { <project id>: { stores, equipment, bill, closedOnInstall } }, agcClosed: [...] } or null. */
+  var extrasP = null, extrasAt = 0, extrasTok = '';
+  window.AGC_PORTAL_EXTRAS = function(){
+    if (!gate.open || !gate.token) return Promise.resolve(null);
+    if (!extrasP || extrasTok !== gate.token || Date.now() - extrasAt > 10 * 60000) {
+      var p = window.AGC_ALFRED_CALL('alfredAiContext').then(function(d){
+        if (!d || d.enabled === false) return null;
+        var by = {}, arr = function(v){ return Array.isArray(v) ? v : []; };
+        (d.projects || []).forEach(function(x){ var f = (x && x.fields) || {};
+          by[x.id] = { stores: arr(f['STORES (Google Maps hours)']), equipment: arr(f['EQUIPMENT TO BRING (approved by AGC)']),
+            bill: arr(f['YOUR BILL TO AGC (payment status)']), closedOnInstall: String(f['AGC CLOSED ON INSTALL DAY'] || '') }; });
+        return { byId: by, agcClosed: arr(d.agcClosed) };
+      }).then(null, function(){ if (extrasP === p) extrasP = null; return null; });
+      extrasP = p; extrasAt = Date.now(); extrasTok = gate.token;
+    }
+    return extrasP;
+  };
   /* PORTAL 6.138 · 🤖 FIELD OPS ALFRED AI (separate Cloudflare service field-ops-alfred, Chris Nov 23). Only questions the fixed answers
      could not answer, only for installers on the 🤖 AI SWITCH (alfredRules says ai: true). The service checks this sign-in with AGC's
      backend itself and reads the installer's data there; the page sends only the question, the project asked about and the last turns. */
@@ -37165,7 +37342,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6155; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6156; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');

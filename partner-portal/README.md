@@ -139,6 +139,20 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
     the project manager is, with a button to call them. (It used to dump the whole job summary.)
 - His total earnings (since 6.128) are exactly the Total AGC Earnings box on Home and its project count, nothing
   more (no breakdown). Before the box has painted he makes the same sum the box makes.
+- My Projects shows more of the job (since 6.156, Chris Nov 24 2026):
+  - A due date on the same day as the scheduled date is not shown (Schedule, calendar, ALFRED).
+  - Scope: "Equipment to bring" (AGC's approved list for the job) takes the place of Reach and PPE Required; a job with
+    no approved list still shows Reach and PPE. Crew size. The lift, when the job has one.
+  - Schedule: a row of facts under the dates: store hours on the install day (click for the whole week), date status
+    and note, why the job is delayed, revisit dates, AGC's office closed on the install day or within 45 days.
+  - Shipping: shipping address, number of packages (the field name had never matched), tracking by store, manifest.
+  - Closeout: a row with Photo requirements (pop-up: the link, a YouTube video plays in place), Invoicing requirements
+    (the PDF in the file pop-up), the installer's own invoice and whether it is paid (no amounts).
+  - Weather: AGC's install-day weather note above the forecast. Files: the site survey and linked data sheets.
+  - Store hours, equipment, bill status and AGC's closed days come from the call that feeds Field Ops ALFRED
+    (`alfredAiContext`, asked once and kept 10 minutes: `AGC_PORTAL_EXTRAS` in the router). Date status and note, revisit
+    dates, delay reason, lift, weather note, tracking by store, manifest, survey and data sheets need the backend change
+    in [`wix/portal-6.156-fields.md`](wix/portal-6.156-fields.md), which is NOT published in Wix yet; they are empty until then.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 
