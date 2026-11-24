@@ -152,7 +152,9 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   - Store hours, equipment, bill status and AGC's closed days come from the call that feeds Field Ops ALFRED
     (`alfredAiContext`, asked once and kept 10 minutes: `AGC_PORTAL_EXTRAS` in the router). Date status and note, revisit
     dates, delay reason, lift, weather note, tracking by store, manifest, survey and data sheets need the backend change
-    in [`wix/portal-6.156-fields.md`](wix/portal-6.156-fields.md), which is NOT published in Wix yet; they are empty until then.
+    in [`wix/portal-6.156-fields.md`](wix/portal-6.156-fields.md): published in Wix on Nov 24 2026. The same change also sends the
+    installer's onboarding status and what is missing, tax form, WCB, licences, height training and delivery instructions
+    (no page shows those yet; Field Ops ALFRED receives them).
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 

@@ -157,6 +157,10 @@ const INSTALLER_READABLE = new Set([...INSTALLER_WRITABLE,
   'SHIPPING TO:', 'STATE / PROVINCE', 'Country', 'SERVICE AREAS',
   'Added AGC to Insurance Policy', 'CONTRACT 2.0', 'VENDOR PORTAL URL',   // STEP 1: no partner STATUS, no INSURANCE AGENT AI text
   'SALUTATION',   // Mr / Miss for ALFRED (Nov 20 2026)
+  // 6.156 (Chris, Nov 24 2026: OK): onboarding status and what is missing, the tax form on file, WCB, licences, height training, delivery instructions
+  '🤝 ONBOARDING', '🤝 MISSING', '🤝 TAX FORM', '🤝 TAX FORM SIGNED', '🤝 TAX FORM VALID UNTIL',
+  '🦺 WORKERS COMP / WCB VALID UNTIL', '🦺 WORKERS COMP / WCB FILES', 'Vendor has WCB',
+  '🪪 LICENCES', '🪪 LICENCE FILES', '🦺 HEIGHT TRAINING', 'DELIVERY INSTRUCTIONS',
   'AGC PROJECTS 3', 'AGC PROJECTS 4'
 ]);
 // Project: what the installer needs for the job. Never prices, profit, margins, client details,
@@ -175,7 +179,15 @@ const PROJECT_READABLE = new Set([
   'BUDGET TYPE', 'BUDGET TYPE 2', 'BUDGET TYPE 3', 'BUDGET TYPE 4', 'BUDGET TYPE 5', 'INSTALLER CURRENCY',
   'SHIPPING TO:', 'SHIPPING CO.', 'TRACKING NUMBER', 'Number of PKGS', 'SHIPPING ADDRESS:', 'ONSITE CONTACT',
   'SHIPMENT CONDITION', 'SHIPMENT NOTES', 'SHIPMENT PHOTOS', ' INVOICE FOR REVIEW',
-  'AGC PROJECT MANAGER', 'AGC PROJECT MANAGER:', 'PM Name', 'PM Direct'
+  'AGC PROJECT MANAGER', 'AGC PROJECT MANAGER:', 'PM Name', 'PM Direct',
+  // 6.156 (Chris, Nov 24 2026: yes): how firm the date is, revisits, why it is delayed, the lift, AGC's install-day weather note,
+  // per-store tracking, the manifest, the site survey and the linked data sheets. Never lift prices.
+  '📅 DATE STATUS', '📅 DATE NOTE', 'REASON PROJECT IS DELAYED',
+  'REVISIT DATE 1:', 'REVISIT DATE 2:', 'REVISIT DATE 3:', 'REVISIT DATE 4:', 'REVISIT DATE 5:',
+  'REVISIT DATE 6:', 'REVISIT DATE 7:', 'REVISIT DATE 8:', 'REVISIT DATE 9:', 'REVISIT DATE 10:',
+  'LIFT STATUS', 'Aerial Lift Type (from Aerial Lifts)', 'Supplier (from Aerial Lifts)', 'AERIAL LIFT DETAILS', 'TOTAL DAYS REQUIRED',
+  '🌦️ WEATHER', '📦 TRACKING BY STORE', '📦 SHIPPING MANIFEST',
+  'SURVEYS', 'Data Sheet (from Data Sheets)', 'Product Name (from Data Sheets)'
   // STEP 1: PROJECT STATUS and STATUS (QuickBooks / client invoice states), the other installers (INSTALLER(S),
   // ADDITIONAL INSTALLER(S), INSTALLER, NAME, PHONE), VENDOR INVOICES and INSTALLER UPDATES are no longer sent.
   // cleanProject adds INSTALLER(S) = this installer only, AGC SHARED JOB (yes / no) and AGC DELAYED (yes / no).
@@ -190,6 +202,7 @@ function cleanInstaller(fields) {
   for (const k of Object.keys(fields || {})) {
     if (!INSTALLER_READABLE.has(k)) continue;
     out[k] = MASKED_INSTALLER_FIELDS.indexOf(k) >= 0 ? mask(fields[k]) : fields[k];
+    if (k === '🤝 MISSING') out[k] = String(fields[k] || '').split(' \u00b7 ').filter((x) => x.trim() && !/duplicate/i.test(x)).join(' \u00b7 ');   // 6.156: never 'possible duplicate of <another partner>'
     if ((k === 'AGC PROJECTS 3' || k === 'AGC PROJECTS 4') && Array.isArray(out[k])) out[k] = out[k].filter((x) => !HANDS_OFF_IDS.has(typeof x === 'string' ? x : (x && x.id)));   // STEP 1
   }
   return out;
@@ -210,6 +223,13 @@ function cleanProject(rec, inst) {
   out['AGC SHARED JOB'] = shared;
   out['AGC DELAYED'] = /delay/i.test(selName(f['PROJECT STATUS']));            // only "delayed or not", never the status itself
   if (shared) for (const k of SHARED_JOB_HIDDEN) delete out[k];
+  // 6.156: these texts are written for the office too. The office-only log lines are cut here, so they never reach the browser or
+  // Field Ops ALFRED ('card sent for', 'PDF ... drafted to ...'), and a text that names the owner is not sent at all.
+  const keepLines156 = (v, drop) => String(v == null ? '' : v).split('\n').filter((l) => l.trim() && !drop.test(l)).join('\n').trim();
+  if (out['🌦️ WEATHER'] != null) out['🌦️ WEATHER'] = keepLines156(out['🌦️ WEATHER'], /^\s*\u{1F514}/u);
+  if (out['📦 TRACKING BY STORE'] != null) out['📦 TRACKING BY STORE'] = keepLines156(out['📦 TRACKING BY STORE'], /^\s*\u{1F4C4}|drafted to/iu);
+  for (const k of ['📅 DATE NOTE', 'REASON PROJECT IS DELAYED', '🌦️ WEATHER', '📦 TRACKING BY STORE', '📦 SHIPPING MANIFEST', 'AERIAL LIFT DETAILS'])
+    if (out[k] != null && (!String(out[k]).trim() || OWNER_NAME.test(String(out[k])))) delete out[k];
   // Nov 23 2026 (Chris: "my name should never be mentioned"): a job Chris manages goes out with no PM name and no PM phone,
   // so the portal and Field Ops ALFRED say "your AGC project manager" and offer Call AGC instead.
   if (PM_FIELDS.some((k) => OWNER_NAME.test(JSON.stringify(out[k] == null ? '' : out[k])))) for (const k of PM_FIELDS) delete out[k];

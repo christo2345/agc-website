@@ -1,7 +1,9 @@
-# Portal 6.156: fields to add to the Wix backend (NOT published yet)
+# Portal 6.156: fields added to the Wix backend (PUBLISHED Nov 24 2026, 10:32 AM)
 
-Chris, Nov 24 2026. The portal page (6.156) already shows these when the backend sends them. Until
-`backend/http-functions.js` is changed in Wix and published, they simply stay empty in the portal.
+Chris, Nov 24 2026 ("yes"). Applied to `backend/http-functions.js` in the Wix editor (each anchor found exactly once, the
+file parsed before and after), saved, checked after an editor reload, then published. Site History: saved 10:31 AM,
+published 10:32 AM. The save before it was the Nov 23 6:29 PM publish, so nothing else went live with it. After the
+publish the endpoints answer as before (401 without a sign-in). `wix/http-functions.js` here carries the same four edits.
 Nothing here changes what the portal can write; these are read-only additions.
 
 ## 1. Projects: `PROJECT_READABLE`
