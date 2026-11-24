@@ -12965,7 +12965,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.158</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.159</span>
  </div>
 
  <div class="hero">
@@ -20122,43 +20122,53 @@ function _agcTimeOffCheck(){
    not fit is closed from the bottom up; opening one closes others to make room. A block too long to fit on its own is cut
    with a "See all" button (pop-up). Order: Graphic Location, Qty installers, Equipment to bring (or Reach, PPE), Lift. */
 (function(){ try{ const st=document.createElement('style'); st.textContent=
-  '.agc-scope-col{width:300px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.1);overflow:hidden;padding:14px;display:flex;flex-direction:column;gap:8px;}'+
+  '.agc-scope-col{width:300px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.1);overflow:hidden;padding:14px;display:flex;flex-direction:column;gap:6px;}'+
+  /* 6.159: the heading over the equipment blocks, with a count that can be read (black on solid amber) */
+  '.agc-acc-group{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;padding:8px 2px 2px;color:#e0e0e0;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1px;}'+
+  '.agc-acc-group b{min-width:14px;text-align:center;padding:2px 9px;border-radius:999px;background:#f0a500;color:#0a0a0a;font-size:13px;font-weight:900;letter-spacing:0;}'+
+  '.agc-acc.eq .agc-acc-h{padding:7px 12px;color:#f0a500;text-transform:none;letter-spacing:0.2px;font-size:14px;font-weight:800;line-height:1.3;}'+
+  '.agc-acc.eq .agc-acc-h:hover{color:#ffc247;}'+
+  '.agc-acc.flat .agc-acc-h{cursor:default;}.agc-acc.flat .agc-acc-h:hover{background:transparent;color:#f0a500;}'+
   '.agc-acc{display:flex;flex-direction:column;flex-shrink:0;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(0,0,0,0.22);overflow:hidden;}'+
-  '.agc-acc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 12px;background:transparent;border:0;cursor:pointer;color:#c0c0c0;font-family:var(--font);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;text-align:left;}'+
+  '.agc-acc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:11px 12px;background:transparent;border:0;cursor:pointer;color:#e0e0e0;font-family:var(--font);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1px;text-align:left;}'+
   '.agc-acc-h:hover{color:#fff;background:rgba(255,255,255,0.05);}'+
-  '.agc-acc-h em{font-style:normal;margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(240,165,0,0.18);color:#f0a500;font-size:10px;}'+
-  '.agc-acc-h i{font-style:normal;font-size:12px;transition:transform 0.18s;}'+
+  '.agc-acc-h em{font-style:normal;margin-left:8px;padding:2px 9px;border-radius:999px;background:#f0a500;color:#0a0a0a;font-size:13px;letter-spacing:0;}'+
+  '.agc-acc-h i,.agc-fold-h i{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:#fff;transition:transform 0.18s;}'+
   '.agc-acc.shut .agc-acc-h i{transform:rotate(-90deg);}'+
   '.agc-acc-b{padding:0 12px 12px;}'+
   '.agc-acc.shut .agc-acc-b,.agc-acc.shut .agc-acc-more{display:none;}'+
   '.agc-acc-more{margin:0 12px 12px;padding:8px;border-radius:8px;border:1px solid rgba(240,165,0,0.5);background:rgba(240,165,0,0.12);color:#fff;cursor:pointer;font-family:var(--font);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;}'+
   '.agc-fold-h{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}.agc-fold-h:hover{color:#fff;}'+
-  '.agc-fold-h i{font-style:normal;font-size:12px;transition:transform 0.18s;}.agc-fold.shut .agc-fold-h i{transform:rotate(-90deg);}'+
+  '.agc-fold.shut .agc-fold-h i{transform:rotate(-90deg);}'+
   '.agc-fold.shut>.d-notes{display:none !important;}.agc-fold.shut{flex:0 0 auto !important;}'+
   '@media (max-width:900px){.agc-scope-col{width:260px;overflow-y:auto;}}';
   document.head.appendChild(st);}catch(e){} })();
 window._agcAccUser=window._agcAccUser||{};   /* what the installer opened or closed by hand, kept while the portal is open */
-function _agcAcc(id,label,inner,count){
- return '<div class="agc-acc'+(window._agcAccUser[id]===false?' shut':'')+'" data-acc="'+id+'" data-label="'+esc(label)+'">'+
-   '<button type="button" class="agc-acc-h" onclick="_agcAccToggle(\''+id+'\')" aria-expanded="true"><span>'+esc(label)+(count?'<em>'+count+'</em>':'')+'</span><i>&#9662;</i></button>'+
-   '<div class="agc-acc-b">'+inner+'</div></div>';
+function _agcAcc(id,label,inner,count,cls){
+ const flat=!inner;   /* nothing to open: a title only */
+ return '<div class="agc-acc'+(cls?' '+cls:'')+(flat?' flat':'')+(!flat&&window._agcAccUser[id]===false?' shut':'')+'" data-acc="'+id+'" data-label="'+esc(label)+'">'+
+   '<button type="button" class="agc-acc-h"'+(flat?'':' onclick="_agcAccToggle(\''+id+'\')" aria-expanded="true"')+'><span>'+esc(label)+(count?'<em>'+count+'</em>':'')+'</span>'+(flat?'':'<i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></i>')+'</button>'+
+   (flat?'':'<div class="agc-acc-b">'+inner+'</div>')+'</div>';
 }
 function _agcFold(h){ const w=h.parentElement; if(!w)return; const shut=!w.classList.contains('shut'); w.classList.toggle('shut',shut); window._agcAccUser[w.dataset.fold]=!shut; }
 function _agcAccToggle(id){
  const col=document.getElementById('agc-scope-col'); if(!col)return;
- const s=col.querySelector('.agc-acc[data-acc="'+id+'"]'); if(!s)return;
+ const s=col.querySelector('.agc-acc[data-acc="'+id+'"]'); if(!s||s.classList.contains('flat'))return;
  const open=s.classList.contains('shut');
- s.classList.toggle('shut',!open); window._agcAccUser[id]=open;
- _agcAccFit(open?id:'');
+ s.classList.toggle('shut',!open);
+ if(!/^eq-/.test(id))window._agcAccUser[id]=open;   /* the equipment blocks are per job, so they are not remembered across jobs */
+ _agcAccFit(open?id:'',true);
 }
-function _agcAccFit(keep){
+function _agcAccFit(keep,fromClick){
  const col=document.getElementById('agc-scope-col'); if(!col)return;
- const secs=[...col.querySelectorAll('.agc-acc')];
- secs.forEach(s=>{const b=s.querySelector('.agc-acc-b');b.style.maxHeight='';b.style.overflow='';const m=s.querySelector('.agc-acc-more');if(m)m.remove();
-   s.querySelector('.agc-acc-h').setAttribute('aria-expanded',s.classList.contains('shut')?'false':'true');});
+ const secs=[...col.querySelectorAll('.agc-acc:not(.flat)')];
+ const mark=()=>secs.forEach(s=>s.querySelector('.agc-acc-h').setAttribute('aria-expanded',s.classList.contains('shut')?'false':'true'));
+ secs.forEach(s=>{const b=s.querySelector('.agc-acc-b');b.style.maxHeight='';b.style.overflow='';const m=s.querySelector('.agc-acc-more');if(m)m.remove();});
+ mark();
  if(window.innerWidth<=900)return;   /* phone: the page scrolls as before */
  const over=()=>col.scrollHeight>col.clientHeight+1;
- if(!keep)secs.forEach(s=>{if(window._agcAccUser[s.dataset.acc]!==false)s.classList.remove('shut');});   /* a fresh paint starts open, then closes what does not fit */
+ if(!fromClick)secs.forEach(s=>{if(window._agcAccUser[s.dataset.acc]!==false)s.classList.remove('shut');});   /* a fresh paint starts open, then closes what does not fit */
+ if(!fromClick&&over())secs.forEach(s=>{if(s.classList.contains('eq'))s.classList.add('shut');});   /* the equipment blocks do not all fit open: show them all as titles (one click opens one) */
  for(let i=secs.length-1;i>=0&&over();i--){const s=secs[i];if(s.dataset.acc===keep||s.classList.contains('shut'))continue;s.classList.add('shut');}
  if(over()){   /* one block alone is taller than the column: cut it, and offer all of it in a pop-up */
    const s=secs.find(x=>!x.classList.contains('shut'));
@@ -20167,7 +20177,7 @@ function _agcAccFit(keep){
      more.addEventListener('click',()=>_agcPopup(s.dataset.label||'',b.innerHTML));s.appendChild(more);
      b.style.overflow='hidden';b.style.maxHeight=Math.max(60,b.offsetHeight-(col.scrollHeight-col.clientHeight)-2)+'px';}
  }
- secs.forEach(s=>s.querySelector('.agc-acc-h').setAttribute('aria-expanded',s.classList.contains('shut')?'false':'true'));
+ mark();
 }
 window.addEventListener('resize',()=>{clearTimeout(window._agcAccT);window._agcAccT=setTimeout(()=>{try{_agcAccFit('');}catch(e){}},150);});
 /* A layout image that will not load becomes a file tile (the inline version of this had a quoting slip and did nothing). */
@@ -21454,8 +21464,10 @@ function renderDetails(opts){
         Then crew size, graphic location and, when the job has one, the lift. */
      const eq=_agcX(p).equipment||[];
      const _col=(label,inner)=>_agcAcc(label.toLowerCase().replace(/[^a-z]+/g,'-'),label==='Crew size'?'Qty installers':label,inner,label==='Equipment to bring'?eq.length:0);   /* 6.158: each block opens and closes */
-     const eqHtml=eq.length?_col('Equipment to bring','<div style="display:flex;flex-direction:column;gap:5px;">'+eq.map(r=>{const t=String(r),k=t.indexOf(': ');
-       return '<div class="d-box" style="padding:6px 9px;border-left:3px solid rgba(240,165,0,0.6);"><div class="d-val" style="font-size:12px;line-height:1.3;">'+(k>0?'<span style="color:#f0a500;">'+esc(t.slice(0,k))+'</span><br>'+esc(t.slice(k+2)):esc(t))+'</div></div>';}).join('')+'</div>'):'';
+     /* 6.159 (Chris): one block per piece of equipment (its title is the place or the kind, the body is what to bring), under a
+        plain heading with the count. Not one block for the whole list. A line with no ": " is a title on its own. */
+     const eqHtml=eq.length?('<div class="agc-acc-group"><span>Equipment to bring</span><b>'+eq.length+'</b></div>'+eq.map((r,i)=>{const t=String(r).trim(),k=t.indexOf(': ');
+       return k>0?_agcAcc('eq-'+i,t.slice(0,k),'<div class="d-val" style="font-size:13px;line-height:1.4;">'+esc(t.slice(k+2))+'</div>',0,'eq'):_agcAcc('eq-'+i,t,'',0,'eq');}).join('')):'';
      const crewHtml=p.crew?_col('Crew size','<div class="chip-row" style="flex-wrap:wrap;gap:7px;"><span class="chip" style="color:#fff;border-color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.08);font-size:14px;padding:7px 14px;font-weight:700;">'+esc(p.crew)+(String(p.crew).trim()==='1'?' installer':' installers')+'</span></div>'):'';
      const lf=p.lift||{}, liftOn=!!(lf.type||lf.details||lf.days||(lf.status&&!/^(NOT ORDERED YET|N\/A)$/i.test(lf.status)));
      const liftHtml=liftOn?_col('Lift','<div class="d-box" style="padding:9px 11px;"><div class="d-val" style="font-size:13px;line-height:1.5;">'+
@@ -21466,8 +21478,8 @@ function renderDetails(opts){
        '<div style="display:flex;flex:1;min-height:0;overflow:hidden;">'+
          // LEFT: notes + scope (scrollable, takes most space)
          '<div style="flex:1;min-width:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;"'+(hasRight?'':'')+'>'+
-           (p.notes&&p.notes.trim()?'<div class="agc-fold'+(window._agcAccUser['L:notes']===false?' shut':'')+'" data-fold="L:notes" style="display:flex;flex-direction:column;gap:8px;"><div class="d-label agc-fold-h" onclick="_agcFold(this)" title="Click to close or open" style="font-size:11px;">Important Notes<i>&#9662;</i></div><div class="d-notes" style="padding:18px;"><div class="d-notes-text" style="font-size:18px;line-height:1.6;display:block;-webkit-line-clamp:unset;color:#e8e8e8;white-space:normal;">'+mdToHtml(p.notes)+'</div></div></div>':'')+
-           (p.scope&&p.scope.trim()?'<div class="agc-fold'+(window._agcAccUser['L:scope']===false?' shut':'')+'" data-fold="L:scope" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;"><div class="d-label agc-fold-h" onclick="_agcFold(this)" title="Click to close or open" style="font-size:11px;">Scope of Work<i>&#9662;</i></div><div class="d-notes" style="padding:18px;flex:1;min-height:0;overflow-y:auto;"><div class="d-notes-text" style="font-size:18px;line-height:1.6;display:block;-webkit-line-clamp:unset;color:#e8e8e8;white-space:normal;">'+mdToHtml(p.scope)+'</div></div></div>':'')+
+           (p.notes&&p.notes.trim()?'<div class="agc-fold'+(window._agcAccUser['L:notes']===false?' shut':'')+'" data-fold="L:notes" style="display:flex;flex-direction:column;gap:8px;"><div class="d-label agc-fold-h" onclick="_agcFold(this)" title="Click to close or open" style="font-size:11px;">Important Notes<i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></i></div><div class="d-notes" style="padding:18px;"><div class="d-notes-text" style="font-size:18px;line-height:1.6;display:block;-webkit-line-clamp:unset;color:#e8e8e8;white-space:normal;">'+mdToHtml(p.notes)+'</div></div></div>':'')+
+           (p.scope&&p.scope.trim()?'<div class="agc-fold'+(window._agcAccUser['L:scope']===false?' shut':'')+'" data-fold="L:scope" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;"><div class="d-label agc-fold-h" onclick="_agcFold(this)" title="Click to close or open" style="font-size:11px;">Scope of Work<i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></i></div><div class="d-notes" style="padding:18px;flex:1;min-height:0;overflow-y:auto;"><div class="d-notes-text" style="font-size:18px;line-height:1.6;display:block;-webkit-line-clamp:unset;color:#e8e8e8;white-space:normal;">'+mdToHtml(p.scope)+'</div></div></div>':'')+
          '</div>'+
          // RIGHT (6.158): graphic location and qty first, then equipment (or reach and PPE), then the lift. Never scrolls on desktop.
          (hasRight?
@@ -37700,7 +37712,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6158; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6159; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');

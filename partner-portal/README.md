@@ -177,6 +177,9 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   - Closeout: asks the backend for this project's closeouts only (it asked for every project the installer has), and the
     store names show while that loads. The archived view's Google Drive link no longer keeps a stray ")".
   - Home: the Time off button in My Calendar is always shown; a failed load says why in the panel.
+  - 6.159: Equipment to bring is one block per piece of equipment (title = the place or kind, body = what to bring) under a
+    plain heading, not one block for the whole list. When they do not all fit open they all show as titles. The count is
+    black on solid amber, and the open/close arrows are 20 px.
   - A layout image that will not load becomes a file tile (its old inline handler had a quoting slip).
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
