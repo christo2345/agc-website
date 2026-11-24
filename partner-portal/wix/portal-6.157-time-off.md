@@ -1,7 +1,9 @@
 # Portal 6.157: time off (backend part)
 
-**Status: NOT PUBLISHED in Wix. Waiting for Chris's yes.** The portal build 6.157 is live and keeps its Time off button
-hidden until these endpoints answer.
+**Status: PUBLISHED in Wix on Nov 24 2026 (Chris: "publish").** Saved 10:52 AM, Publish clicked once at 10:53 AM. The three
+endpoints answer 401 without a sign-in, so they are live. Site History listed the 10:53 entry as "Saved" when checked a
+minute later; there was no other save between the 10:33 AM publish and this one. The block is now in `http-functions.js`
+in this folder. Not yet tried with a real installer sign-in.
 
 ## What it adds
 

@@ -162,8 +162,8 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
   - The calendar hatches those days in amber, rings a day in red when a job is already booked on it, and tags the days
     AGC's office is closed. A job's Schedule says "You marked this day off" when the install lands on one.
   - Needs three backend endpoints (`timeOff`, `timeOffAdd`, `timeOffDelete`), described in
-    [`wix/portal-6.157-time-off.md`](wix/portal-6.157-time-off.md). NOT published in Wix yet: until they are, the Time off
-    button stays hidden and nothing else changes.
+    [`wix/portal-6.157-time-off.md`](wix/portal-6.157-time-off.md). Published in Wix on Nov 24 2026. The Time off button
+    stays hidden whenever those endpoints do not answer.
 - When the website's header or ALFRED changes, the portal's copy is regenerated from the website file
   rather than edited by hand.
 
