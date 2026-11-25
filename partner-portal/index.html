@@ -1004,7 +1004,7 @@
   .agc-nav-budget-amt.wait{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#f59e0b;padding:6px 10px;border-radius:8px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.55)}
   /* phones: the job name and the budget shrink to share the bar with the sound and menu buttons */
   @media (max-width:900px){.agc-nav-job{font-size:20px}}
-  @media (max-width:560px){.agc-nav-job{font-size:16px;margin:0 4px}.agc-nav-budget-amt.words{font-size:10px;letter-spacing:.3px}.agc-nav-job.on{padding-left:10px}.agc-nav-budget{margin-right:4px;padding-right:8px}.agc-nav-budget-top{display:none}.agc-nav-budget-amt{font-size:16px}.agc-nav-budget-amt.wait{font-size:9px;padding:4px 6px;letter-spacing:.3px}.agc-nav-wide{display:none}}
+  @media (max-width:560px){.agc-nav-job{font-size:16px;margin:0 4px;visibility:hidden}.agc-nav-budget-amt.words{font-size:10px;letter-spacing:.3px}.agc-nav-job.on{padding-left:10px}.agc-nav-budget{margin-right:4px;padding-right:8px}.agc-nav-budget-top{display:none}.agc-nav-budget-amt{font-size:16px}.agc-nav-budget-amt.wait{font-size:9px;padding:4px 6px;letter-spacing:.3px}.agc-nav-wide{display:none}}
   /* THE PORTAL'S OWN TILES. The menu panel and its tiles are the website's design; the list is the portal's,
      three rows of three: Home (the website), My Portal, My Calendar · My Projects, My Profile, Upload Invoice ·
      Service Area, Site Monkey, Sign out (Sign out is hidden while signed out). Under them, as on the website,
@@ -1526,6 +1526,17 @@ body{background:transparent!important}
 /* ── No "step complete" banner on any step: it is switched off, and the step's
    cards take the space it used (the column is a flex stack, so they stretch). ── */
 #step-complete-banner,#step-complete-banner.visible{display:none!important}
+
+</style>
+<style id="agc-m162">
+/* PORTAL 6.162: PHONE LAYOUT (shell) */
+@media (max-width:560px){
+  /* the menu: a long label takes two lines instead of being cut ("My Cale...") */
+  html body .links.apps .ap .ap-t{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.15!important;text-align:center;font-size:12.5px!important}
+}
+#agc-turn{display:none;position:fixed;left:8px;right:8px;top:calc(var(--nav,72px) + 6px);z-index:2147483000;align-items:center;gap:8px;padding:8px 8px 8px 12px;border-radius:12px;background:#f0a500;color:#0a0a0a;font:800 12px/1.3 'Wix Madefor Display',Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+#agc-turn span{flex:1;min-width:0}
+#agc-turn button{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:rgba(0,0,0,.18);color:#0a0a0a;font-size:14px;font-weight:900;cursor:pointer}
 
 </style>
 </head>
@@ -12898,6 +12909,30 @@ window.AGC_LOOK_FIELD = {
    50%{box-shadow:0 18px 28px -8px rgba(0,0,0,0.55), 0 0 22px 2px rgba(146,198,75,0.45), 0 0 0 1.5px rgba(146,198,75,0.95);}
  }
  @media (prefers-reduced-motion: reduce){ .card.steps-gated .tool-btn.no-icon{animation:none;box-shadow:0 0 0 1.5px rgba(146,198,75,0.9)!important;} }
+
+/* ═══ PORTAL 6.162: PHONE LAYOUT ═══ */
+/* HOME on a phone (always 320 px wide through Wix): My Calendar's bar fits, the time-off form is one column. */
+@media (max-width:560px){
+ #cal-fs{background:#0a0a0c !important;}
+ #cal-fs .cal-fs-bar{display:flex !important;align-items:center;gap:6px !important;padding:10px 56px 10px 10px !important;}
+ #cal-fs .cal-fs-nav{flex:1 1 auto;min-width:0;gap:6px !important;justify-content:flex-start !important;}
+ #cal-fs .cal-fs-nav-btn{width:34px !important;height:34px !important;flex-shrink:0;}
+ #cal-fs .cal-fs-month{min-width:0 !important;flex:1 1 auto;font-size:13px !important;white-space:nowrap;}
+ #cal-fs .cal-fs-actions{flex:0 0 auto;gap:0 !important;}
+ #cal-fs .cal-off-btn{height:34px !important;padding:0 9px !important;font-size:10px !important;letter-spacing:0.2px !important;}
+ #cal-fs.off-open .cal-fs-close{display:none !important;}
+ #cal-fs .cal-off-panel{padding:8px !important;z-index:30 !important;align-items:flex-start !important;}
+ #cal-fs .cal-off-card{padding:14px !important;gap:10px !important;max-height:100% !important;}
+ #cal-fs .cal-off-card>*{flex-shrink:0;}
+ #cal-fs .cal-off-row{grid-template-columns:1fr !important;gap:8px !important;}
+ #cal-fs .cal-off-field input{font-size:16px !important;height:44px !important;min-width:0;}     /* 16 px: an iPhone does not zoom the page on focus */
+ #cal-fs .cal-off-kind{padding:11px 6px !important;font-size:11px !important;min-height:44px;}
+ #cal-fs .cal-off-save{height:46px !important;min-height:46px;}
+ #cal-fs .cal-off-item{padding:8px 10px !important;gap:8px !important;}
+ #cal-fs .cal-off-del{min-height:34px;}
+ .pfp-placeholder span{font-size:7.5px !important;letter-spacing:0.2px !important;}      /* "Add Photo" was 5.5 px */
+}
+
 </style>
 </head>
 <body>
@@ -12965,7 +13000,7 @@ window.AGC_LOOK_FIELD = {
  <\!-- Version tag, pinned top-right of the page (below the cards on phones).
       To change the number, edit the text inside this pill. -->
  <div class="beta-strip">
-   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.161</span>
+   <span class="beta-pill" id="portal-version" title="AGC Partner Portal version">Version 6.162</span>
  </div>
 
  <div class="hero">
@@ -18268,6 +18303,15 @@ function showInvoiceSuccess(){
   else wire();
 })();
 <\/script>
+<script>
+/* ═══ PORTAL 6.162: PHONE LAYOUT ═══ */
+/* HOME on a phone: while the time-off form is open the calendar's own close button steps aside (it sat on top of the form's). */
+(function(){ try{
+  const fs=document.getElementById('cal-fs'), p=document.getElementById('cal-off-panel'); if(!fs||!p)return;
+  new MutationObserver(function(){ fs.classList.toggle('off-open',p.classList.contains('show')); }).observe(p,{attributes:true,attributeFilter:['class']});
+}catch(e){} })();
+
+<\/script>
 </body>
 </html>
 </script>
@@ -18706,6 +18750,152 @@ function showInvoiceSuccess(){
  .wx-project-row{display:flex;align-items:center;gap:12px;}
  .wx-project-temp{font-size:22px;font-weight:900;color:#fff;}
  .wx-project-info{font-size:12px;color:#6b6b6b;line-height:1.5;}
+
+/* ═══ PORTAL 6.162: PHONE LAYOUT ═══ */
+/* PHONE MODE for My Projects. Wix's phone page is always 320 px wide (it scales that to the phone), so this is the layout
+   every phone gets. One screen at a time: the list, then the job. Inside a job the sections are a strip to swipe, and
+   each section is one column that scrolls. Desktop and tablet (980 px and up) are not touched. */
+#m-back,#m-store-back{display:none;}
+@media (max-width:700px){
+ :root{--sidebar-w:100vw;}
+ .top-bar{display:none !important;}
+ .shell{height:100vh !important;}
+ .sidebar{width:100% !important;border-right:0 !important;}
+ body:not(.m-open) .main{display:none !important;}
+ body.m-open .sidebar{display:none !important;}
+ .main{width:100% !important;min-width:0 !important;}
+
+ /* the list */
+ .sb-toolbar{padding:8px 10px !important;}
+ .search-input{padding:10px 12px 10px 36px !important;font-size:16px !important;}      /* 16 px: iOS does not zoom the page on focus */
+ .sb-count{padding:6px 12px 2px !important;}
+ .project-list{padding:8px 10px 84px !important;}
+ .p-thumb{width:84px !important;min-width:84px !important;}
+ .p-title{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25 !important;}
+ .p-meta-row{flex-wrap:wrap !important;gap:6px 8px !important;align-items:center !important;}
+ .p-body{flex:0 0 auto !important;min-width:0;}
+ .p-date{white-space:nowrap !important;}
+ .p-right{flex:0 1 auto !important;min-width:0;max-width:100%;}
+ .p-right>div{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}                                          /* room under the last card for ALFRED's button */
+
+ /* the job: back bar, section strip, alerts */
+ html body #detail-panel{flex-direction:column !important;gap:0 !important;padding:0 !important;}
+ html body #detail-panel>div{margin:0 !important;border-radius:0 !important;border-left:0 !important;border-right:0 !important;}
+ #m-back{display:flex;align-items:center;gap:10px;flex-shrink:0;padding:6px 10px;background:#000;border-bottom:1px solid rgba(255,255,255,0.18);}
+ #m-back-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:3px;height:36px;padding:0 13px 0 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.3);background:#1c1c1c;color:#fff;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:0.3px;cursor:pointer;}
+ #m-back-title{flex:1;min-width:0;font-size:12.5px;font-weight:800;line-height:1.25;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+ #m-navcol{width:100% !important;flex:0 0 auto !important;border-right:0 !important;border-bottom:1px solid rgba(255,255,255,0.18);}
+ html body #detail-nav{flex-direction:row !important;overflow-x:auto !important;overflow-y:hidden !important;width:100% !important;max-width:100% !important;min-width:0 !important;box-sizing:border-box;padding:6px 8px !important;gap:6px !important;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+ html body #m-navcol{overflow:hidden !important;min-width:0 !important;}
+ #detail-nav::-webkit-scrollbar{display:none;}
+ #detail-nav>*{flex:0 0 auto !important;}
+ .d-nav-btn{width:auto !important;height:40px;padding:0 12px 0 9px !important;gap:6px !important;font-size:12px !important;letter-spacing:0.4px !important;border-radius:999px !important;border-color:rgba(255,255,255,0.16) !important;color:#c0c0c0 !important;white-space:nowrap;}
+ .d-nav-btn.active{color:#fff !important;border-color:rgba(146,198,75,0.75) !important;}
+ .d-nav-icon{font-size:17px !important;width:20px !important;}
+ #detail-nav-warnings{flex:0 0 auto !important;max-height:96px;padding:0 8px 6px !important;gap:6px !important;border-top:0 !important;}
+ #detail-nav-warnings:empty{display:none !important;}
+
+ /* every section: a short header, then one column that scrolls */
+ #detail-content-panel{overflow-y:auto !important;overflow-x:hidden !important;-webkit-overflow-scrolling:touch;}
+ #detail-content-panel>div:first-child,#closeout-section-header,#map-section-header,#wx-fullscreen>div:nth-of-type(1){padding:7px 12px !important;gap:8px !important;flex-shrink:0;font-size:13px !important;min-width:0;}
+ .hdr-status-slot,#detail-content-panel>div:first-child>div{min-width:0;flex-shrink:1 !important;}
+ .hdr-status-slot>div,#detail-content-panel>div:first-child>div{max-width:100%;padding:5px 10px !important;font-size:10px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+ #detail-content-panel>div:nth-child(2){flex:0 0 auto !important;min-height:0 !important;height:auto !important;overflow:visible !important;}
+
+ /* SCOPE: the facts column first (graphic location, qty, equipment titles), then the notes and the scope of work */
+ #detail-content-panel[data-sec="scope"]>div:nth-child(2){flex-direction:column !important;}
+ #detail-content-panel[data-sec="scope"]>div:nth-child(2)>div:first-child{order:2;flex:0 0 auto !important;overflow:visible !important;padding:12px !important;gap:12px !important;}
+ #detail-content-panel[data-sec="scope"] .agc-fold{flex:0 0 auto !important;min-height:0 !important;}
+ #detail-content-panel[data-sec="scope"] .d-notes{flex:0 0 auto !important;overflow:visible !important;max-height:none !important;padding:12px !important;}
+ #agc-scope-col{order:1;width:100% !important;border-left:0 !important;border-bottom:1px solid rgba(255,255,255,0.12);overflow:visible !important;padding:12px !important;}
+
+ /* SCHEDULE: the date box, then a calendar tall enough to read, then the legend and the two buttons */
+ #detail-content-panel[data-sec="schedule"]>div:nth-child(2)>div{flex:0 0 auto !important;min-height:0 !important;height:auto !important;overflow:visible !important;padding:12px !important;gap:10px !important;}
+ #detail-content-panel[data-sec="schedule"]>div:nth-child(2)>div>div:nth-child(1){grid-template-columns:1fr !important;gap:8px !important;}
+ #detail-content-panel[data-sec="schedule"]>div:nth-child(2)>div>div:nth-child(1)>div{min-width:0;}
+ #detail-content-panel[data-sec="schedule"] .d-box .d-val{font-size:16px !important;}
+ #agc-sched-sub{font-size:12px !important;gap:2px 12px !important;}
+ #agc-sched-sub>span{white-space:normal !important;}
+ #detail-content-panel[data-sec="schedule"]>div:nth-child(2)>div>div:nth-child(2){flex:0 0 auto !important;height:330px !important;padding:10px 8px !important;}
+ #detail-content-panel[data-sec="schedule"]>div:nth-child(2)>div>div:nth-child(3){flex-wrap:wrap !important;gap:8px 14px !important;padding-bottom:70px;}
+ #agc-sched-timeoff,#agc-sched-timeoff+button{flex:1 1 100% !important;margin-left:0 !important;justify-content:center;min-height:44px;}
+
+ /* FILES: one file at a time, full width (the arrows on it change file; a tap opens it full screen) */
+ #detail-content-panel>#detail-layouts-content{flex:1 1 auto !important;height:auto !important;min-height:260px !important;overflow:hidden !important;padding:10px !important;}
+ #detail-content-panel[data-sec="layouts"]{overflow:hidden !important;}
+ #layout-carousel{display:none !important;}
+
+ /* SHIPPING and the other simple sections: nothing wider than the screen */
+ #detail-content-panel[data-sec] .d-box{max-width:100% !important;}
+ #detail-content-panel[data-sec="shipping"]>div:nth-child(2){padding:16px 12px 84px !important;gap:12px !important;}
+ #detail-content-panel[data-sec="shipping"]>div:nth-child(2)>*{max-width:100% !important;}
+
+ /* CLOSEOUT: the stores first; a tap opens one store (a job with a single store opens straight on it) */
+ #agc-closeout-bar{padding:6px 10px !important;}
+ #agc-closeout-bar>*{flex:1 1 auto;justify-content:center;min-height:40px;}
+ #closeout-new-grid{grid-template-columns:1fr !important;}
+ #pane-photos:not(.m-store-open):not(.m-one-store) #store-closeouts-detail{display:none !important;}
+ #pane-photos.m-store-open #closeout-new-grid>div:first-child,#pane-photos.m-one-store #closeout-new-grid>div:first-child{display:none !important;}
+ #pane-photos.m-store-open:not(.m-one-store) #m-store-back{display:flex;align-items:center;gap:6px;flex-shrink:0;margin:6px 10px 0;height:36px;padding:0 13px 0 8px;align-self:flex-start;border-radius:999px;border:1px solid rgba(255,255,255,0.3);background:#1c1c1c;color:#fff;font-family:var(--font);font-size:13px;font-weight:900;cursor:pointer;}
+
+ /* one store: a small header, then risk check, sign-off, notes and photos in one column */
+ #store-closeouts-detail>div:first-child{padding:10px 12px !important;gap:10px !important;align-items:center !important;}
+ #store-closeouts-detail>div:first-child>div:last-child>div:first-child{font-size:16px !important;line-height:1.2 !important;}
+ #store-closeouts-scroll>div{flex:0 0 auto !important;min-height:0 !important;height:auto !important;overflow:visible !important;padding:12px 12px 84px !important;}
+ #store-closeouts-scroll>div>div{flex:0 0 auto !important;min-height:0 !important;height:auto !important;}
+ #store-closeouts-scroll>div>div>div{flex-wrap:wrap;}
+ #store-closeouts-scroll [style*="minmax(0,1fr) minmax(0,1fr)"]{grid-template-columns:1fr !important;flex:0 0 auto !important;min-height:0 !important;height:auto !important;gap:14px !important;}
+ #store-closeouts-scroll [style*="minmax(0,1fr) minmax(0,1fr)"]>div{min-height:0 !important;height:auto !important;}
+ #store-closeouts-scroll [id^="store-notes-wrap-"]{flex:0 0 auto !important;min-height:0 !important;}
+ #store-closeouts-scroll textarea{flex:0 0 auto !important;min-height:110px !important;font-size:16px !important;}
+
+ /* the archived closeout (notes and the Drive link): one column that scrolls, the notes at their full height */
+ #closeout-legacy-view{overflow-y:auto !important;-webkit-overflow-scrolling:touch;}
+ #closeout-legacy-view>div{flex:0 0 auto !important;min-height:0 !important;height:auto !important;padding:12px 12px 84px !important;gap:12px !important;}
+ #closeout-legacy-view>div>div{flex:0 0 auto !important;min-height:0 !important;height:auto !important;}
+ #closeout-legacy-view>div>div>div{flex:0 0 auto !important;min-height:0 !important;max-height:none !important;overflow:visible !important;}
+ #closeout-legacy-view>div>div:first-child>div:last-child{flex:1 1 0 !important;min-width:0 !important;}   /* the banner's words wrap instead of running off the side */
+
+ /* WEATHER: fills the space under the section strip (the strip stays in reach to leave it) */
+ html body #wx-fullscreen{left:0 !important;right:0 !important;bottom:0 !important;top:var(--m-top,104px) !important;border-radius:0 !important;border-left:0 !important;border-right:0 !important;}
+ #wx-help-popover{left:10px !important;right:10px !important;width:auto !important;max-width:none !important;top:50px !important;}
+ #wx-fs-title{font-size:12px !important;line-height:1.25 !important;min-width:0;}
+ #wx-status-slot{display:none !important;}
+ #agc-wx-place{padding:6px 12px !important;gap:2px 10px !important;}
+ #wx-fs-content{overflow-y:auto !important;overflow-x:hidden !important;-webkit-overflow-scrolling:touch;}
+ #wx-fs-content>div{height:auto !important;min-height:100% !important;overflow:visible !important;}
+ .m-wx-top{grid-template-columns:1fr !important;}
+ .m-wx-big{flex-direction:row !important;gap:14px !important;padding:10px 12px 4px !important;border-right:0 !important;}
+ .m-wx-big>div:first-child{font-size:60px !important;}
+ .m-wx-big>div:last-child{font-size:50px !important;}
+ .m-wx-big>div:last-child span{font-size:22px !important;}
+ .m-wx-stats{grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:6px !important;padding:8px 10px 12px !important;}
+ .m-wx-stats>div{padding:8px 4px !important;min-width:0;}
+ .m-wx-stats>div>div{max-width:100%;overflow-wrap:anywhere;}
+ .m-wx-hourly{flex:0 0 auto !important;min-height:0 !important;overflow:visible !important;}
+ .m-wx-hourly>div:first-child{padding:10px 12px 6px !important;}
+ .m-wx-hourly>div:last-child{flex:0 0 auto !important;overflow-x:auto !important;overflow-y:hidden !important;padding-bottom:84px;-webkit-overflow-scrolling:touch;}
+ #wx-graph-scroll,#wx-cards-scroll{min-width:680px;}
+
+ /* pop-ups made for a wide screen */
+ #agc-popup>div,#lightbox>div{max-width:100vw !important;}
+}
+
+/* TABLET MODE for My Projects (an iPad or a narrow window: 701 to 1199 px wide). The three desktop columns do not fit, so it is
+   one screen at a time here too: the project cards across the full width, then the job with its menu and its sections laid
+   out as on desktop. */
+@media (min-width:701px) and (max-width:1199px){
+ body:not(.m-open) .main{display:none !important;}
+ body.m-open .sidebar{display:none !important;}
+ body:not(.m-open) .sidebar{width:100% !important;border-right:0 !important;}
+ body:not(.m-open) .project-list{display:grid !important;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));grid-auto-rows:max-content;gap:4px 14px;align-content:start;padding-bottom:90px !important;}
+ body:not(.m-open) .project-list>*:not(.p-item){grid-column:1 / -1;}
+ #m-back{display:flex;flex-shrink:0;padding:10px 8px 2px;}
+ #m-back-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;border-radius:10px;border:1px solid rgba(255,255,255,0.3);background:#1c1c1c;color:#fff;font-family:var(--font);font-size:14px;font-weight:900;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;}
+ #m-back-title{display:none;}
+ html body.m-open #wx-fullscreen{left:var(--m-wx-l,290px) !important;}
+}
+
 </style>
 </head>
 <body>
@@ -19902,6 +20092,7 @@ function getProjectsInSidebarOrder(){
 }
 
 function autoSelectFirst(){
+ if(window.matchMedia&&window.matchMedia('(max-width:1199px)').matches)return;   /* 6.162: phone and tablet = the list first, nothing opened for them */
  // Idempotent — safe to call multiple times. Internal gating prevents
  // overriding a user-initiated selection. Selects the first project card
  // in the rendered sidebar DOM IFF one of these is true:
@@ -20550,7 +20741,7 @@ window.addEventListener('resize',()=>{requestAnimationFrame(fitHeaderTitle);});
  const tell=()=>{
    let name='', budget=null, id='';
    try{
-     if(_selected){
+     if(_selected&&!(window.matchMedia&&window.matchMedia('(max-width:1199px)').matches&&!document.body.classList.contains('m-open'))){   /* 6.162: on a phone or tablet only while the job is open */
        name=(el.textContent||'').trim(); id=String(_selected.id||'');   // id: so ALFRED knows which project is on screen
        if(_isAwaitingApprovalStatus(_selected.statusRaw)) budget={awaiting:true};
        else if(_selected.amount) budget={amount:String(_selected.amount),billing:String(_selected.billing||''),currency:_selected.shared?'':_installerCurrency};
@@ -20560,6 +20751,7 @@ window.addEventListener('resize',()=>{requestAnimationFrame(fitHeaderTitle);});
    if(key===last)return; last=key;
    try{ window.parent.postMessage({type:'agc_project_title',title:name,budget:budget,id:id},'*'); }catch(e){}
  };
+ window._agcTellNav=tell;   /* 6.162 */
  const mo=new MutationObserver(tell);
  mo.observe(el,{childList:true,characterData:true,subtree:true});
  if(bud) mo.observe(bud,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['style']});
@@ -20957,14 +21149,14 @@ ${_agcWxPlaceBar()}
    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.16);flex-shrink:0;background:rgba(0,0,0,0.2);">${daysBar}</div>
    ${(_selected&&_selected.wxNote)?'<div id="agc-wx-note" style="flex-shrink:0;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.16);background:rgba(240,165,0,0.08);border-left:3px solid rgba(240,165,0,0.8);font-size:13px;font-weight:700;color:#fff;line-height:1.5;white-space:pre-line;max-height:120px;overflow-y:auto;"><div class="d-label" style="font-size:9px;margin:0 0 3px;">AGC install-day weather note</div>'+esc(_selected.wxNote)+'</div>':''}
    <\!-- TOP ROW: 2 cols (big emoji/temp + stats grid) -->
-   <div style="display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.22);">
+   <div class="m-wx-top" style="display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.22);">
      <\!-- LEFT: big emoji + temp -->
-     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,0.22);gap:16px;padding:24px;">
+     <div class="m-wx-big" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,0.22);gap:16px;padding:24px;">
        <div style="font-size:150px;line-height:1;">${WX_ICONS[dc]||''}</div>
        <div style="font-size:96px;font-weight:900;color:#fff;line-height:1;">${hi}°<span style="font-size:36px;color:#6b6b6b;font-weight:400;">C</span></div>
      </div>
      <\!-- RIGHT: stats grid 3x2 -->
-     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:20px;align-content:center;">
+     <div class="m-wx-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:20px;align-content:center;">
        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.22);border-radius:12px;padding:20px 16px;text-align:center;"><div style="font-size:22px;margin-bottom:6px;">🥶</div><div style="font-size:10px;font-weight:900;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">Low</div><div style="font-size:32px;font-weight:900;color:#fff;">${lo}°</div></div>
        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.22);border-radius:12px;padding:20px 16px;text-align:center;"><div style="font-size:22px;margin-bottom:6px;">🌧️</div><div style="font-size:10px;font-weight:900;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">Rain</div><div style="font-size:32px;font-weight:900;color:#3b82f6;">${rain}%</div></div>
        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.22);border-radius:12px;padding:20px 16px;text-align:center;"><div style="font-size:22px;margin-bottom:6px;">💧</div><div style="font-size:10px;font-weight:900;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">Precip</div><div style="font-size:32px;font-weight:900;color:#60a5fa;">${precip}<span style="font-size:14px;">mm</span></div></div>
@@ -20974,7 +21166,7 @@ ${_agcWxPlaceBar()}
      </div>
    </div>
    <\!-- BOTTOM ROW: hourly forecast — full width of both columns -->
-   <div style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;">
+   <div class="m-wx-hourly" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;">
      <div style="padding:14px 24px 8px;flex-shrink:0;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#6b6b6b;">Hourly Forecast</div>
      ${(()=>{
        const hourly=_wxData.hourly||{};
@@ -22094,6 +22286,7 @@ function renderDetails(opts){
  // Each item: {id, label, icon, type:'section'|'tab', tabId?}
  const _sectionMap={};
  sections.forEach(function(s){_sectionMap[s.id]=s;});
+ sections.forEach(function(s){ if(s._m162)return; s._m162=true; const r=s.render; s.render=function(){ let el=null,changed=false; try{el=document.getElementById('detail-content-panel'); if(el){changed=el.getAttribute('data-sec')!==s.id; el.setAttribute('data-sec',s.id);}}catch(e){} const out=r.apply(this,arguments); try{ if(el&&changed)el.scrollTop=0; }catch(e){} return out; }; });   /* 6.162 */
 
  const _navItems=[
    {id:'nav-layouts', label:'Files', type:'section', sectionId:'layouts',
@@ -27899,6 +28092,53 @@ function mdToHtml(s){
  <div id="lb-body" style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:20px;"></div>
  </div>
 </div><\!-- /shell -->
+<script>
+/* ═══ PORTAL 6.162: PHONE LAYOUT ═══ */
+/* PHONE MODE for My Projects: list first, a tap opens the job full width with a back bar; the sections are a strip to swipe. */
+(function(){
+ try{
+  const mq=window.matchMedia('(max-width:700px)'), one=window.matchMedia('(max-width:1199px)');   /* phone; and "one screen at a time" (phone + tablet) */
+  const dp=document.getElementById('detail-panel'), nav=document.getElementById('detail-nav');
+  if(!dp||!nav||document.getElementById('m-back'))return;
+  nav.parentElement.id='m-navcol';
+  const bar=document.createElement('div'); bar.id='m-back';
+  bar.innerHTML='<button type="button" id="m-back-btn" aria-label="Back to my projects"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Projects</button><span id="m-back-title"></span>';
+  nav.parentElement.insertBefore(bar,nav);      /* inside the nav column, so that column stays the panel's first child (the desktop look styles it by that) */
+  bar.querySelector('#m-back-btn').addEventListener('click',function(){
+    document.body.classList.remove('m-open');
+    try{const w=document.getElementById('wx-fullscreen'); if(w&&w.style.display!=='none'&&typeof closeWeatherPopup==='function')closeWeatherPopup();}catch(e){}
+    if(window._agcTellNav)window._agcTellNav();      /* the bar on top stops naming a job when the list is back */
+  });
+  /* where the weather screen starts: right under the section strip */
+  const place=function(){ try{ const n=document.getElementById('m-navcol'); if(!n)return;
+      if(!mq.matches){ if(one.matches&&n.nextElementSibling){ const l=Math.round(n.nextElementSibling.getBoundingClientRect().left); if(l>0)document.documentElement.style.setProperty('--m-wx-l',l+'px'); } return; }   /* tablet: weather sits over the content card */
+      const b=Math.round(n.getBoundingClientRect().bottom); if(b>0)document.documentElement.style.setProperty('--m-top',b+'px'); n.scrollLeft=0; const act=nav.querySelector('.d-nav-btn.active'); if(act)nav.scrollLeft=Math.max(0,act.offsetLeft-nav.offsetLeft-(nav.clientWidth-act.offsetWidth)/2); }catch(e){} };
+  nav.addEventListener('click',function(){setTimeout(place,60);});
+  window.addEventListener('resize',function(){setTimeout(place,120);});
+  new MutationObserver(function(){setTimeout(place,60);}).observe(document.getElementById('detail-nav-warnings'),{childList:true,subtree:true});
+  /* Closeout on a phone: the store list, then one store. A job with one store skips the list. */
+  const pane=document.getElementById('pane-photos'), list=document.getElementById('store-closeouts-list'), grid=document.getElementById('closeout-new-grid');
+  if(pane&&list&&grid){
+    const sb=document.createElement('button'); sb.type='button'; sb.id='m-store-back';
+    sb.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Stores';
+    sb.addEventListener('click',function(){pane.classList.remove('m-store-open');});
+    grid.parentElement.insertBefore(sb,grid);
+    list.addEventListener('click',function(e){ if(e.target.closest('button'))pane.classList.add('m-store-open'); });
+    const count=function(){ pane.classList.toggle('m-one-store',list.querySelectorAll(':scope > button').length===1); };
+    new MutationObserver(count).observe(list,{childList:true}); count();
+  }
+  const _sel=window.selectProject;
+  window.selectProject=function(id){
+    const r=_sel.apply(this,arguments);
+    try{const t=document.getElementById('m-back-title'); if(t)t.textContent=(_selected&&(_selected.title||_selected.name))||'';}catch(e){}
+    Promise.resolve().then(function(){ if(one.matches&&_selected&&!window._autoSelectedFirst){document.body.classList.add('m-open');place();} if(window._agcTellNav)window._agcTellNav(); });
+    try{pane.classList.remove('m-store-open');}catch(e){}
+    return r;
+  };
+ }catch(e){}
+})();
+
+<\/script>
 </body>
 </html>
 </script>
@@ -28949,7 +29189,66 @@ function mdToHtml(s){
       .step-btn,.s1-part-tab,.skill-group,.social-card,.tax-form-card,.clause-card,.btn-back,.btn-continue{transition-duration:.01ms!important}
     }
 
-  </style>
+  
+/* ═══ PORTAL 6.162: PHONE LAYOUT ═══ */
+/* PHONE MODE for My Profile (320 px wide on every phone through Wix). The five steps are the first screen; a tap opens one
+   step full width, with "Steps" to come back. Desktop and tablet are not touched. */
+#m-steps-back{display:none;}
+@media (max-width:700px){
+ .top-bar{display:none !important;}
+ html body{display:flex !important;flex-direction:column !important;height:100vh !important;}
+ html body .page-shell{flex:1 1 auto !important;min-height:0 !important;height:auto !important;flex-direction:column !important;overflow:hidden !important;}
+ html body .sidebar{width:100% !important;border-right:0 !important;flex:1 1 auto !important;min-height:0 !important;overflow-y:auto !important;-webkit-overflow-scrolling:touch;}
+ html body .sidebar-inner{flex:0 0 auto !important;overflow:visible !important;padding:10px 10px 84px !important;gap:10px !important;}
+ body.m-open .sidebar{display:none !important;}
+ html body .page-shell>div:last-child{width:100% !important;min-width:0 !important;}
+ body:not(.m-open) .page-shell>div:last-child{order:-1;flex:0 0 auto !important;}
+ body:not(.m-open) .progress-strip{display:none !important;}
+ body:not(.m-open) .main-content{padding:10px 12px 4px !important;flex:0 0 auto !important;}
+ /* the welcome: words and the two buttons, no picture */
+ .welcome-worker,.welcome-wrap::before{display:none !important;}
+ #welcome-view{flex:0 0 auto !important;}
+ .welcome-wrap{gap:8px !important;}
+ .welcome-copy{gap:10px !important;flex:0 0 auto !important;}
+ .welcome-copy #welcome-heading{font-size:22px !important;}
+ .welcome-actions{gap:8px !important;flex-direction:row !important;width:100%;}
+ html body #welcome-cta-btn,html body #welcome-projects-btn{flex:1 1 0;width:auto !important;min-width:0;height:44px !important;font-size:12px !important;letter-spacing:0.5px !important;padding:0 8px !important;}
+ /* a step: the strip (Steps, progress, Save) on top, then the form in one column that scrolls */
+ body.m-open .progress-strip{display:block !important;height:auto !important;padding:8px 10px !important;}
+ .progress-strip-left{display:none !important;}
+ .progress-strip-right{padding:0 !important;gap:8px !important;}
+ #m-steps-back{display:inline-flex;align-items:center;gap:3px;flex-shrink:0;height:38px;padding:0 12px 0 7px;border-radius:999px;border:1px solid rgba(255,255,255,0.3);background:#1c1c1c;color:#fff;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;}
+ body.m-open .main-content{flex:1 1 auto !important;min-height:0 !important;overflow-y:auto !important;overflow-x:hidden !important;padding:10px 10px 84px !important;-webkit-overflow-scrolling:touch;}
+ body.m-open .main-inner{flex:0 0 auto !important;min-height:0 !important;}
+ body.m-open #step-content{flex:0 0 auto !important;min-height:0 !important;display:block;}
+
+ /* the strip: Steps, the bar, the percent and Save all fit */
+ .progress-strip-right .progress-bar-outer{flex:1 1 auto;min-width:30px;}
+ .progress-strip-right .progress-pct{font-size:15px !important;min-width:0 !important;flex-shrink:0;}
+ .progress-strip-right .btn-continue,.progress-strip-right .btn-back{flex-shrink:0;height:38px !important;padding:0 12px !important;font-size:12px !important;min-width:0 !important;}
+ .progress-strip-right .btn-back{display:none !important;}      /* "Steps" does this job on a phone */
+ /* the forms: every side-by-side block becomes one column */
+ body.m-open #step-content,body.m-open #step-content>div{display:block !important;height:auto !important;min-height:0 !important;overflow:visible !important;}
+ #step-content [style*="grid-template-columns"],#step-content .p1-top-row{display:grid !important;grid-template-columns:minmax(0,1fr) !important;height:auto !important;}
+ #step-content [style*="grid-column"]{grid-column:auto !important;}
+ #step-content [style*="grid-row"]{grid-row:auto !important;}
+ #step-content .portal-panel{min-width:0 !important;max-width:100% !important;height:auto !important;border-left:0 !important;border-right:0 !important;}
+ #step-content input,#step-content select,#step-content textarea{font-size:16px !important;max-width:100%;min-width:0;}   /* 16 px: no zoom on focus on an iPhone */
+
+ /* steps 2 to 5 are drawn straight into the main area as two or three panels side by side: one under the other here */
+ body.m-open #main-content>div:not(#main-inner){flex:0 0 auto !important;height:auto !important;min-height:0 !important;overflow:visible !important;}
+ body.m-open #main-content>div:not(#main-inner)>div{flex-direction:column !important;flex:0 0 auto !important;height:auto !important;min-height:0 !important;overflow:visible !important;gap:10px !important;}
+ body.m-open #main-content>div:not(#main-inner)>div>*{width:100% !important;max-width:none !important;min-width:0 !important;flex:0 0 auto !important;height:auto !important;min-height:0 !important;border-left:0 !important;border-right:0 !important;}
+ body.m-open #main-content>div:not(#main-inner) [style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr) !important;}
+ body.m-open #main-content>div:not(#main-inner) [style*="grid-column"]{grid-column:auto !important;}
+ body.m-open #main-content .tax-forms-container{flex-direction:column !important;gap:10px !important;}
+ body.m-open #main-content .tax-forms-container>*{width:100% !important;max-width:none !important;min-width:0 !important;flex:0 0 auto !important;}
+ body.m-open #main-content input,body.m-open #main-content select,body.m-open #main-content textarea{font-size:16px !important;max-width:100%;min-width:0;}
+
+ body.m-open #void-check-zone,body.m-open #coi-zone,body.m-open #tax-upload-zone,body.m-open .tax-upload-zone{flex:0 0 auto !important;min-height:120px !important;height:auto !important;}
+}
+
+</style>
 </head>
 <body>
 
@@ -36578,6 +36877,22 @@ function mdToHtml(s){
   wake();
 })();
 <\/script>
+<script>
+/* ═══ PORTAL 6.162: PHONE LAYOUT ═══ */
+/* PHONE MODE for My Profile: the page knows when a step is open (its panel is shown) and offers "Steps" to go back. */
+(function(){ try{
+  const sc=document.getElementById('step-content'), strip=document.querySelector('.progress-strip-right'); if(!sc||!strip||document.getElementById('m-steps-back'))return;
+  /* a step is open whenever the welcome is not what is showing (steps 2 to 5 redraw the whole main area, so watch all of it) */
+  const main=document.getElementById('main-content'); let t=0;
+  const upd=function(){ t=0; const w=document.getElementById('welcome-view'); const welcome=!!(w&&w.isConnected&&w.style.display!=='none'&&w.getClientRects().length); document.body.classList.toggle('m-open',!welcome); };
+  new MutationObserver(function(){ if(!t)t=requestAnimationFrame(upd); }).observe(main||sc,{childList:true,subtree:true,attributes:true,attributeFilter:['style']}); upd();
+  const b=document.createElement('button'); b.type='button'; b.id='m-steps-back'; b.setAttribute('aria-label','Back to the steps');
+  b.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Steps';
+  b.addEventListener('click',function(){ try{ if(typeof window.agcShowWelcome==='function')window.agcShowWelcome(); }catch(e){} });
+  strip.insertBefore(b,strip.firstChild);
+}catch(e){} })();
+
+<\/script>
 </body>
 </html>
 </script>
@@ -37663,7 +37978,21 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      page is zoomed) and cap the portal at that height: nav bar, views and sign-in card all fit what
      is on screen, with no scrolling or zooming to line things up. Until the page answers, the
      screen's own height is the cap. */
-  function setCap(h){ h = Math.round(+h || 0); if (h > 200) { document.documentElement.style.setProperty('--agc-cap', h + 'px'); setTimeout(gateFit, 0); } }   /* the sign-in card refits too */
+  /* 6.162: Wix reports the window's height; under about 260 px on a 320 px page means the phone is on its side */
+  var turnEl = null, turnOff = false;
+  function turnHint(on){
+    try {
+      if (on && !turnOff && !turnEl) {
+        turnEl = document.createElement('div'); turnEl.id = 'agc-turn'; turnEl.setAttribute('role', 'status');
+        var t = document.createElement('span'); t.textContent = 'Turn your phone upright for the best view.';
+        var x = document.createElement('button'); x.type = 'button'; x.setAttribute('aria-label', 'Hide this message'); x.textContent = '\u2715';
+        x.addEventListener('click', function(){ turnOff = true; turnHint(false); });
+        turnEl.appendChild(t); turnEl.appendChild(x); document.body.appendChild(turnEl);
+      }
+      if (turnEl) turnEl.style.display = (on && !turnOff) ? 'flex' : 'none';
+    } catch (e) {}
+  }
+  function setCap(h){ h = Math.round(+h || 0); if (h > 0) turnHint(h <= 260 && window.innerWidth <= 400); if (h > 200) { document.documentElement.style.setProperty('--agc-cap', h + 'px'); setTimeout(gateFit, 0); } }   /* the sign-in card refits too */
   if (host) { try { setCap(screen.availHeight || 900); } catch (e) {} }      /* opened on its own, the page is already exactly one window tall */
   var capT = 0;
   function askCap(){ if (host) up({ type: 'agc_partner_viewport_request' }); }
@@ -37719,7 +38048,7 @@ window.AGC_KEYS = { airtable: 'bridge', invoice: 'bridge', imgbb: 'bridge' };
      working gets the page pulled out from under them; they get the new version next time. */
   /* PORTAL 6.131: this must match version.json (it had stayed at 6124 since 6.124, so every new version reloaded the page
      once after the Wix page had already handed over the map key, and the maps and the forecast lost it) */
-  var AGC_BUILD = 6161; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
+  var AGC_BUILD = 6162; window.AGC_PORTAL_BUILD = AGC_BUILD;   /* 6.138: the build goes in the FIELD OPS ALFRED LOG */
   /* PORTAL 6.138: the version label (sign-in screen and Home) now comes from AGC_BUILD, so it can no longer fall behind
      (it was typed by hand and still said 6.136 at 6.137 and 6.138) */
   (function(){ var t = 'Version ' + String(AGC_BUILD).replace(/^(\d)(\d{3})$/, '$1.$2');

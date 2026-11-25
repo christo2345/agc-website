@@ -178,6 +178,12 @@ Live: https://christo2345.github.io/agc-website/partner-portal/
     store names show while that loads. The archived view's Google Drive link no longer keeps a stray ")".
   - Home: the Time off button in My Calendar is always shown; a failed load says why in the panel.
   - 6.161: Equipment to bring leaves out the rule "no equipment (charges and notes)" (it says there is nothing to bring).
+  - 6.162: phone and tablet review. Measured on the live site: Wix shows the Vendor Portal page to every phone at 320 px wide (its mobile viewport) with the portal frame 320 x 760, and to tablets at 980 px or wider. So "phone" in this file means 320 px. My Projects and My Profile had no phone layout before this version.
+    - My Projects on a phone (700 px and under): the list fills the screen; tapping a job opens it full screen with a "Projects" back button, the job's name, and the seven sections as a strip of buttons that scrolls sideways. Every section stacks in one column. Closeout shows the store list first, then one store at a time with a "Stores" back button.
+    - My Projects on a tablet (701 to 1199 px): the list is a grid of cards; a job opens with the list hidden and a "Projects" button on top of the section buttons. From 1200 px up nothing changed.
+    - My Profile on a phone: welcome and the five steps on one screen; a step opens full screen with a "Steps" back button; every form is one column with 16 px inputs.
+    - Home on a phone: the Time off button no longer sits under the close button, the time off form is one column, menu labels wrap.
+    - A phone turned sideways gets a line saying to turn it upright (Wix keeps the page 320 px wide and magnifies it, so nothing fits). Fixing that for real needs a change on the Wix page, not in this file.
     Which rules a job gets is decided in Airtable by the automation "🧰 SUGGESTED EQUIPMENT ON NEW JOBS", not in the portal.
   - 6.160: trip numbers go by date. The scheduled date and every revisit date are sorted, oldest first, and numbered from
     Trip 1, whichever Airtable field each was typed in. The same day twice counts once.
