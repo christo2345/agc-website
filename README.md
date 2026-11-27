@@ -20,3 +20,10 @@ https://christo2345.github.io/agc-website/partner-portal/ (loaded by the Wix Ven
 is never sent to GitHub's servers. The Airtable agent "🧾 ESTIMATE BUILDER" writes the link into
 AGC PROJECTS → 🧾 ESTIMATE LINK. The page prints on Letter (one page for a normal estimate) with
 "Print / Save as PDF", and works on phones.
+
+## Site survey PDF (`/estimate/pdf/survey-pdf.js`)
+
+The AGC site survey PDF engine (Nov 27, 2026), on the same pure-JS engine and fonts as the estimate PDF and the project brief:
+header on page 1 only, footer on the last page only (projects@), every section grows to fit. `AGC_PDF.makeSurvey(D, fetch, photos)`
+returns the PDF bytes. The Airtable automation "📐 SITE SURVEY PDF · build" carries a copy of it inline and builds the PDF from
+AGC PROJECTS → 📐 SITE SURVEY DATA when 📐 BUILD SITE SURVEY is ticked. Nothing about a client is stored in this repo.
